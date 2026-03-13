@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback, useEffect, forwardRef } from "react";
+import html2canvas from "html2canvas";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,7 +16,7 @@ import {
   Download, Eye, RefreshCw, Plus, Minus, ChevronDown, ChevronUp,
   Smartphone, MessageSquare, Send, Archive, History, X, Check,
   ImageIcon, Layers, Share2, Palette, Type,
-  Strikethrough, Code, MapPin, Map as MapIcon, Loader2
+  Strikethrough, Code, MapPin, Map as MapIcon, Loader2, Move, ZoomIn, ZoomOut
 } from "lucide-react";
 import { toast } from "sonner";
 import layoutConfig from "@/config/layout-config.json";
@@ -69,6 +70,21 @@ interface FotoItem {
 
 // Generate unique ID
 const generateId = () => Math.random().toString(36).substr(2, 9);
+
+// Format today's date in Indonesian format: "Hari, DD Bulan Tahun"
+const formatTodayDate = (): string => {
+  const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+  const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 
+                  'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+  
+  const today = new Date();
+  const dayName = days[today.getDay()];
+  const date = today.getDate();
+  const monthName = months[today.getMonth()];
+  const year = today.getFullYear();
+  
+  return `${dayName}, ${date} ${monthName} ${year}`;
+};
 
 // Helper function to shade colors
 const shadeColor = (color: string, percent: number): string => {
@@ -818,263 +834,839 @@ const renderWhatsAppText = (text: string): React.ReactNode => {
   );
 };
 
-// Title Position Preview Component - Draggable title/subtitle positioning
-interface TitlePositionPreviewProps {
-  titleX: number;
-  titleY: number;
-  subtitleX: number;
-  subtitleY: number;
-  titleText: string;
-  subtitleText: string;
-  titleFontSize: number;
-  subtitleFontSize: number;
-  titleFontFamily: string;
-  customBackground: string;
-  backgroundBrightness: "light" | "dark";
-  bgPositionX: number;
-  bgPositionY: number;
-  bgScale: number;
-  onTitlePositionChange: (x: number, y: number) => void;
-  onSubtitlePositionChange: (x: number, y: number) => void;
+// Layer types for Collage Editor - Using percentage strings for responsive layout
+interface PhotoLayer {
+  id: string;
+  url: string;
+  frameX: string;  // percentage e.g. "5%"
+  frameY: string;  // percentage e.g. "28%"
+  frameW: string;  // percentage e.g. "40%"
+  frameH: string;  // percentage e.g. "25%"
+  imgX: number;    // pixel offset for panning
+  imgY: number;    // pixel offset for panning
+  scale: number;   // zoom scale
 }
 
-const TitlePositionPreview = ({
-  titleX,
-  titleY,
-  subtitleX,
-  subtitleY,
-  titleText,
-  subtitleText,
-  titleFontSize,
-  subtitleFontSize,
-  titleFontFamily,
-  customBackground,
+interface CollageLayers {
+  background: {
+    url: string | null;
+    scale: number;
+    x: number;
+    y: number;
+  };
+  title: {
+    text: string;
+    x: number;
+    y: number;
+    fontSize: number;
+    color: string;
+  };
+  subtitle: {
+    text: string;
+    x: number;
+    y: number;
+    fontSize: number;
+    color: string;
+  };
+  footer: {
+    text: string;
+    x: number;
+    y: number;
+    fontSize: number;
+    color: string;
+  };
+  logo: {
+    leftUrl: string | null;
+    rightUrl: string | null;
+    x: number;
+    y: number;
+    size: number;
+  };
+  photos: PhotoLayer[];
+}
+
+// Collage Editor Props
+interface CollageEditorProps {
+  layers: CollageLayers;
+  setLayers: React.Dispatch<React.SetStateAction<CollageLayers>>;
+  selected: string | null;
+  setSelected: (s: string | null) => void;
+  canvasWidth: number;
+  canvasHeight: number;
+  backgroundBrightness: "light" | "dark";
+  onBackgroundUpload: (file: File) => void;
+  onPhotoUpload: (files: FileList) => void;
+  onMerge: () => void;
+  onDownload: () => void;
+  isMerging: boolean;
+  mergedImage: string;
+  setMergedImage: (img: string) => void;
+  basarnasLogo: HTMLImageElement | null;
+  bppLogo: HTMLImageElement | null;
+  reportTitle: string;
+  reportSubtitle: string;
+  onSendToWhatsApp: () => void;
+}
+
+// Collage Editor Component - Mobile Style Layout with Bottom Toolbar
+const CollageEditor = ({
+  layers,
+  setLayers,
+  selected,
+  setSelected,
+  canvasWidth,
+  canvasHeight,
   backgroundBrightness,
-  bgPositionX,
-  bgPositionY,
-  bgScale,
-  onTitlePositionChange,
-  onSubtitlePositionChange,
-}: TitlePositionPreviewProps) => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [isDraggingTitle, setIsDraggingTitle] = useState(false);
-  const [isDraggingSubtitle, setIsDraggingSubtitle] = useState(false);
+  onBackgroundUpload,
+  onPhotoUpload,
+  onMerge,
+  onDownload,
+  isMerging,
+  mergedImage,
+  setMergedImage,
+  basarnasLogo,
+  bppLogo,
+  reportTitle,
+  reportSubtitle,
+  onSendToWhatsApp,
+}: CollageEditorProps) => {
+  const canvasRef = useRef<HTMLDivElement>(null);
+  const backgroundInputRef = useRef<HTMLInputElement>(null);
+  const photoInputRef = useRef<HTMLInputElement>(null);
+  const [activeTool, setActiveTool] = useState<string | null>(null);
+  const [selectedPhoto, setSelectedPhoto] = useState<number | null>(null);
+  
+  // Update layer helper
+  const updateLayer = <K extends keyof CollageLayers>(
+    key: K,
+    updates: Partial<CollageLayers[K]>
+  ) => {
+    setLayers((prev) => ({
+      ...prev,
+      [key]: { ...prev[key], ...updates },
+    }));
+  };
 
-  const handleMouseDown = (e: React.MouseEvent, type: 'title' | 'subtitle') => {
+  // Update photo helper
+  const updatePhoto = useCallback((index: number, updates: Partial<PhotoLayer>) => {
+    setLayers((prev) => {
+      const newPhotos = [...prev.photos];
+      newPhotos[index] = { ...newPhotos[index], ...updates };
+      return { ...prev, photos: newPhotos };
+    });
+  }, [setLayers]);
+
+  // Drag photo inside frame
+  const startDragPhoto = useCallback((e: React.MouseEvent | React.TouchEvent, index: number) => {
     e.preventDefault();
-    if (type === 'title') {
-      setIsDraggingTitle(true);
-    } else {
-      setIsDraggingSubtitle(true);
-    }
-  };
-
-  const handleMouseMove = useCallback((e: MouseEvent) => {
-    if (!containerRef.current) return;
+    e.stopPropagation();
     
-    const rect = containerRef.current.getBoundingClientRect();
-    const x = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100));
-    const y = Math.max(0, Math.min(100, ((e.clientY - rect.top) / rect.height) * 100));
-
-    if (isDraggingTitle) {
-      onTitlePositionChange(Math.round(x), Math.round(y));
-    } else if (isDraggingSubtitle) {
-      onSubtitlePositionChange(Math.round(x), Math.round(y));
-    }
-  }, [isDraggingTitle, isDraggingSubtitle, onTitlePositionChange, onSubtitlePositionChange]);
-
-  const handleMouseUp = useCallback(() => {
-    setIsDraggingTitle(false);
-    setIsDraggingSubtitle(false);
-  }, []);
-
-  // Touch event handlers
-  const handleTouchStart = (e: React.TouchEvent, type: 'title' | 'subtitle') => {
-    e.preventDefault(); // Prevent scroll
-    if (type === 'title') {
-      setIsDraggingTitle(true);
-    } else {
-      setIsDraggingSubtitle(true);
-    }
-  };
-
-  const handleTouchMove = useCallback((e: TouchEvent) => {
-    if (!containerRef.current) return;
-    if (e.touches.length === 0) return;
+    if (!canvasRef.current) return;
+    const rect = canvasRef.current.getBoundingClientRect();
     
-    e.preventDefault(); // Prevent scroll during drag
-    
-    const touch = e.touches[0];
-    const rect = containerRef.current.getBoundingClientRect();
-    const x = Math.max(0, Math.min(100, ((touch.clientX - rect.left) / rect.width) * 100));
-    const y = Math.max(0, Math.min(100, ((touch.clientY - rect.top) / rect.height) * 100));
-
-    if (isDraggingTitle) {
-      onTitlePositionChange(Math.round(x), Math.round(y));
-    } else if (isDraggingSubtitle) {
-      onSubtitlePositionChange(Math.round(x), Math.round(y));
-    }
-  }, [isDraggingTitle, isDraggingSubtitle, onTitlePositionChange, onSubtitlePositionChange]);
-
-  const handleTouchEnd = useCallback(() => {
-    setIsDraggingTitle(false);
-    setIsDraggingSubtitle(false);
-  }, []);
-
-  useEffect(() => {
-    if (isDraggingTitle || isDraggingSubtitle) {
-      window.addEventListener('mousemove', handleMouseMove);
-      window.addEventListener('mouseup', handleMouseUp);
-      window.addEventListener('touchmove', handleTouchMove, { passive: false });
-      window.addEventListener('touchend', handleTouchEnd);
-      // Prevent body scroll during drag
-      document.body.style.overflow = 'hidden';
-    }
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
-      window.removeEventListener('touchmove', handleTouchMove);
-      window.removeEventListener('touchend', handleTouchEnd);
-      document.body.style.overflow = '';
+    const getClientPos = (ev: React.MouseEvent | React.TouchEvent | MouseEvent | TouchEvent) => {
+      if ('touches' in ev && ev.touches.length > 0) {
+        return { x: ev.touches[0].clientX, y: ev.touches[0].clientY };
+      } else if ('clientX' in ev) {
+        return { x: ev.clientX, y: ev.clientY };
+      }
+      return { x: 0, y: 0 };
     };
-  }, [isDraggingTitle, isDraggingSubtitle, handleMouseMove, handleMouseUp, handleTouchMove, handleTouchEnd]);
+    
+    const startPos = getClientPos(e);
+    const startImgX = layers.photos[index]?.imgX || 0;
+    const startImgY = layers.photos[index]?.imgY || 0;
+    
+    const handleMove = (moveEvent: MouseEvent | TouchEvent) => {
+      moveEvent.preventDefault(); // Prevent scroll
+      const clientPos = getClientPos(moveEvent);
+      const dx = clientPos.x - startPos.x;
+      const dy = clientPos.y - startPos.y;
+      
+      // Scale delta based on canvas size
+      const scaledDx = (dx / rect.width) * 100;
+      const scaledDy = (dy / rect.height) * 100;
+      
+      setLayers((prev) => {
+        const newPhotos = [...prev.photos];
+        if (newPhotos[index]) {
+          newPhotos[index] = { 
+            ...newPhotos[index], 
+            imgX: startImgX + scaledDx,
+            imgY: startImgY + scaledDy,
+          };
+        }
+        return { ...prev, photos: newPhotos };
+      });
+    };
+    
+    const handleUp = () => {
+      document.removeEventListener('mousemove', handleMove);
+      document.removeEventListener('mouseup', handleUp);
+      document.removeEventListener('touchmove', handleMove, { capture: true } as AddEventListenerOptions);
+      document.removeEventListener('touchend', handleUp);
+    };
+    
+    document.addEventListener('mousemove', handleMove);
+    document.addEventListener('mouseup', handleUp);
+    document.addEventListener('touchmove', handleMove, { passive: false, capture: true } as AddEventListenerOptions);
+    document.addEventListener('touchend', handleUp);
+  }, [layers.photos, setLayers]);
 
-  // Determine text alignment based on X position
-  const getTitleAlign = (x: number): CanvasTextAlign => {
-    if (x < 30) return "left";
-    if (x > 70) return "right";
-    return "center";
+  // Custom drag handler for text elements
+  const handleElementDrag = useCallback((
+    type: 'title' | 'subtitle' | 'footer',
+    e: React.MouseEvent | React.TouchEvent
+  ) => {
+    e.preventDefault();
+    if (!canvasRef.current) return;
+    
+    const canvas = canvasRef.current;
+    const rect = canvas.getBoundingClientRect();
+    
+    const getClientPos = (e: React.MouseEvent | React.TouchEvent) => {
+      if ('touches' in e) {
+        return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      }
+      return { x: e.clientX, y: e.clientY };
+    };
+    
+    const startPos = getClientPos(e);
+    const startLayer = layers[type];
+    
+    const handleMove = (moveEvent: MouseEvent | TouchEvent) => {
+      moveEvent.preventDefault(); // Prevent scroll
+      const clientX = 'touches' in moveEvent ? moveEvent.touches[0].clientX : moveEvent.clientX;
+      const clientY = 'touches' in moveEvent ? moveEvent.touches[0].clientY : moveEvent.clientY;
+      
+      const deltaX = clientX - startPos.x;
+      const deltaY = clientY - startPos.y;
+      
+      // Convert pixel delta to percentage
+      const percentX = Math.round((deltaX / rect.width) * 100);
+      const percentY = Math.round((deltaY / rect.height) * 100);
+      
+      const newX = Math.max(0, Math.min(100, startLayer.x + percentX));
+      const newY = Math.max(0, Math.min(100, startLayer.y + percentY));
+      
+      updateLayer(type, { x: newX, y: newY });
+    };
+    
+    const handleUp = () => {
+      document.removeEventListener('mousemove', handleMove);
+      document.removeEventListener('mouseup', handleUp);
+      document.removeEventListener('touchmove', handleMove, { capture: true } as AddEventListenerOptions);
+      document.removeEventListener('touchend', handleUp);
+    };
+    
+    document.addEventListener('mousemove', handleMove);
+    document.addEventListener('mouseup', handleUp);
+    document.addEventListener('touchmove', handleMove, { passive: false, capture: true } as AddEventListenerOptions);
+    document.addEventListener('touchend', handleUp);
+  }, [layers, updateLayer]);
+
+  // Export function using html2canvas
+  const exportImage = async () => {
+    if (!canvasRef.current) return;
+    
+    onMerge(); // Use existing merge logic
+    
+    // Alternative: use html2canvas for what-you-see-is-what-you-get
+    // try {
+    //   const canvas = await html2canvas(canvasRef.current, {
+    //     scale: 3,
+    //     useCORS: true,
+    //     allowTaint: true,
+    //   });
+    //   const dataUrl = canvas.toDataURL("image/jpeg", 0.95);
+    //   // Handle download
+    // } catch (error) {
+    //   console.error('Export error:', error);
+    // }
   };
-
-  const titleAlign = getTitleAlign(titleX);
-  const subtitleAlign = getTitleAlign(subtitleX);
 
   const isDarkBg = backgroundBrightness === "dark";
   const textColor = isDarkBg ? "#FFFFFF" : "#1E293B";
   const subtitleColor = isDarkBg ? "#CBD5E1" : "#64748B";
 
-  // Scale fonts for preview (smaller than actual)
-  const previewTitleSize = Math.max(10, titleFontSize * 0.4);
-  const previewSubtitleSize = Math.max(8, subtitleFontSize * 0.4);
-
   return (
-    <div className="space-y-2">
-      <div
-        ref={containerRef}
-        className="relative w-full h-48 rounded-xl overflow-hidden cursor-crosshair select-none border-2 border-white/10"
-        style={{
-          touchAction: 'none',
+    <div className="flex flex-col h-full bg-slate-900">
+      {/* Hidden inputs */}
+      <input
+        ref={backgroundInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) onBackgroundUpload(file);
         }}
-      >
-        {/* Background layer with position and scale */}
-        {customBackground && (
-          <img
-            src={customBackground}
-            alt="Background preview"
-            className="absolute inset-0 w-full h-full object-cover"
-            style={{
-              objectPosition: `${bgPositionX}% ${bgPositionY}%`,
-              transform: `scale(${bgScale / 100})`,
-              transformOrigin: `${bgPositionX}% ${bgPositionY}%`,
-            }}
-          />
-        )}
-        {/* Default gradient fallback */}
-        {!customBackground && (
-          <div 
-            className="absolute inset-0"
-            style={{
-              background: "linear-gradient(180deg, #fff8f0 0%, #fef3e2 100%)",
-            }}
-          />
-        )}
-        {/* Logo placeholders */}
-        <div className="absolute top-3 left-3 w-10 h-10 rounded-full bg-white/90 shadow-md flex items-center justify-center text-[8px] font-bold text-slate-600 z-10">
-          LOGO
-        </div>
-        <div className="absolute top-3 right-3 w-10 h-10 rounded-full bg-white/90 shadow-md flex items-center justify-center text-[8px] font-bold text-slate-600 z-10">
-          LOGO
-        </div>
+      />
+      <input
+        ref={photoInputRef}
+        type="file"
+        accept="image/*"
+        multiple
+        className="hidden"
+        onChange={(e) => {
+          const files = e.target.files;
+          if (files) onPhotoUpload(files);
+        }}
+      />
 
-        {/* Draggable Title - position matches canvas rendering logic */}
+      {/* Main Canvas Area */}
+      <div className="flex-1 flex flex-col items-center justify-center p-4 pb-20 overflow-auto">
+        {/* Canvas - 9:16 aspect ratio */}
         <div
-          className={`absolute cursor-move transition-shadow ${isDraggingTitle ? 'z-20' : 'z-10'}`}
+          ref={canvasRef}
+          className="relative bg-black overflow-hidden shadow-2xl rounded-lg select-none"
           style={{
-            left: `calc(15% + ${titleX} * 0.7%)`, // 15% start + 70% range
-            top: `calc(20% + ${titleY} * 0.6%)`, // 20% start + 60% range
-            transform: titleAlign === 'center' ? 'translate(-50%, 0)' : titleAlign === 'right' ? 'translate(-100%, 0)' : 'translate(0, 0)',
-            textAlign: titleAlign,
+            width: "100%",
+            maxWidth: "420px",
+            aspectRatio: "9 / 16",
+            touchAction: "none"
           }}
-          onMouseDown={(e) => handleMouseDown(e, 'title')}
-          onTouchStart={(e) => handleTouchStart(e, 'title')}
         >
-          <div 
-            className={`px-2 py-1 rounded-md transition-all ${isDraggingTitle ? 'ring-2 ring-orange-500 ring-offset-1 ring-offset-transparent' : 'hover:ring-1 hover:ring-orange-500/50'}`}
-            style={{ backgroundColor: isDraggingTitle ? 'rgba(249, 115, 22, 0.2)' : 'transparent' }}
-          >
-            <span 
-              className="font-bold whitespace-nowrap block"
-              style={{ 
-                fontSize: `${previewTitleSize}px`,
-                fontFamily: titleFontFamily,
-                color: customBackground ? textColor : "#1E293B",
+          {/* Background */}
+          {layers.background.url ? (
+            <img
+              src={layers.background.url}
+              alt="Background"
+              className="absolute inset-0 w-full h-full object-cover"
+              style={{
+                transform: `translate(${layers.background.x}px, ${layers.background.y}px) scale(${layers.background.scale})`,
+                transformOrigin: "center"
               }}
+            />
+          ) : (
+            <div 
+              className="absolute inset-0"
+              style={{
+                background: "linear-gradient(180deg, #1e3a5f 0%, #0f172a 50%, #1e293b 100%)",
+              }}
+            />
+          )}
+
+          {/* Logos - Original shape */}
+          <div className="absolute top-3 left-3 w-12 h-14 bg-white/95 shadow-lg flex items-center justify-center overflow-hidden z-10 rounded-sm">
+            {basarnasLogo ? (
+              <img src={basarnasLogo.src} alt="Logo" className="w-full h-full object-contain p-1" />
+            ) : (
+              <span className="text-[8px] font-bold text-slate-600 text-center">BASARNAS</span>
+            )}
+          </div>
+          <div className="absolute top-3 right-3 w-12 h-14 bg-white/95 shadow-lg flex items-center justify-center overflow-hidden z-10 rounded-sm">
+            {bppLogo ? (
+              <img src={bppLogo.src} alt="Logo" className="w-full h-full object-contain p-1" />
+            ) : (
+              <span className="text-[8px] font-bold text-slate-600 text-center">BPP</span>
+            )}
+          </div>
+
+          {/* Photo Frames */}
+          {layers.photos.map((photo, i) => (
+            <div
+              key={photo.id}
+              className={`absolute overflow-hidden border-2 cursor-pointer transition-all ${
+                selectedPhoto === i 
+                  ? "border-orange-500 ring-2 ring-orange-400" 
+                  : "border-white/50 hover:border-white"
+              }`}
+              style={{
+                left: photo.frameX,
+                top: photo.frameY,
+                width: photo.frameW,
+                height: photo.frameH,
+                touchAction: "none"
+              }}
+              onClick={() => setSelectedPhoto(selectedPhoto === i ? null : i)}
             >
-              {titleText.slice(0, 30)}{titleText.length > 30 ? '...' : ''}
-            </span>
+              {photo.url ? (
+                <img
+                  src={photo.url}
+                  alt={`Photo ${i + 1}`}
+                  draggable={false}
+                  onMouseDown={(e) => startDragPhoto(e, i)}
+                  onTouchStart={(e) => startDragPhoto(e, i)}
+                  className="absolute select-none"
+                  style={{
+                    left: `${photo.imgX}%`,
+                    top: `${photo.imgY}%`,
+                    transform: `scale(${photo.scale})`,
+                    transformOrigin: "center",
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                    touchAction: "none"
+                  }}
+                />
+              ) : (
+                <div 
+                  className="w-full h-full bg-white/10 flex items-center justify-center"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    document.getElementById(`photo-upload-${photo.id}`)?.click();
+                  }}
+                >
+                  <ImagePlus className="w-8 h-8 text-white/50" />
+                </div>
+              )}
+              <input
+                type="file"
+                accept="image/*"
+                id={`photo-upload-${photo.id}`}
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  const url = URL.createObjectURL(file);
+                  updatePhoto(i, { url, imgX: 0, imgY: 0, scale: 1 });
+                }}
+              />
+            </div>
+          ))}
+
+          {/* Title - Draggable (max 2 lines) */}
+          <div
+            className="absolute cursor-move select-none text-center px-3"
+            onMouseDown={(e) => { e.preventDefault(); handleElementDrag("title", e); }}
+            onTouchStart={(e) => handleElementDrag("title", e)}
+            style={{
+              top: `${layers.title.y}%`,
+              left: `${layers.title.x}%`,
+              transform: "translate(-50%, -50%)",
+              fontSize: layers.title.fontSize,
+              fontWeight: "bold",
+              color: layers.background.url ? layers.title.color : "#FFFFFF",
+              textShadow: "0 2px 4px rgba(0,0,0,0.5)",
+              touchAction: "none",
+              width: "90%",
+              lineHeight: 1.2,
+              display: "-webkit-box",
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: "vertical",
+              overflow: "hidden"
+            }}
+          >
+            {layers.title.text || reportTitle || "Judul Laporan"}
+          </div>
+
+          {/* Subtitle - Draggable (single line only) */}
+          <div
+            className="absolute cursor-move select-none text-center px-3"
+            onMouseDown={(e) => { e.preventDefault(); handleElementDrag("subtitle", e); }}
+            onTouchStart={(e) => handleElementDrag("subtitle", e)}
+            style={{
+              top: `${layers.subtitle.y}%`,
+              left: `${layers.subtitle.x}%`,
+              transform: "translate(-50%, -50%)",
+              fontSize: layers.subtitle.fontSize,
+              color: layers.background.url ? layers.subtitle.color : "#CBD5E1",
+              textShadow: "0 2px 4px rgba(0,0,0,0.5)",
+              touchAction: "none",
+              width: "90%",
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis"
+            }}
+          >
+            {layers.subtitle.text || reportSubtitle || "Tempat, Tanggal Bulan Tahun"}
+          </div>
+
+          {/* Footer - Draggable */}
+          <div
+            className="absolute cursor-move select-none text-center px-3"
+            onMouseDown={(e) => { e.preventDefault(); handleElementDrag("footer", e); }}
+            onTouchStart={(e) => handleElementDrag("footer", e)}
+            style={{
+              top: `${layers.footer.y}%`,
+              left: `${layers.footer.x}%`,
+              transform: "translate(-50%, -50%)",
+              fontSize: layers.footer.fontSize,
+              color: layers.background.url ? layers.footer.color : "#FFFFFF",
+              textShadow: "0 2px 4px rgba(0,0,0,0.5)",
+              touchAction: "none"
+            }}
+          >
+            {layers.footer.text || "Footer text"}
           </div>
         </div>
 
-        {/* Draggable Subtitle - position matches canvas rendering logic */}
-        <div
-          className={`absolute cursor-move transition-shadow ${isDraggingSubtitle ? 'z-20' : 'z-10'}`}
-          style={{
-            left: `calc(15% + ${subtitleX} * 0.7%)`, // 15% start + 70% range
-            top: `calc(20% + ${subtitleY} * 0.6%)`, // 20% start + 60% range
-            transform: subtitleAlign === 'center' ? 'translate(-50%, 0)' : subtitleAlign === 'right' ? 'translate(-100%, 0)' : 'translate(0, 0)',
-            textAlign: subtitleAlign,
-          }}
-          onMouseDown={(e) => handleMouseDown(e, 'subtitle')}
-          onTouchStart={(e) => handleTouchStart(e, 'subtitle')}
-        >
-          <div 
-            className={`px-2 py-1 rounded-md transition-all ${isDraggingSubtitle ? 'ring-2 ring-cyan-500 ring-offset-1 ring-offset-transparent' : 'hover:ring-1 hover:ring-cyan-500/50'}`}
-            style={{ backgroundColor: isDraggingSubtitle ? 'rgba(6, 182, 212, 0.2)' : 'transparent' }}
-          >
-            <span 
-              className="whitespace-nowrap block"
-              style={{ 
-                fontSize: `${previewSubtitleSize}px`,
-                fontFamily: titleFontFamily,
-                color: customBackground ? subtitleColor : "#64748B",
-              }}
+        {/* Action buttons above toolbar */}
+        {mergedImage && (
+          <div className="mt-4 flex gap-2">
+            <Button
+              onClick={onDownload}
+              className="bg-green-600 hover:bg-green-500 text-white"
             >
-              {subtitleText.slice(0, 35)}{subtitleText.length > 35 ? '...' : ''}
-            </span>
+              <Download className="w-4 h-4 mr-2" />
+              Download
+            </Button>
           </div>
-        </div>
+        )}
+      </div>
 
-        {/* Position indicators */}
-        <div className="absolute bottom-2 left-2 right-2 flex justify-between text-[10px]">
-          <span className="bg-orange-500/80 text-white px-1.5 py-0.5 rounded">
-            X:{titleX}% Y:{titleY}%
-          </span>
-          <span className="bg-cyan-500/80 text-white px-1.5 py-0.5 rounded">
-            X:{subtitleX}% Y:{subtitleY}%
-          </span>
-        </div>
-
-        {/* Grid overlay for guidance */}
-        <div className="absolute inset-0 pointer-events-none opacity-10">
-          <div className="absolute left-1/3 top-0 bottom-0 w-px bg-slate-500" />
-          <div className="absolute left-2/3 top-0 bottom-0 w-px bg-slate-500" />
-          <div className="absolute top-1/3 left-0 right-0 h-px bg-slate-500" />
-          <div className="absolute top-2/3 left-0 right-0 h-px bg-slate-500" />
+      {/* Bottom Toolbar */}
+      <div className="fixed bottom-0 left-0 right-0 bg-slate-800 border-t border-white/10 shadow-lg z-50">
+        <div className="flex justify-around py-3 px-2">
+          <button
+            onClick={() => setActiveTool(activeTool === "background" ? null : "background")}
+            className={`flex flex-col items-center gap-1 px-4 py-2 rounded-lg transition-all ${
+              activeTool === "background" ? "bg-blue-500/20 text-blue-400" : "text-white/70 hover:text-white hover:bg-white/5"
+            }`}
+          >
+            <ImageIcon className="w-5 h-5" />
+            <span className="text-xs">Background</span>
+          </button>
+          
+          <button
+            onClick={() => setActiveTool(activeTool === "photos" ? null : "photos")}
+            className={`flex flex-col items-center gap-1 px-4 py-2 rounded-lg transition-all ${
+              activeTool === "photos" ? "bg-purple-500/20 text-purple-400" : "text-white/70 hover:text-white hover:bg-white/5"
+            }`}
+          >
+            <ImagePlus className="w-5 h-5" />
+            <span className="text-xs">Photos</span>
+          </button>
+          
+          <button
+            onClick={() => setActiveTool(activeTool === "text" ? null : "text")}
+            className={`flex flex-col items-center gap-1 px-4 py-2 rounded-lg transition-all ${
+              activeTool === "text" ? "bg-orange-500/20 text-orange-400" : "text-white/70 hover:text-white hover:bg-white/5"
+            }`}
+          >
+            <Type className="w-5 h-5" />
+            <span className="text-xs">Text</span>
+          </button>
+          
+          <button
+            onClick={() => setActiveTool(activeTool === "logo" ? null : "logo")}
+            className={`flex flex-col items-center gap-1 px-4 py-2 rounded-lg transition-all ${
+              activeTool === "logo" ? "bg-cyan-500/20 text-cyan-400" : "text-white/70 hover:text-white hover:bg-white/5"
+            }`}
+          >
+            <Layers className="w-5 h-5" />
+            <span className="text-xs">Logo</span>
+          </button>
+          
+          <button
+            onClick={exportImage}
+            disabled={isMerging}
+            className={`flex flex-col items-center gap-1 px-4 py-2 rounded-lg transition-all ${
+              isMerging ? "text-white/50" : "text-green-400 hover:bg-green-500/20"
+            }`}
+          >
+            {isMerging ? <RefreshCw className="w-5 h-5 animate-spin" /> : <Download className="w-5 h-5" />}
+            <span className="text-xs">{isMerging ? "Proses..." : "Export"}</span>
+          </button>
         </div>
       </div>
-      <p className="text-center text-xs text-slate-500">
-        Klik dan geser <span className="text-orange-400">judul</span> atau <span className="text-cyan-400">subtitle</span> untuk mengubah posisi
-      </p>
+
+      {/* Tool Panels - Slide up from bottom */}
+      {/* Background Panel */}
+      {activeTool === "background" && (
+        <div className="fixed bottom-16 left-0 right-0 bg-slate-800 border-t border-white/10 rounded-t-2xl p-4 z-40 max-h-[50vh] overflow-y-auto">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-white font-semibold">Background</h3>
+            <button onClick={() => setActiveTool(null)} className="text-white/70 hover:text-white">
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+          
+          <div className="space-y-4">
+            <button
+              onClick={() => backgroundInputRef.current?.click()}
+              className="w-full p-3 border border-white/20 rounded-lg bg-white/5 text-white hover:bg-white/10 flex items-center justify-center gap-2"
+            >
+              <ImageIcon className="w-5 h-5" />
+              {layers.background.url ? "Ganti Background" : "Upload Background"}
+            </button>
+            
+            {layers.background.url && (
+              <>
+                <div className="space-y-2">
+                  <Label className="text-white/70 text-sm">Skala: {Math.round(layers.background.scale * 100)}%</Label>
+                  <input
+                    type="range"
+                    min="0.5"
+                    max="2"
+                    step="0.05"
+                    value={layers.background.scale}
+                    onChange={(e) => updateLayer("background", { scale: parseFloat(e.target.value) })}
+                    className="w-full"
+                  />
+                </div>
+                
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => updateLayer("background", { url: null })}
+                  className="w-full"
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Hapus Background
+                </Button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Photos Panel */}
+      {activeTool === "photos" && (
+        <div className="fixed bottom-16 left-0 right-0 bg-slate-800 border-t border-white/10 rounded-t-2xl p-4 z-40 max-h-[50vh] overflow-y-auto">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-white font-semibold">Photos</h3>
+            <button onClick={() => setActiveTool(null)} className="text-white/70 hover:text-white">
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+          
+          <div className="space-y-4">
+            <button
+              onClick={() => photoInputRef.current?.click()}
+              className="w-full p-3 border border-white/20 rounded-lg bg-white/5 text-white hover:bg-white/10 flex items-center justify-center gap-2"
+            >
+              <ImagePlus className="w-5 h-5" />
+              Tambah Foto
+            </button>
+            
+            {selectedPhoto !== null && layers.photos[selectedPhoto] && (
+              <div className="space-y-3 border-t border-white/10 pt-4">
+                <h4 className="text-white/70 text-sm">Edit Foto {selectedPhoto + 1}</h4>
+                
+                <div className="space-y-2">
+                  <Label className="text-white/70 text-xs">Zoom: {Math.round(layers.photos[selectedPhoto].scale * 100)}%</Label>
+                  <input
+                    type="range"
+                    min="0.5"
+                    max="3"
+                    step="0.01"
+                    value={layers.photos[selectedPhoto].scale}
+                    onChange={(e) => updatePhoto(selectedPhoto, { scale: parseFloat(e.target.value) })}
+                    className="w-full"
+                  />
+                </div>
+                
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => updatePhoto(selectedPhoto, { imgX: 0, imgY: 0, scale: 1 })}
+                    className="flex-1"
+                  >
+                    <RefreshCw className="w-3 h-3 mr-1" />
+                    Reset
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => {
+                      setLayers(prev => ({
+                        ...prev,
+                        photos: prev.photos.filter((_, i) => i !== selectedPhoto),
+                      }));
+                      setSelectedPhoto(null);
+                    }}
+                    className="flex-1"
+                  >
+                    <Trash2 className="w-3 h-3 mr-1" />
+                    Hapus
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Text Panel */}
+      {activeTool === "text" && (
+        <div className="fixed bottom-16 left-0 right-0 bg-slate-800 border-t border-white/10 rounded-t-2xl p-4 z-40 max-h-[60vh] overflow-y-auto">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-white font-semibold">Text</h3>
+            <button onClick={() => setActiveTool(null)} className="text-white/70 hover:text-white">
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+          
+          {/* Title Section */}
+          <div className="space-y-3 mb-4 pb-4 border-b border-white/10">
+            <h4 className="text-orange-400 text-sm font-medium">Judul</h4>
+            <p className="text-white/40 text-xs">Default: Judul Laporan dari form</p>
+            <Input
+              value={layers.title.text}
+              onChange={(e) => updateLayer("title", { text: e.target.value })}
+              placeholder={reportTitle || "Judul Laporan"}
+              className="bg-white/5 border-white/10 text-white"
+            />
+            <div className="flex gap-2">
+              <div className="flex-1">
+                <Label className="text-white/50 text-xs">Ukuran: {layers.title.fontSize}px</Label>
+                <input
+                  type="range"
+                  min="10"
+                  max="48"
+                  value={layers.title.fontSize}
+                  onChange={(e) => updateLayer("title", { fontSize: parseInt(e.target.value) })}
+                  className="w-full"
+                />
+              </div>
+              <Input
+                type="color"
+                value={layers.title.color}
+                onChange={(e) => updateLayer("title", { color: e.target.value })}
+                className="w-10 h-8 p-1"
+              />
+            </div>
+          </div>
+          
+          {/* Subtitle Section */}
+          <div className="space-y-3 mb-4 pb-4 border-b border-white/10">
+            <h4 className="text-cyan-400 text-sm font-medium">Subtitle</h4>
+            <p className="text-white/40 text-xs">Default: [Tempat], [Tanggal Bulan Tahun]</p>
+            <Input
+              value={layers.subtitle.text}
+              onChange={(e) => updateLayer("subtitle", { text: e.target.value })}
+              placeholder={reportSubtitle || "Tempat, Tanggal Bulan Tahun"}
+              className="bg-white/5 border-white/10 text-white"
+            />
+            <div className="flex gap-2">
+              <div className="flex-1">
+                <Label className="text-white/50 text-xs">Ukuran: {layers.subtitle.fontSize}px</Label>
+                <input
+                  type="range"
+                  min="8"
+                  max="32"
+                  value={layers.subtitle.fontSize}
+                  onChange={(e) => updateLayer("subtitle", { fontSize: parseInt(e.target.value) })}
+                  className="w-full"
+                />
+              </div>
+              <Input
+                type="color"
+                value={layers.subtitle.color}
+                onChange={(e) => updateLayer("subtitle", { color: e.target.value })}
+                className="w-10 h-8 p-1"
+              />
+            </div>
+          </div>
+          
+          {/* Footer Section */}
+          <div className="space-y-3">
+            <h4 className="text-green-400 text-sm font-medium">Footer</h4>
+            <Input
+              value={layers.footer.text}
+              onChange={(e) => updateLayer("footer", { text: e.target.value })}
+              placeholder="Footer text..."
+              className="bg-white/5 border-white/10 text-white"
+            />
+            <div className="flex gap-2">
+              <div className="flex-1">
+                <Label className="text-white/50 text-xs">Ukuran: {layers.footer.fontSize}px</Label>
+                <input
+                  type="range"
+                  min="10"
+                  max="20"
+                  value={layers.footer.fontSize}
+                  onChange={(e) => updateLayer("footer", { fontSize: parseInt(e.target.value) })}
+                  className="w-full"
+                />
+              </div>
+              <Input
+                type="color"
+                value={layers.footer.color}
+                onChange={(e) => updateLayer("footer", { color: e.target.value })}
+                className="w-10 h-8 p-1"
+              />
+            </div>
+          </div>
+          
+          <p className="text-white/40 text-xs mt-4 text-center">
+            Drag text di canvas untuk mengubah posisi
+          </p>
+        </div>
+      )}
+
+      {/* Logo Panel */}
+      {activeTool === "logo" && (
+        <div className="fixed bottom-16 left-0 right-0 bg-slate-800 border-t border-white/10 rounded-t-2xl p-4 z-40">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-white font-semibold">Logo</h3>
+            <button onClick={() => setActiveTool(null)} className="text-white/70 hover:text-white">
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+          
+          <div className="flex items-center justify-center gap-8">
+            <div className="text-center">
+              <div className="w-14 h-16 bg-white/95 flex items-center justify-center overflow-hidden mb-2 rounded-sm shadow-lg">
+                {basarnasLogo ? (
+                  <img src={basarnasLogo.src} alt="Basarnas" className="w-full h-full object-contain p-1" />
+                ) : (
+                  <span className="text-[8px] font-bold text-slate-600">BASARNAS</span>
+                )}
+              </div>
+              <span className="text-white/50 text-xs">Basarnas</span>
+            </div>
+            <div className="text-center">
+              <div className="w-14 h-16 bg-white/95 flex items-center justify-center overflow-hidden mb-2 rounded-sm shadow-lg">
+                {bppLogo ? (
+                  <img src={bppLogo.src} alt="BPP" className="w-full h-full object-contain p-1" />
+                ) : (
+                  <span className="text-[8px] font-bold text-slate-600">BPP</span>
+                )}
+              </div>
+              <span className="text-white/50 text-xs">BPP</span>
+            </div>
+          </div>
+          
+          <p className="text-white/40 text-xs mt-4 text-center">
+            Logo otomatis menggunakan logo Basarnas dan BPP
+          </p>
+        </div>
+      )}
+
+      {/* Merged Result Preview */}
+      {mergedImage && (
+        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+          <div className="bg-slate-800 rounded-xl p-4 max-w-md w-full">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-white font-semibold">Hasil Export</h3>
+              <button 
+                onClick={() => setMergedImage("")} 
+                className="text-white/70 hover:text-white"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <img src={mergedImage} alt="Merged" className="w-full rounded-lg" />
+            <div className="flex gap-2 mt-4">
+              <Button
+                onClick={onDownload}
+                className="flex-1 bg-green-600 hover:bg-green-500"
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Download
+              </Button>
+              <Button
+                onClick={onSendToWhatsApp}
+                className="flex-1 bg-green-500 hover:bg-green-400 text-white"
+              >
+                <MessageSquare className="w-4 h-4 mr-2" />
+                Kirim WA
+              </Button>
+            </div>
+            <Button
+              onClick={() => setMergedImage("")}
+              variant="outline"
+              className="w-full mt-2"
+            >
+              Tutup
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -1084,7 +1676,7 @@ export default function Home() {
   const [judul, setJudul] = useState("RAPAT BRIEFING PETUGAS LIAISON OFFICER");
   const [tempat, setTempat] = useState("Daring melalui zoom meeting");
   const [locationData, setLocationData] = useState<LocationData | null>(null);
-  const [tanggal, setTanggal] = useState("");
+  const [tanggal, setTanggal] = useState(formatTodayDate()); // Default: hari ini
   const [waktu, setWaktu] = useState("");
   const [pimpinan, setPimpinan] = useState("Kasubdit Siaga dan Latihan");
   const [peserta, setPeserta] = useState<PesertaItem[]>([
@@ -1119,7 +1711,57 @@ export default function Home() {
   const [photoHeaderJudul, setPhotoHeaderJudul] = useState("");
   const [photoHeaderTempatTanggal, setPhotoHeaderTempatTanggal] = useState("");
   
-  // State untuk title styling - Free positioning
+  // State for Collage Editor - New Layer System
+  const [collageSelected, setCollageSelected] = useState<string | null>("title");
+  
+  // Default photo frames - Using percentage for responsive 9:16 layout
+  // 4 photos in a 2x2 grid below the title area
+  const defaultPhotoFrames: PhotoLayer[] = [
+    { id: generateId(), url: "", frameX: "5%", frameY: "28%", frameW: "40%", frameH: "25%", imgX: 0, imgY: 0, scale: 1 },
+    { id: generateId(), url: "", frameX: "55%", frameY: "28%", frameW: "40%", frameH: "25%", imgX: 0, imgY: 0, scale: 1 },
+    { id: generateId(), url: "", frameX: "5%", frameY: "55%", frameW: "40%", frameH: "25%", imgX: 0, imgY: 0, scale: 1 },
+    { id: generateId(), url: "", frameX: "55%", frameY: "55%", frameW: "40%", frameH: "25%", imgX: 0, imgY: 0, scale: 1 },
+  ];
+  
+  const [collageLayers, setCollageLayers] = useState<CollageLayers>({
+    background: {
+      url: null,
+      scale: 1,
+      x: 0,
+      y: 0
+    },
+    title: {
+      text: "", // Empty so reportTitle (judul) is used by default
+      x: 50,
+      y: 15,
+      fontSize: 28,
+      color: "#FFFFFF"
+    },
+    subtitle: {
+      text: "", // Empty so reportSubtitle (tempat, tanggal) is used by default
+      x: 50,
+      y: 25,
+      fontSize: 18,
+      color: "#CBD5E1"
+    },
+    footer: {
+      text: "© Direktorat Kesiapsiagaan",
+      x: 50,
+      y: 95,
+      fontSize: 14,
+      color: "#FFFFFF"
+    },
+    logo: {
+      leftUrl: null,
+      rightUrl: null,
+      x: 10,
+      y: 10,
+      size: 60
+    },
+    photos: defaultPhotoFrames
+  });
+  
+  // State untuk title styling - Free positioning (keeping for backward compatibility)
   const [titleX, setTitleX] = useState(50); // Percentage (0-100)
   const [titleY, setTitleY] = useState(35); // Percentage (0-100)
   const [subtitleX, setSubtitleX] = useState(50); // Percentage (0-100)
@@ -1142,8 +1784,8 @@ export default function Home() {
   const [backgroundBrightness, setBackgroundBrightness] = useState<"light" | "dark">("light");
   
   // State for background position adjustment
-  const [bgPositionX, setBgPositionX] = useState(50); // Percentage (0-100)
-  const [bgPositionY, setBgPositionY] = useState(50); // Percentage (0-100)
+  const [bgPositionX, setBgPositionX] = useState(0); // Pixels (-200 to 200)
+  const [bgPositionY, setBgPositionY] = useState(0); // Pixels (-200 to 200)
   const [bgScale, setBgScale] = useState(100); // Percentage (100 = fit, >100 = zoom in)
   
   const fileInputRefs = useRef<(HTMLInputElement | null)[]>([]);
@@ -1448,6 +2090,24 @@ export default function Home() {
         if (index < 6 && preview) updatedPhotos[index] = { id: generateId(), file, preview, cachedImage };
       });
       setPhotos(updatedPhotos);
+      
+      // Also update collageLayers.photos
+      setCollageLayers(prev => {
+        const newPhotos = [...prev.photos];
+        results.forEach(({ index, preview }) => {
+          if (index < 6 && preview && newPhotos[index]) {
+            newPhotos[index] = {
+              ...newPhotos[index],
+              url: preview,
+              imgX: 0,
+              imgY: 0,
+              scale: 1,
+            };
+          }
+        });
+        return { ...prev, photos: newPhotos };
+      });
+      
       const uploadedCount = results.filter(r => r.index < 6 && r.preview).length;
       toast.success(`${uploadedCount} foto berhasil diupload`);
       if (files.length > 6) toast.info(`Hanya 6 foto pertama yang dimuat`);
@@ -1468,6 +2128,12 @@ export default function Home() {
     reader.onload = (e) => {
       const dataUrl = e.target?.result as string;
       setCustomBackground(dataUrl);
+      
+      // Also update collageLayers
+      setCollageLayers(prev => ({
+        ...prev,
+        background: { ...prev.background, url: dataUrl, scale: 1, x: 0, y: 0 }
+      }));
       
       // Detect brightness
       const img = new Image();
@@ -1512,12 +2178,18 @@ export default function Home() {
     setCustomBackground("");
     customBgRef.current = null;
     setBackgroundBrightness("light");
+    // Also clear from collageLayers
+    setCollageLayers(prev => ({
+      ...prev,
+      background: { ...prev.background, url: null, scale: 1, x: 0, y: 0 }
+    }));
     toast.success("Background dihapus");
   };
 
   const mergeImages = async () => {
-    const validPhotos = photos.filter(p => p.preview);
-    if (validPhotos.length === 0) {
+    // Check for photos from collageLayers
+    const photosWithUrl = collageLayers.photos.filter(p => p.url);
+    if (photosWithUrl.length === 0) {
       toast.error("Pilih minimal 1 foto untuk digabung");
       return;
     }
@@ -1540,7 +2212,13 @@ export default function Home() {
       canvas.height = canvasHeight;
 
       // ========== BACKGROUND ==========
-      if (customBackground && customBgRef.current) {
+      // Use collageLayers for background settings
+      const bgUrl = collageLayers.background.url || customBackground;
+      const bgScaleValue = collageLayers.background.url ? collageLayers.background.scale * 100 : bgScale;
+      const bgPosX = collageLayers.background.url ? collageLayers.background.x : bgPositionX;
+      const bgPosY = collageLayers.background.url ? collageLayers.background.y : bgPositionY;
+      
+      if (bgUrl && customBgRef.current) {
         // Use custom background image with position adjustment
         const bgImg = customBgRef.current;
         const bgRatio = bgImg.width / bgImg.height;
@@ -1559,15 +2237,14 @@ export default function Home() {
         }
         
         // Apply scale
-        const scale = bgScale / 100;
+        const scale = bgScaleValue / 100;
         const drawWidth = baseWidth * scale;
         const drawHeight = baseHeight * scale;
         
-        // Calculate position with offset
-        const offsetX = ((bgPositionX / 100) - 0.5) * (drawWidth - canvasWidth);
-        const offsetY = ((bgPositionY / 100) - 0.5) * (drawHeight - canvasHeight);
-        const drawX = -(drawWidth - canvasWidth) / 2 - offsetX;
-        const drawY = -(drawHeight - canvasHeight) / 2 - offsetY;
+        // Calculate position - use pixel values directly
+        // bgPosX/Y are now in pixels, used as offset from center
+        const drawX = -(drawWidth - canvasWidth) / 2 + bgPosX;
+        const drawY = -(drawHeight - canvasHeight) / 2 + bgPosY;
         
         ctx.drawImage(bgImg, drawX, drawY, drawWidth, drawHeight);
         
@@ -1596,7 +2273,7 @@ export default function Home() {
       const subtitleColor = isDarkBg ? "#CBD5E1" : "#64748B";
       
       // Only draw header background if no custom background
-      if (!customBackground) {
+      if (!bgUrl) {
         ctx.fillStyle = headerConfig.backgroundColor;
         ctx.fillRect(0, 0, canvasWidth, headerHeight);
         
@@ -1610,59 +2287,89 @@ export default function Home() {
       const bppLogo = bppLogoRef.current;
       const logoConfig = headerConfig.logos;
       
-      // Left logo (BASARNAS)
+      // Left logo (BASARNAS) - Original shape with white background
       const leftLogoConfig = logoConfig[0];
       const leftLogoX = leftLogoConfig.position.x;
       const logoY = leftLogoConfig.position.y;
-      const logoSize = leftLogoConfig.width;
+      const logoWidth = leftLogoConfig.width;
+      const logoHeight = leftLogoConfig.height;
 
       if (basarnasLogo) {
-        // White circular background
+        // White rectangular background with shadow
         ctx.save();
         ctx.shadowColor = "rgba(0,0,0,0.2)";
-        ctx.shadowBlur = 10;
-        ctx.shadowOffsetY = 3;
-        ctx.beginPath();
-        ctx.arc(leftLogoX + logoSize/2, logoY + logoSize/2, logoSize/2 + 5, 0, Math.PI * 2);
+        ctx.shadowBlur = 8;
+        ctx.shadowOffsetY = 2;
         ctx.fillStyle = "#ffffff";
+        ctx.beginPath();
+        ctx.roundRect(leftLogoX - 4, logoY - 4, logoWidth + 8, logoHeight + 8, 6);
         ctx.fill();
         ctx.restore();
         
-        // Clip and draw logo
-        ctx.save();
-        ctx.beginPath();
-        ctx.arc(leftLogoX + logoSize/2, logoY + logoSize/2, logoSize/2, 0, Math.PI * 2);
-        ctx.clip();
-        ctx.drawImage(basarnasLogo, leftLogoX, logoY, logoSize, logoSize);
-        ctx.restore();
+        // Draw logo in original shape
+        ctx.drawImage(basarnasLogo, leftLogoX, logoY, logoWidth, logoHeight);
       }
 
-      // Right logo (BPP/SAR Nasional)
+      // Right logo (BPP/SAR Nasional) - Original shape with white background
       const rightLogoConfig = logoConfig[1];
       const rightLogoX = canvasWidth - rightLogoConfig.position.right - rightLogoConfig.width;
 
       if (bppLogo) {
         ctx.save();
         ctx.shadowColor = "rgba(0,0,0,0.2)";
-        ctx.shadowBlur = 10;
-        ctx.shadowOffsetY = 3;
-        ctx.beginPath();
-        ctx.arc(rightLogoX + logoSize/2, logoY + logoSize/2, logoSize/2 + 5, 0, Math.PI * 2);
+        ctx.shadowBlur = 8;
+        ctx.shadowOffsetY = 2;
         ctx.fillStyle = "#ffffff";
+        ctx.beginPath();
+        ctx.roundRect(rightLogoX - 4, logoY - 4, logoWidth + 8, logoHeight + 8, 6);
         ctx.fill();
         ctx.restore();
         
-        ctx.save();
-        ctx.beginPath();
-        ctx.arc(rightLogoX + logoSize/2, logoY + logoSize/2, logoSize/2, 0, Math.PI * 2);
-        ctx.clip();
-        ctx.drawImage(bppLogo, rightLogoX, logoY, logoSize, logoSize);
-        ctx.restore();
+        ctx.drawImage(bppLogo, rightLogoX, logoY, logoWidth, logoHeight);
       }
       
       // ========== TITLE ==========
-      const judulText = photoHeaderJudul || judul || "DOKUMENTASI KEGIATAN";
-      const tempatTanggalText = photoHeaderTempatTanggal || `${tempat}${tempat && tanggal ? ', ' : ''}${tanggal}`;
+      // Use report data as primary source for title/subtitle
+      // Title: Judul Laporan
+      // Subtitle: [nama tempat], [Tanggal Bulan Tahun]
+      const judulText = collageLayers.title.text || judul || "DOKUMENTASI KEGIATAN";
+      
+      // Format subtitle: Tempat, Tanggal Bulan Tahun
+      const formatSubtitle = () => {
+        if (collageLayers.subtitle.text) return collageLayers.subtitle.text;
+        
+        // Parse tanggal if it already includes day name (e.g., "Senin, 12 Januari 2025")
+        // or use as-is if it's just the date
+        let dateStr = tanggal;
+        
+        // If tanggal already has the format "Hari, DD Bulan Tahun", extract just "DD Bulan Tahun"
+        if (tanggal && tanggal.includes(',')) {
+          const parts = tanggal.split(',');
+          dateStr = parts.length > 1 ? parts[1].trim() : tanggal;
+        }
+        
+        // Build subtitle: "Tempat, Tanggal Bulan Tahun"
+        if (tempat && dateStr) {
+          return `${tempat}, ${dateStr}`;
+        } else if (tempat) {
+          return tempat;
+        } else if (dateStr) {
+          return dateStr;
+        }
+        return "";
+      };
+      
+      const tempatTanggalText = formatSubtitle();
+      
+      // Get settings from collageLayers
+      const currentTitleX = collageLayers.title.x;
+      const currentTitleY = collageLayers.title.y;
+      const currentTitleFontSize = collageLayers.title.fontSize;
+      const currentSubtitleX = collageLayers.subtitle.x;
+      const currentSubtitleY = collageLayers.subtitle.y;
+      const currentSubtitleFontSize = collageLayers.subtitle.fontSize;
+      const currentTitleColor = collageLayers.title.color;
+      const currentSubtitleColor = collageLayers.subtitle.color;
       
       // Word wrap helper function
       const wrapText = (text: string, maxWidth: number, fontSize: number, fontFamily: string, isBold: boolean = false): string[] => {
@@ -1685,52 +2392,32 @@ export default function Home() {
         return lines;
       };
       
-      // Calculate positions based on percentage
-      // Title area is between logos (approximately center 800px of 1240px canvas)
-      // Y position is relative to header height (280px)
-      const titleAreaStartX = 180; // After left logo
-      const titleAreaEndX = canvasWidth - 180; // Before right logo
-      const titleAreaWidth = titleAreaEndX - titleAreaStartX;
+      // Calculate positions based on percentage of ENTIRE canvas (same as preview)
+      // X position: 0% = left edge, 100% = right edge of canvas
+      const titleActualX = (currentTitleX / 100) * canvasWidth;
+      const subtitleActualX = (currentSubtitleX / 100) * canvasWidth;
       
-      // X position: 0% = left edge of title area, 100% = right edge
-      const titleActualX = titleAreaStartX + (titleX / 100) * titleAreaWidth;
-      const subtitleActualX = titleAreaStartX + (subtitleX / 100) * titleAreaWidth;
+      // Y position: 0% = top, 100% = bottom of entire canvas
+      const titleActualY = (currentTitleY / 100) * canvasHeight;
+      const subtitleActualY = (currentSubtitleY / 100) * canvasHeight;
       
-      // Y position: 0% = top (with padding), 100% = bottom (with padding)
-      const headerPaddingTop = 50;
-      const headerPaddingBottom = 20;
-      const usableHeaderHeight = headerHeight - headerPaddingTop - headerPaddingBottom;
+      // Always use center alignment (matching preview with translate(-50%, -50%))
+      const titleTextAlign: CanvasTextAlign = "center";
+      const subtitleTextAlign: CanvasTextAlign = "center";
       
-      const titleActualY = headerPaddingTop + (titleY / 100) * usableHeaderHeight;
-      const subtitleActualY = headerPaddingTop + (subtitleY / 100) * usableHeaderHeight;
+      // Wrap text with canvas width (minus padding)
+      const titleMaxWidth = canvasWidth - 200; // Padding on sides
+      const titleLineHeight = currentTitleFontSize + 10;
+      const subtitleLineHeight = currentSubtitleFontSize + 8;
       
-      // Determine text alignment based on X position
-      const getTextAlign = (x: number): CanvasTextAlign => {
-        if (x < 30) return "left";
-        if (x > 70) return "right";
-        return "center";
-      };
-      
-      const titleTextAlign = getTextAlign(titleX);
-      const subtitleTextAlign = getTextAlign(subtitleX);
-      
-      // Wrap text with title area width
-      const titleMaxWidth = titleAreaWidth - 40; // Extra padding
-      const titleLineHeight = titleFontSize + 10;
-      const subtitleLineHeight = subtitleFontSize + 8;
-      
-      const titleLines = wrapText(judulText, titleMaxWidth, titleFontSize, titleFontFamily, true).slice(0, 3);
-      const subtitleLines = wrapText(tempatTanggalText, titleMaxWidth, subtitleFontSize, titleFontFamily, false).slice(0, 2);
-      
-      // Debug: Draw title background area (for debugging, remove later)
-      // ctx.fillStyle = "rgba(255,0,0,0.1)";
-      // ctx.fillRect(titleAreaStartX, headerPaddingTop, titleAreaWidth, usableHeaderHeight);
+      const titleLines = wrapText(judulText, titleMaxWidth, currentTitleFontSize, titleFontFamily, true).slice(0, 2);
+      const subtitleLines = wrapText(tempatTanggalText, titleMaxWidth, currentSubtitleFontSize, titleFontFamily, false).slice(0, 1);
       
       // Draw title with custom styling
       ctx.textAlign = titleTextAlign;
-      ctx.textBaseline = "top";
-      ctx.font = `bold ${titleFontSize}px ${titleFontFamily}`;
-      ctx.fillStyle = customBackground ? textColor : "#1E293B";
+      ctx.textBaseline = "middle"; // Match preview's translate(-50%, -50%)
+      ctx.font = `bold ${currentTitleFontSize}px ${titleFontFamily}`;
+      ctx.fillStyle = bgUrl ? currentTitleColor : "#1E293B";
       
       titleLines.forEach((line, idx) => {
         ctx.fillText(line, titleActualX, titleActualY + idx * titleLineHeight);
@@ -1738,100 +2425,112 @@ export default function Home() {
       
       // Draw subtitle with its own styling
       ctx.textAlign = subtitleTextAlign;
-      ctx.font = `${subtitleFontSize}px ${titleFontFamily}`;
-      ctx.fillStyle = customBackground ? subtitleColor : "#64748B";
+      ctx.font = `${currentSubtitleFontSize}px ${titleFontFamily}`;
+      ctx.fillStyle = bgUrl ? currentSubtitleColor : "#64748B";
       
       subtitleLines.forEach((line, idx) => {
         ctx.fillText(line, subtitleActualX, subtitleActualY + idx * subtitleLineHeight);
       });
 
       // ========== PHOTOS ==========
-      const photoGridConfig = config.photoGrid;
+      // Use collageLayers.photos for rendering
+      const collagePhotos = collageLayers.photos.filter(p => p.url);
+      const photoCount = collagePhotos.length;
       const footerConfig = config.footer;
-      const photoCount = validPhotos.length;
-      const availableHeight = canvasHeight - headerHeight - footerConfig.height;
       
-      const cols = photoGridConfig.columns;
-      const rows = Math.ceil(Math.min(photoCount, photoGridConfig.maxPhotos) / cols);
-      
-      const padding = photoGridConfig.padding;
-      const gap = photoGridConfig.gap;
-      const photoWidth = (canvasWidth - padding.left - padding.right - gap * (cols - 1)) / cols;
-      const photoHeight = (availableHeight - photoGridConfig.marginTop - photoGridConfig.marginBottom - gap * (rows + 1)) / rows;
-
-      // Load all images
+      // Load all images from collageLayers
       const loadImage = (src: string): Promise<HTMLImageElement> => {
         return new Promise((resolve, reject) => {
           const img = new Image();
           img.onload = () => resolve(img);
           img.onerror = reject;
+          img.crossOrigin = "anonymous";
           img.src = src;
         });
       };
 
-      const imagePromises = validPhotos.slice(0, photoGridConfig.maxPhotos).map(async (photo, index) => {
-        if (photo.cachedImage && photo.cachedImage.complete) {
-          return { index, img: photo.cachedImage };
+      const collageImagePromises = collagePhotos.map(async (photo, index) => {
+        // Check if we have cached image from old photos state
+        const cachedPhoto = photos.find(p => p.preview === photo.url);
+        if (cachedPhoto?.cachedImage && cachedPhoto.cachedImage.complete) {
+          return { index, img: cachedPhoto.cachedImage, photo };
         }
-        const img = await loadImage(photo.preview);
-        return { index, img };
+        const img = await loadImage(photo.url);
+        return { index, img, photo };
       });
 
-      const loadedImages = await Promise.all(imagePromises);
+      const loadedCollageImages = await Promise.all(collageImagePromises);
 
-      // Draw each photo with white frame
-      const imageStyle = photoGridConfig.imageStyle;
-      
-      loadedImages.forEach(({ index, img }) => {
-        if (!img) return;
+      // Draw each photo from collageLayers
+      loadedCollageImages.forEach(({ index, img, photo }) => {
+        if (!img || !photo) return;
         
-        const row = Math.floor(index / cols);
-        const col = index % cols;
-        const x = padding.left + col * (photoWidth + gap);
-        const y = headerHeight + photoGridConfig.marginTop + gap + row * (photoHeight + gap);
+        // Convert percentage strings to pixel values
+        const parsePercent = (value: string, total: number): number => {
+          if (typeof value === 'string' && value.endsWith('%')) {
+            return (parseFloat(value) / 100) * total;
+          }
+          return parseFloat(value as string) || 0;
+        };
         
-        // White frame with shadow
+        const frameX = parsePercent(photo.frameX, canvasWidth);
+        const frameY = parsePercent(photo.frameY, canvasHeight);
+        const frameW = parsePercent(photo.frameW, canvasWidth);
+        const frameH = parsePercent(photo.frameH, canvasHeight);
+        
+        // Draw photo frame (white border with shadow)
         ctx.save();
-        ctx.shadowColor = imageStyle.shadowColor;
-        ctx.shadowBlur = imageStyle.shadowBlur;
-        ctx.shadowOffsetX = 0;
-        ctx.shadowOffsetY = imageStyle.shadowOffsetY;
-        
+        ctx.shadowColor = "rgba(0,0,0,0.2)";
+        ctx.shadowBlur = 10;
+        ctx.shadowOffsetY = 3;
+        ctx.fillStyle = "#ffffff";
         ctx.beginPath();
         ctx.roundRect(
-          x - imageStyle.borderWidth, 
-          y - imageStyle.borderWidth, 
-          photoWidth + imageStyle.borderWidth * 2, 
-          photoHeight + imageStyle.borderWidth * 2, 
-          imageStyle.borderRadius || 4
+          frameX - 4, 
+          frameY - 4, 
+          frameW + 8, 
+          frameH + 8, 
+          8
         );
-        ctx.fillStyle = imageStyle.borderColor;
         ctx.fill();
         ctx.restore();
         
-        // Calculate aspect ratio for cover fit
-        const imgRatio = img.width / img.height;
-        const boxRatio = photoWidth / photoHeight;
-        let drawWidth: number, drawHeight: number, drawX: number, drawY: number;
-        
-        if (imgRatio > boxRatio) {
-          drawHeight = photoHeight;
-          drawWidth = photoHeight * imgRatio;
-          drawX = x - (drawWidth - photoWidth) / 2;
-          drawY = y;
-        } else {
-          drawWidth = photoWidth;
-          drawHeight = photoWidth / imgRatio;
-          drawX = x;
-          drawY = y - (drawHeight - photoHeight) / 2;
-        }
-        
-        // Draw image with rounded corners clip
+        // Clip to frame and draw image with transformations
         ctx.save();
         ctx.beginPath();
-        ctx.roundRect(x, y, photoWidth, photoHeight, imageStyle.borderRadius || 12);
+        ctx.roundRect(frameX, frameY, frameW, frameH, 4);
         ctx.clip();
-        ctx.drawImage(img, drawX, drawY, drawWidth, drawHeight);
+        
+        // Apply image transformation (position and scale)
+        const scaledWidth = frameW * photo.scale;
+        const scaledHeight = frameH * photo.scale;
+        const imgOffsetX = (photo.imgX / 100) * frameW;
+        const imgOffsetY = (photo.imgY / 100) * frameH;
+        
+        // Calculate cover fit
+        const imgRatio = img.width / img.height;
+        const frameRatio = frameW / frameH;
+        let drawW: number, drawH: number;
+        
+        if (imgRatio > frameRatio) {
+          // Image is wider - height determines fit
+          drawH = scaledHeight;
+          drawW = scaledHeight * imgRatio;
+        } else {
+          // Image is taller - width determines fit
+          drawW = scaledWidth;
+          drawH = scaledWidth / imgRatio;
+        }
+        
+        // Center the image in the frame initially, then apply offsets
+        const baseX = frameX + (frameW - drawW) / 2;
+        const baseY = frameY + (frameH - drawH) / 2;
+        
+        // Apply offset and scale
+        const finalX = baseX + imgOffsetX * photo.scale;
+        const finalY = baseY + imgOffsetY * photo.scale;
+        
+        ctx.drawImage(img, finalX, finalY, drawW, drawH);
         ctx.restore();
       });
 
@@ -2011,6 +2710,18 @@ export default function Home() {
     } catch {
       toast.error("Gagal mengunduh gambar peta");
     }
+  };
+
+  // Send both report and merged photo to WhatsApp
+  const sendAllToWhatsApp = async () => {
+    // First, merge images if not already done
+    if (!mergedImage) {
+      toast.info("Menggabungkan gambar terlebih dahulu...");
+      await mergeImages();
+    }
+    
+    // Then call the existing share function
+    await shareToWhatsApp();
   };
 
   useEffect(() => { loadDrafts(); }, []);
@@ -2539,525 +3250,38 @@ export default function Home() {
             </Card>
           </TabsContent>
 
-          {/* Image Merger Tab */}
-          <TabsContent value="image" className="space-y-6">
-            {/* Header Input Fields */}
-            <Card className="bg-slate-800/50 backdrop-blur-sm border-white/10 shadow-xl">
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-base text-white flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center">
-                      <span className="text-sm">📝</span>
-                    </div>
-                    Header Lampiran Foto
-                  </CardTitle>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      setPhotoHeaderJudul(judul);
-                      setPhotoHeaderTempatTanggal(`${tempat}${tempat && tanggal ? ', ' : ''}${tanggal}`);
-                      toast.success("Header disinkronkan dari form!");
-                    }}
-                    className="border-white/20 bg-white/5 hover:bg-white/10 text-white"
-                  >
-                    <RefreshCw className="w-4 h-4 mr-2" />
-                    Sync dari Form
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label className="text-slate-300">Judul Kegiatan</Label>
-                  <Input
-                    value={photoHeaderJudul}
-                    onChange={(e) => setPhotoHeaderJudul(e.target.value)}
-                    placeholder="RAPAT BRIEFING PETUGAS LIAISON OFFICER"
-                    className="font-semibold bg-slate-900/50 border-white/10 text-white placeholder:text-slate-500 focus:border-red-500"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-slate-300">Tempat, Tanggal Bulan Tahun</Label>
-                  <Input
-                    value={photoHeaderTempatTanggal}
-                    onChange={(e) => setPhotoHeaderTempatTanggal(e.target.value)}
-                    placeholder="Daring melalui zoom meeting, Rabu 11 Maret 2026"
-                    className="bg-slate-900/50 border-white/10 text-white placeholder:text-slate-500 focus:border-red-500"
-                  />
-                </div>
-                
-                {/* Title Style Settings */}
-                <div className="pt-2 border-t border-white/10 space-y-4">
-                  <Label className="text-slate-300 flex items-center gap-2">
-                    <Type className="w-4 h-4" />
-                    Pengaturan Judul
-                  </Label>
-
-                  {/* Live Preview - Draggable Title/Subtitle */}
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <Label className="text-slate-400 text-sm">Preview Posisi (Geser judul/subtitle)</Label>
-                      <div className="flex gap-2 text-xs">
-                        <Badge className="bg-orange-500/20 text-orange-400 border-orange-500/30">Judul</Badge>
-                        <Badge className="bg-cyan-500/20 text-cyan-400 border-cyan-500/30">Subtitle</Badge>
-                      </div>
-                    </div>
-                    <TitlePositionPreview
-                      titleX={titleX}
-                      titleY={titleY}
-                      subtitleX={subtitleX}
-                      subtitleY={subtitleY}
-                      titleText={photoHeaderJudul || judul || "DOKUMENTASI KEGIATAN"}
-                      subtitleText={photoHeaderTempatTanggal || `${tempat}${tempat && tanggal ? ', ' : ''}${tanggal}`}
-                      titleFontSize={titleFontSize}
-                      subtitleFontSize={subtitleFontSize}
-                      titleFontFamily={titleFontFamily}
-                      customBackground={customBackground}
-                      backgroundBrightness={backgroundBrightness}
-                      bgPositionX={bgPositionX}
-                      bgPositionY={bgPositionY}
-                      bgScale={bgScale}
-                      onTitlePositionChange={(x, y) => { setTitleX(x); setTitleY(y); }}
-                      onSubtitlePositionChange={(x, y) => { setSubtitleX(x); setSubtitleY(y); }}
-                    />
-                  </div>
-
-                  {/* Font Size */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label className="text-slate-400 text-sm">Ukuran Judul: {titleFontSize}px</Label>
-                      <input
-                        type="range"
-                        min="16"
-                        max="48"
-                        value={titleFontSize}
-                        onChange={(e) => setTitleFontSize(parseInt(e.target.value))}
-                        className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-orange-500"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-slate-400 text-sm">Ukuran Subtitle: {subtitleFontSize}px</Label>
-                      <input
-                        type="range"
-                        min="12"
-                        max="32"
-                        value={subtitleFontSize}
-                        onChange={(e) => setSubtitleFontSize(parseInt(e.target.value))}
-                        className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-orange-500"
-                      />
-                    </div>
-                  </div>
-                  
-                  {/* Font Family */}
-                  <div className="space-y-2">
-                    <Label className="text-slate-400 text-sm">Jenis Font</Label>
-                    <div className="grid grid-cols-3 gap-2">
-                      {[
-                        { value: "Arial", label: "Arial" },
-                        { value: "Times New Roman", label: "Times" },
-                        { value: "Georgia", label: "Georgia" },
-                        { value: "Verdana", label: "Verdana" },
-                        { value: "Tahoma", label: "Tahoma" },
-                        { value: "Courier New", label: "Courier" },
-                      ].map((font) => (
-                        <Button
-                          key={font.value}
-                          variant={titleFontFamily === font.value ? "default" : "outline"}
-                          size="sm"
-                          onClick={() => setTitleFontFamily(font.value as typeof titleFontFamily)}
-                          className={titleFontFamily === font.value 
-                            ? "bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white border-0" 
-                            : "border-white/20 bg-white/5 hover:bg-white/10 text-slate-300"
-                          }
-                          style={{ fontFamily: font.value }}
-                        >
-                          {font.label}
-                        </Button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Background Upload */}
-            <Card className="bg-slate-800/50 backdrop-blur-sm border-white/10 shadow-xl">
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-base flex items-center gap-2 text-white">
-                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
-                      <ImageIcon className="w-4 h-4 text-white" />
-                    </div>
-                    Background Kustom
-                  </CardTitle>
-                  {customBackground && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={removeBackground}
-                      className="border-red-500/30 bg-red-500/10 hover:bg-red-500/20 text-red-400"
-                    >
-                      <Trash2 className="w-4 h-4 mr-2" />
-                      Hapus Background
-                    </Button>
-                  )}
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="bg-blue-500/10 p-3 rounded-lg border border-blue-500/20">
-                  <p className="text-blue-300 text-xs">
-                    💡 Upload gambar sebagai background lampiran foto. Warna font akan otomatis disesuaikan dengan kecerahan background.
-                  </p>
-                </div>
-                
-                {customBackground ? (
-                  <div className="space-y-4">
-                    <div className="relative group">
-                      <img 
-                        src={customBackground} 
-                        alt="Custom Background" 
-                        className="w-full h-40 object-cover rounded-lg border border-white/20"
-                      />
-                      <div className="absolute bottom-2 left-2 right-2 flex justify-between items-center">
-                        <Badge className={` ${backgroundBrightness === 'dark' ? 'bg-slate-800/80 text-white' : 'bg-white/80 text-slate-800'}`}>
-                          Mode: {backgroundBrightness === 'dark' ? 'Gelap' : 'Terang'}
-                        </Badge>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          className="opacity-0 group-hover:opacity-100 transition-opacity"
-                          onClick={removeBackground}
-                        >
-                          <X className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </div>
-                    
-                    {/* Background Position Adjustment */}
-                    <div className="space-y-3 pt-2 border-t border-white/10">
-                      <Label className="text-slate-300 flex items-center gap-2">
-                        <Layers className="w-4 h-4" />
-                        Posisi & Skala Background
-                      </Label>
-                      
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label className="text-slate-400 text-sm">Posisi Horizontal: {bgPositionX}%</Label>
-                          <input
-                            type="range"
-                            min="0"
-                            max="100"
-                            value={bgPositionX}
-                            onChange={(e) => setBgPositionX(parseInt(e.target.value))}
-                            className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-cyan-500"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label className="text-slate-400 text-sm">Posisi Vertikal: {bgPositionY}%</Label>
-                          <input
-                            type="range"
-                            min="0"
-                            max="100"
-                            value={bgPositionY}
-                            onChange={(e) => setBgPositionY(parseInt(e.target.value))}
-                            className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-cyan-500"
-                          />
-                        </div>
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label className="text-slate-400 text-sm">Skala (Zoom): {bgScale}%</Label>
-                        <input
-                          type="range"
-                          min="100"
-                          max="200"
-                          value={bgScale}
-                          onChange={(e) => setBgScale(parseInt(e.target.value))}
-                          className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-cyan-500"
-                        />
-                      </div>
-                      
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => { setBgPositionX(50); setBgPositionY(50); setBgScale(100); }}
-                        className="w-full border-white/20 bg-white/5 hover:bg-white/10 text-slate-300"
-                      >
-                        <RefreshCw className="w-4 h-4 mr-2" />
-                        Reset Posisi
-                      </Button>
-                    </div>
-                  </div>
-                ) : (
-                  <div 
-                    onClick={() => backgroundInputRef.current?.click()}
-                    className="border-2 border-dashed border-white/20 rounded-lg p-8 text-center cursor-pointer hover:border-blue-500/50 hover:bg-blue-500/5 transition-all"
-                  >
-                    <ImageIcon className="w-12 h-12 text-slate-500 mx-auto mb-3" />
-                    <p className="text-slate-400 text-sm">Klik untuk upload background</p>
-                    <p className="text-slate-500 text-xs mt-1">PNG, JPG, JPEG (Max 5MB)</p>
-                  </div>
-                )}
-                
-                <input
-                  ref={backgroundInputRef}
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      if (file.size > 5 * 1024 * 1024) {
-                        toast.error("File terlalu besar. Maksimal 5MB");
-                        return;
-                      }
-                      handleBackgroundUpload(file);
-                    }
-                  }}
-                />
-              </CardContent>
-            </Card>
-
-            {/* Style Options */}
-            <Card className="bg-slate-800/50 backdrop-blur-sm border-white/10 shadow-xl">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base flex items-center gap-2 text-white">
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center">
-                    <Palette className="w-4 h-4 text-white" />
-                  </div>
-                  Style Options
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {/* Font Style */}
-                <div className="space-y-2">
-                  <Label className="text-slate-300 flex items-center gap-2">
-                    <Type className="w-4 h-4" /> Font Style
-                  </Label>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                    {(["modern", "classic", "elegant", "bold"] as const).map((style) => (
-                      <Button
-                        key={style}
-                        variant={fontStyle === style ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => setFontStyle(style)}
-                        className={fontStyle === style 
-                          ? "bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white border-0" 
-                          : "border-white/20 bg-white/5 hover:bg-white/10 text-slate-300"
-                        }
-                      >
-                        {style.charAt(0).toUpperCase() + style.slice(1)}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-                
-                {/* Colors */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label className="text-slate-300">Header Background Color</Label>
-                    <div className="flex gap-2">
-                      <Input
-                        type="color"
-                        value={headerBgColor}
-                        onChange={(e) => setHeaderBgColor(e.target.value)}
-                        className="w-12 h-10 p-1 cursor-pointer bg-slate-900 border-white/10"
-                      />
-                      <Input
-                        value={headerBgColor}
-                        onChange={(e) => setHeaderBgColor(e.target.value)}
-                        className="flex-1 bg-slate-900/50 border-white/10 text-white"
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-slate-300">Accent Color</Label>
-                    <div className="flex gap-2">
-                      <Input
-                        type="color"
-                        value={accentColor}
-                        onChange={(e) => setAccentColor(e.target.value)}
-                        className="w-12 h-10 p-1 cursor-pointer bg-slate-900 border-white/10"
-                      />
-                      <Input
-                        value={accentColor}
-                        onChange={(e) => setAccentColor(e.target.value)}
-                        className="flex-1 bg-slate-900/50 border-white/10 text-white"
-                      />
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Color Presets */}
-                <div className="space-y-2">
-                  <Label className="text-slate-300">Color Presets</Label>
-                  <div className="flex flex-wrap gap-2">
-                    {[
-                      { name: "Basarnas", header: "#ffffff", accent: "#c53030", emoji: "🔴" },
-                      { name: "Navy Gold", header: "#1e3a5f", accent: "#f59e0b", emoji: "🔵" },
-                      { name: "Dark Cyan", header: "#1a1a2e", accent: "#00d9ff", emoji: "🟣" },
-                      { name: "Fresh Green", header: "#f0fdf4", accent: "#16a34a", emoji: "🟢" },
-                    ].map((preset) => (
-                      <Button
-                        key={preset.name}
-                        variant="outline"
-                        size="sm"
-                        onClick={() => { setHeaderBgColor(preset.header); setAccentColor(preset.accent); }}
-                        className="border-white/20 bg-white/5 hover:bg-white/10 text-slate-300"
-                      >
-                        {preset.emoji} {preset.name}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Photo Grid */}
-            <Card className="bg-slate-800/50 backdrop-blur-sm border-white/10 shadow-xl">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base flex items-center gap-2 text-white">
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center">
-                    <ImageIcon className="w-4 h-4 text-white" />
-                  </div>
-                  Upload Foto
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  {photos.map((photo, index) => (
-                    <div
-                      key={photo.id}
-                      className="relative aspect-square border-2 border-dashed border-white/20 rounded-xl overflow-hidden flex items-center justify-center bg-slate-900/50 hover:border-red-500/50 hover:bg-slate-900/70 transition-all duration-300 cursor-pointer group"
-                      onClick={() => fileInputRefs.current[index]?.click()}
-                    >
-                      {photo.preview ? (
-                        <>
-                          <img
-                            src={photo.preview}
-                            alt={`Foto ${index + 1}`}
-                            className="w-full h-full object-cover"
-                          />
-                          <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                            <p className="text-white text-sm">Ganti Foto</p>
-                          </div>
-                          <Button
-                            variant="destructive"
-                            size="icon"
-                            className="absolute top-2 right-2 w-8 h-8 opacity-0 group-hover:opacity-100 transition-opacity"
-                            onClick={(e) => { e.stopPropagation(); removePhoto(index); }}
-                          >
-                            <X className="w-4 h-4" />
-                          </Button>
-                        </>
-                      ) : (
-                        <div className="text-center p-4">
-                          <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center mx-auto mb-2">
-                            <ImageIcon className="w-6 h-6 text-slate-400" />
-                          </div>
-                          <p className="text-sm text-slate-400">Foto {index + 1}</p>
-                          <p className="text-xs text-slate-500">Klik untuk upload</p>
-                        </div>
-                      )}
-                      <input
-                        ref={(el) => { fileInputRefs.current[index] = el; }}
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) handlePhotoUpload(index, file);
-                        }}
-                      />
-                    </div>
-                  ))}
-                </div>
-
-                {/* Multi-Select Upload Button */}
-                <div className="flex gap-2">
-                  <input
-                    ref={(el) => { fileInputRefs.current[6] = el; }}
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    className="hidden"
-                    onChange={(e) => {
-                      const files = e.target.files;
-                      if (files && files.length > 0) handleMultiplePhotoUpload(files);
-                    }}
-                  />
-                  <Button
-                    variant="outline"
-                    className="flex-1 border-white/20 bg-white/5 hover:bg-white/10 text-white transition-all duration-300 hover:scale-[1.02]"
-                    onClick={() => fileInputRefs.current[6]?.click()}
-                  >
-                    <ImagePlus className="w-4 h-4 mr-2" />
-                    Pilih Multiple Foto
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => setPhotos(Array(6).fill(null).map(() => ({ id: generateId(), file: null, preview: "" })))}
-                    className="border-white/20 bg-white/5 hover:bg-red-500/20 text-slate-300 hover:text-red-400"
-                  >
-                    <Trash2 className="w-4 h-4 mr-2" />
-                    Reset
-                  </Button>
-                </div>
-
-                {/* Merge Button */}
-                <Button
-                  onClick={mergeImages}
-                  disabled={isMerging || !photos.some(p => p.preview)}
-                  className="w-full bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white shadow-lg shadow-red-500/25 transition-all duration-300 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
-                >
-                  {isMerging ? (
-                    <>
-                      <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                      Memproses...
-                    </>
-                  ) : (
-                    <>
-                      <Layers className="w-4 h-4 mr-2" />
-                      Gabungkan Foto
-                    </>
-                  )}
-                </Button>
-
-                {/* Hidden Canvas */}
-                <canvas ref={canvasRef} className="hidden" />
-              </CardContent>
-            </Card>
-
-            {/* Merged Image Preview */}
-            {mergedImage && (
-              <Card className="bg-slate-800/50 backdrop-blur-sm border-white/10 shadow-xl">
-                <CardHeader className="bg-gradient-to-r from-green-600/20 to-green-500/10 border-b border-white/10">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="flex items-center gap-2 text-white">
-                      <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center">
-                        <Check className="w-4 h-4 text-white" />
-                      </div>
-                      Hasil Gabungan
-                    </CardTitle>
-                    <div className="flex gap-2">
-                      <Button size="sm" variant="outline" onClick={downloadMergedImage} className="border-white/20 bg-white/5 hover:bg-white/10 text-white">
-                        <Download className="w-4 h-4 mr-2" />
-                        Download
-                      </Button>
-                      <Button size="sm" onClick={shareToWhatsApp} className="bg-gradient-to-r from-green-600 to-green-500 text-white">
-                        <Share2 className="w-4 h-4 mr-2" />
-                        Share ke WA
-                      </Button>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="p-6">
-                  <div className="rounded-xl overflow-hidden border border-white/10 shadow-2xl">
-                    <img src={mergedImage} alt="Merged" className="w-full max-w-md mx-auto" />
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+          {/* Image Merger Tab - Collage Editor */}
+          <TabsContent value="image" className="space-y-4">
+            <CollageEditor
+              layers={collageLayers}
+              setLayers={setCollageLayers}
+              selected={collageSelected}
+              setSelected={setCollageSelected}
+              canvasWidth={layoutConfig.canvas.width}
+              canvasHeight={layoutConfig.canvas.height}
+              backgroundBrightness={backgroundBrightness}
+              onBackgroundUpload={handleBackgroundUpload}
+              onPhotoUpload={handleMultiplePhotoUpload}
+              onMerge={mergeImages}
+              onDownload={downloadMergedImage}
+              isMerging={isMerging}
+              mergedImage={mergedImage}
+              setMergedImage={setMergedImage}
+              basarnasLogo={basarnasLogoRef.current}
+              bppLogo={bppLogoRef.current}
+              reportTitle={judul}
+              reportSubtitle={(() => {
+                let dateStr = tanggal;
+                if (tanggal && tanggal.includes(',')) {
+                  const parts = tanggal.split(',');
+                  dateStr = parts.length > 1 ? parts[1].trim() : tanggal;
+                }
+                return tempat && dateStr ? `${tempat}, ${dateStr}` : tempat || dateStr || "";
+              })()}
+              onSendToWhatsApp={sendAllToWhatsApp}
+            />
+            {/* Hidden Canvas */}
+            <canvas ref={canvasRef} className="hidden" />
           </TabsContent>
         </Tabs>
       </div>
