@@ -1,0 +1,108 @@
+{
+  "canvas": {
+    "width": 1240,
+    "height": 1754,
+    "backgroundColor": "#FFFFFF",
+    "unit": "px"
+  },
+  "header": {
+    "height": 280,
+    "backgroundColor": "#FFF7ED",
+    "topAccentLine": {
+      "height": 6,
+      "color": "#F97316"
+    },
+    "logos": [
+      { 
+        "id": "logo_basarnas", 
+        "position": { "x": 60, "y": 40 }, 
+        "width": 100,
+        "height": 100,
+        "shape": "circle"
+      },
+      { 
+        "id": "logo_sar_nasional", 
+        "position": { "right": 60, "y": 40 }, 
+        "width": 100,
+        "height": 100,
+        "shape": "circle"
+      }
+    ],
+    "title": {
+      "fontFamily": "Arial, sans-serif",
+      "fontSize": 28,
+      "fontWeight": "bold",
+      "textAlign": "center",
+      "color": "#1E293B",
+      "lineHeight": 36,
+      "maxWidth": 800,
+      "marginTop": 50
+    },
+    "subtitle": {
+      "fontFamily": "Arial, sans-serif",
+      "fontSize": 20,
+      "color": "#64748B",
+      "lineHeight": 28,
+      "marginTop": 20
+    },
+    "separator": {
+      "marginTop": 20,
+      "color": "#E2E8F0",
+      "width": 2
+    }
+  },
+  "photoGrid": {
+    "columns": 2,
+    "rows": 3,
+    "maxPhotos": 6,
+    "marginTop": 40,
+    "marginBottom": 100,
+    "padding": { "left": 50, "right": 50, "top": 0, "bottom": 0 },
+    "gap": 38,
+    "imageStyle": {
+      "borderRadius": 20,
+      "borderWidth": 10,
+      "borderColor": "#FFFFFF",
+      "shadowColor": "rgba(0,0,0,0.25)",
+      "shadowBlur": 15,
+      "shadowOffsetY": 5
+    },
+    "dimensions": {
+      "width": 548,
+      "height": 400
+    }
+  },
+  "footer": {
+    "height": 90,
+    "backgroundColor": "#F97316",
+    "content": {
+      "organization": {
+        "text": "DIREKTORAT KESIAPSIAGAAN",
+        "fontSize": 18,
+        "fontWeight": "bold",
+        "color": "#FFFFFF"
+      },
+      "contactInfo": {
+        "fontSize": 14,
+        "color": "#FFFFFF",
+        "items": [
+          { "icon": "instagram", "label": "@sar_nasional" },
+          { "icon": "web", "label": "https://basarnas.go.id" },
+          { "icon": "phone", "label": "115" }
+        ]
+      }
+    }
+  },
+  "background": {
+    "type": "gradient",
+    "gradient": {
+      "direction": "to bottom",
+      "stops": [
+        { "position": 0, "color": "#FFF8F0" },
+        { "position": 0.3, "color": "#FEF3E2" },
+        { "position": 0.7, "color": "#FFEDD5" },
+        { "position": 1, "color": "#FED7AA" }
+      ]
+    }
+  }
+}
