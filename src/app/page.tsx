@@ -1147,19 +1147,29 @@ const CollageEditor = ({
             />
           )}
 
-          {/* Logos - Original shape */}
-          <div className="absolute top-3 left-3 w-12 h-14 bg-white/95 shadow-lg flex items-center justify-center overflow-hidden z-10 rounded-sm">
+          {/* Logos - Transparent with yellow glow */}
+          <div className="absolute top-3 left-3 w-12 h-14 flex items-center justify-center overflow-visible z-10">
             {basarnasLogo ? (
-              <img src={basarnasLogo.src} alt="Logo" className="w-full h-full object-contain p-1" />
+              <img 
+                src={basarnasLogo.src} 
+                alt="Logo" 
+                className="w-full h-full object-contain"
+                style={{ filter: "drop-shadow(0 0 8px rgba(255, 200, 0, 0.8)) drop-shadow(0 0 15px rgba(255, 180, 0, 0.6))" }}
+              />
             ) : (
-              <span className="text-[8px] font-bold text-slate-600 text-center">BASARNAS</span>
+              <span className="text-[8px] font-bold text-white text-center">BASARNAS</span>
             )}
           </div>
-          <div className="absolute top-3 right-3 w-12 h-14 bg-white/95 shadow-lg flex items-center justify-center overflow-hidden z-10 rounded-sm">
+          <div className="absolute top-3 right-3 w-12 h-14 flex items-center justify-center overflow-visible z-10">
             {bppLogo ? (
-              <img src={bppLogo.src} alt="Logo" className="w-full h-full object-contain p-1" />
+              <img 
+                src={bppLogo.src} 
+                alt="Logo" 
+                className="w-full h-full object-contain"
+                style={{ filter: "drop-shadow(0 0 8px rgba(255, 200, 0, 0.8)) drop-shadow(0 0 15px rgba(255, 180, 0, 0.6))" }}
+              />
             ) : (
-              <span className="text-[8px] font-bold text-slate-600 text-center">BPP</span>
+              <span className="text-[8px] font-bold text-white text-center">BPP</span>
             )}
           </div>
 
@@ -1600,21 +1610,31 @@ const CollageEditor = ({
           
           <div className="flex items-center justify-center gap-8">
             <div className="text-center">
-              <div className="w-14 h-16 bg-white/95 flex items-center justify-center overflow-hidden mb-2 rounded-sm shadow-lg">
+              <div className="w-14 h-16 bg-slate-700/50 flex items-center justify-center overflow-visible mb-2 rounded">
                 {basarnasLogo ? (
-                  <img src={basarnasLogo.src} alt="Basarnas" className="w-full h-full object-contain p-1" />
+                  <img 
+                    src={basarnasLogo.src} 
+                    alt="Basarnas" 
+                    className="w-full h-full object-contain"
+                    style={{ filter: "drop-shadow(0 0 8px rgba(255, 200, 0, 0.8)) drop-shadow(0 0 15px rgba(255, 180, 0, 0.6))" }}
+                  />
                 ) : (
-                  <span className="text-[8px] font-bold text-slate-600">BASARNAS</span>
+                  <span className="text-[8px] font-bold text-white">BASARNAS</span>
                 )}
               </div>
               <span className="text-white/50 text-xs">Basarnas</span>
             </div>
             <div className="text-center">
-              <div className="w-14 h-16 bg-white/95 flex items-center justify-center overflow-hidden mb-2 rounded-sm shadow-lg">
+              <div className="w-14 h-16 bg-slate-700/50 flex items-center justify-center overflow-visible mb-2 rounded">
                 {bppLogo ? (
-                  <img src={bppLogo.src} alt="BPP" className="w-full h-full object-contain p-1" />
+                  <img 
+                    src={bppLogo.src} 
+                    alt="BPP" 
+                    className="w-full h-full object-contain"
+                    style={{ filter: "drop-shadow(0 0 8px rgba(255, 200, 0, 0.8)) drop-shadow(0 0 15px rgba(255, 180, 0, 0.6))" }}
+                  />
                 ) : (
-                  <span className="text-[8px] font-bold text-slate-600">BPP</span>
+                  <span className="text-[8px] font-bold text-white">BPP</span>
                 )}
               </div>
               <span className="text-white/50 text-xs">BPP</span>
@@ -1622,7 +1642,7 @@ const CollageEditor = ({
           </div>
           
           <p className="text-white/40 text-xs mt-4 text-center">
-            Logo otomatis menggunakan logo Basarnas dan BPP
+            Logo dengan efek glow kuning
           </p>
         </div>
       )}
@@ -2287,7 +2307,7 @@ export default function Home() {
       const bppLogo = bppLogoRef.current;
       const logoConfig = headerConfig.logos;
       
-      // Left logo (BASARNAS) - Original shape with white background
+      // Left logo (BASARNAS) - Transparent with yellow glow
       const leftLogoConfig = logoConfig[0];
       const leftLogoX = leftLogoConfig.position.x;
       const logoY = leftLogoConfig.position.y;
@@ -2295,37 +2315,54 @@ export default function Home() {
       const logoHeight = leftLogoConfig.height;
 
       if (basarnasLogo) {
-        // White rectangular background with shadow
+        // Draw logo with yellow glow effect (multiple passes for stronger glow)
         ctx.save();
-        ctx.shadowColor = "rgba(0,0,0,0.2)";
-        ctx.shadowBlur = 8;
-        ctx.shadowOffsetY = 2;
-        ctx.fillStyle = "#ffffff";
-        ctx.beginPath();
-        ctx.roundRect(leftLogoX - 4, logoY - 4, logoWidth + 8, logoHeight + 8, 6);
-        ctx.fill();
-        ctx.restore();
         
-        // Draw logo in original shape
+        // First glow pass - larger blur
+        ctx.shadowColor = "rgba(255, 200, 0, 0.8)";
+        ctx.shadowBlur = 20;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 0;
         ctx.drawImage(basarnasLogo, leftLogoX, logoY, logoWidth, logoHeight);
+        
+        // Second glow pass - medium blur
+        ctx.shadowColor = "rgba(255, 180, 0, 0.6)";
+        ctx.shadowBlur = 12;
+        ctx.drawImage(basarnasLogo, leftLogoX, logoY, logoWidth, logoHeight);
+        
+        // Third glow pass - small blur for definition
+        ctx.shadowColor = "rgba(255, 220, 0, 0.9)";
+        ctx.shadowBlur = 6;
+        ctx.drawImage(basarnasLogo, leftLogoX, logoY, logoWidth, logoHeight);
+        
+        ctx.restore();
       }
 
-      // Right logo (BPP/SAR Nasional) - Original shape with white background
+      // Right logo (BPP/SAR Nasional) - Transparent with yellow glow
       const rightLogoConfig = logoConfig[1];
       const rightLogoX = canvasWidth - rightLogoConfig.position.right - rightLogoConfig.width;
 
       if (bppLogo) {
         ctx.save();
-        ctx.shadowColor = "rgba(0,0,0,0.2)";
-        ctx.shadowBlur = 8;
-        ctx.shadowOffsetY = 2;
-        ctx.fillStyle = "#ffffff";
-        ctx.beginPath();
-        ctx.roundRect(rightLogoX - 4, logoY - 4, logoWidth + 8, logoHeight + 8, 6);
-        ctx.fill();
-        ctx.restore();
         
+        // First glow pass - larger blur
+        ctx.shadowColor = "rgba(255, 200, 0, 0.8)";
+        ctx.shadowBlur = 20;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 0;
         ctx.drawImage(bppLogo, rightLogoX, logoY, logoWidth, logoHeight);
+        
+        // Second glow pass - medium blur
+        ctx.shadowColor = "rgba(255, 180, 0, 0.6)";
+        ctx.shadowBlur = 12;
+        ctx.drawImage(bppLogo, rightLogoX, logoY, logoWidth, logoHeight);
+        
+        // Third glow pass - small blur for definition
+        ctx.shadowColor = "rgba(255, 220, 0, 0.9)";
+        ctx.shadowBlur = 6;
+        ctx.drawImage(bppLogo, rightLogoX, logoY, logoWidth, logoHeight);
+        
+        ctx.restore();
       }
       
       // ========== TITLE ==========
