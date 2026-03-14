@@ -3230,64 +3230,64 @@ export default function Home() {
   useEffect(() => { generatePreview(); }, [generatePreview]);
 
   return (
-    <main className="min-h-screen bg-slate-950 flex items-center justify-center p-0 sm:p-4">
-      {/* Animated Background - Desktop only */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none hidden sm:block">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-red-500/10 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute top-1/2 -left-40 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl animate-pulse delay-1000" />
-        <div className="absolute -bottom-40 right-1/3 w-72 h-72 bg-red-600/10 rounded-full blur-3xl animate-pulse delay-500" />
-      </div>
-
-      {/* Phone Container - 9:16 Aspect Ratio */}
-      <div 
-        className="relative w-full sm:max-w-[420px] bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex flex-col overflow-hidden sm:rounded-3xl sm:shadow-2xl sm:border sm:border-white/10"
-        style={{ 
-          minHeight: "100vh",
-          aspectRatio: "auto",
-        }}
+    <div className="w-screen h-screen bg-slate-900 flex items-center justify-center overflow-hidden">
+      {/* 9:16 Container */}
+      <div
+        className="
+          relative
+          h-screen
+          max-h-[920px]
+          aspect-[9/16]
+          bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900
+          shadow-2xl
+          overflow-hidden
+          rounded-xl
+        "
       >
-        {/* Header */}
-        <header className="sticky top-0 z-50 backdrop-blur-xl bg-slate-900/80 border-b border-white/10">
-          <div className="px-4 py-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="relative">
-                  <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-amber-400 rounded-xl blur-md opacity-75" />
-                  <img 
-                    src="https://www.e-katalog-sop.cloud/sulapfoto_nomg_1.png" 
-                    alt="Logo" 
-                    className="relative w-10 h-10 rounded-xl shadow-lg object-cover"
-                  />
+        {/* Scroll area */}
+        <div className="absolute inset-0 overflow-y-auto overflow-x-hidden">
+          {/* Header */}
+          <header className="sticky top-0 z-50 backdrop-blur-xl bg-slate-900/80 border-b border-white/10">
+            <div className="px-4 py-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-amber-400 rounded-xl blur-md opacity-75" />
+                    <img 
+                      src="https://www.e-katalog-sop.cloud/sulapfoto_nomg_1.png" 
+                      alt="Logo" 
+                      className="relative w-10 h-10 rounded-xl shadow-lg object-cover"
+                    />
+                  </div>
+                  <div>
+                    <h1 className="text-lg font-bold bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent">
+                      Laporan WA Basarnas
+                    </h1>
+                    <p className="text-[10px] text-slate-400">
+                      Direktorat Kesiapsiagaan
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h1 className="text-lg font-bold bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent">
-                    Laporan WA Basarnas
-                  </h1>
-                  <p className="text-[10px] text-slate-400">
-                    Direktorat Kesiapsiagaan
-                  </p>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setShowDrafts(true)}
+                    className="text-white/70 hover:text-white hover:bg-white/10"
+                  >
+                    <Archive className="w-5 h-5" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={shareToWhatsApp}
+                    className="bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white"
+                  >
+                    <Send className="w-4 h-4" />
+                  </Button>
                 </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setShowDrafts(true)}
-                  className="text-white/70 hover:text-white hover:bg-white/10"
-                >
-                  <Archive className="w-5 h-5" />
-                </Button>
-                <Button
-                  size="sm"
-                  onClick={shareToWhatsApp}
-                  className="bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white"
-                >
-                  <Send className="w-4 h-4" />
-                </Button>
               </div>
             </div>
-          </div>
-        </header>
+          </header>
 
         {/* Main Content - Scrollable */}
         <div className="flex-1 overflow-y-auto px-4 py-4">
@@ -3918,22 +3918,24 @@ export default function Home() {
         </DialogContent>
       </Dialog>
 
-        {/* Footer - Inside Phone Container */}
-        <footer className="bg-slate-900/80 backdrop-blur-sm border-t border-white/10 py-4 mt-auto">
-          <div className="text-center">
-            <div className="flex items-center justify-center gap-2 mb-1">
-              <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-red-600 to-red-700 flex items-center justify-center">
-                <MessageSquare className="w-3 h-3 text-white" />
+          {/* Footer */}
+          <footer className="bg-slate-900/80 backdrop-blur-sm border-t border-white/10 py-4 mt-auto">
+            <div className="text-center">
+              <div className="flex items-center justify-center gap-2 mb-1">
+                <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-red-600 to-red-700 flex items-center justify-center">
+                  <MessageSquare className="w-3 h-3 text-white" />
+                </div>
+                <span className="text-white text-sm font-semibold">Basarnas</span>
               </div>
-              <span className="text-white text-sm font-semibold">Basarnas</span>
+              <p className="text-slate-400 text-[10px]">
+                © 2024 Laporan WhatsApp - Direktorat Kesiapsiagaan
+              </p>
             </div>
-            <p className="text-slate-400 text-[10px]">
-              © 2024 Laporan WhatsApp - Direktorat Kesiapsiagaan
-            </p>
-          </div>
-        </footer>
+          </footer>
+        </div>
+        {/* End Scroll Area */}
       </div>
-      {/* End Phone Container */}
-    </main>
+      {/* End 9:16 Container */}
+    </div>
   );
 }
