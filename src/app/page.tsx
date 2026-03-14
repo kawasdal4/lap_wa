@@ -3008,71 +3008,79 @@ export default function Home() {
 
   // Send text report first, then photo separately
   const sendAllToWhatsApp = async () => {
-    const text = generatePreview();
-    
-    // Check if we have merged image
-    if (!mergedImage) {
-      toast.error("Silakan klik Export terlebih dahulu!");
-      return;
-    }
-    
-    // STEP 1: Send text report first
-    const loadingToast = toast.loading("Mengirim laporan teks ke WhatsApp...");
+    const laporanText = generatePreview();
+    const phoneNumber = ""; // Kosong = pilih kontak manual
     
     try {
-      // Open WhatsApp with text only
-      const encodedText = encodeURIComponent(text);
-      window.open(`https://wa.me/?text=${encodedText}`, "_blank");
+      // ============================
+      // STEP 1: EXPORT FOTO
+      // ============================
+      toast.info("Export gambar...");
       
-      toast.success("Laporan teks dikirim! Menyiapkan foto...", { id: loadingToast });
+      // Gunakan CollageEditor's exportImage via mergedImage
+      if (!mergedImage) {
+        toast.error("Silakan klik Export terlebih dahulu!");
+        return;
+      }
       
-      // STEP 2: Send photo after a delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const response = await fetch(mergedImage);
+      const blob = await response.blob();
+      const file = new File([blob], "dokumentasi-basarnas.jpg", { type: "image/jpeg" });
       
-      toast.info("Menyiapkan foto...", { duration: 3000 });
+      // ============================
+      // STEP 2: KIRIM TEXT WA
+      // ============================
+      toast.info("Membuka WhatsApp...");
       
-      // Try Web Share API for image (works best on mobile)
-      if (navigator.share && navigator.canShare) {
+      const encodedText = encodeURIComponent(laporanText);
+      window.open(
+        `https://wa.me/${phoneNumber}?text=${encodedText}`,
+        "_blank"
+      );
+      
+      toast.success("Laporan teks terkirim!");
+      
+      // ============================
+      // STEP 3: KIRIM FOTO WA
+      // ============================
+      setTimeout(async () => {
         try {
-          console.log("Trying Web Share API for image...");
-          const response = await fetch(mergedImage);
-          const blob = await response.blob();
-          const file = new File([blob], `dokumentasi-basarnas.jpg`, { type: 'image/jpeg' });
-          
-          if (navigator.canShare({ files: [file] })) {
+          // HP / Mobile browser - share file langsung
+          if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            toast.info("Mengirim foto...");
+            
             await navigator.share({
-              title: 'Dokumentasi Kegiatan',
-              files: [file]
+              files: [file],
+              title: "Foto Laporan",
+              text: ""
             });
+            
             toast.success("Foto berhasil dikirim!");
-            return;
           }
-        } catch (error: unknown) {
-          if (error instanceof Error && error.name === 'AbortError') {
-            toast.info("Pengiriman foto dibatalkan");
-            return;
+          // Desktop fallback - download foto
+          else {
+            toast.info("Mengunduh foto untuk dikirim manual...");
+            
+            const link = document.createElement("a");
+            link.href = mergedImage;
+            link.download = "dokumentasi-basarnas.jpg";
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            
+            toast.success("Foto sudah di-download. Silakan attach di WhatsApp.");
           }
-          console.log('Web Share for image failed, trying R2 upload:', error);
+        } catch (err) {
+          console.error("Share error:", err);
+          if (err instanceof Error && err.name !== 'AbortError') {
+            toast.error("Gagal mengirim foto");
+          }
         }
-      }
+      }, 1800);
       
-      // Fallback: Upload to R2 and send link
-      toast.info("Mengupload foto ke server...", { duration: 5000 });
-      const photoUrl = await uploadImageToR2(mergedImage, "base64", "photos");
-      
-      if (photoUrl) {
-        // Open WhatsApp with photo link
-        const photoText = encodeURIComponent(`📸 Dokumentasi Kegiatan:\n${photoUrl}`);
-        window.open(`https://wa.me/?text=${photoText}`, "_blank");
-        toast.success("Link foto dikirim ke WhatsApp!");
-      } else {
-        toast.error("Gagal mengupload foto. Silakan download dan kirim manual.");
-      }
-      
-    } catch (error) {
-      toast.dismiss(loadingToast);
-      console.error("Send error:", error);
-      toast.error("Terjadi kesalahan saat mengirim");
+    } catch (err) {
+      console.error("Export error:", err);
+      toast.error("Gagal export laporan");
     }
   };
 
