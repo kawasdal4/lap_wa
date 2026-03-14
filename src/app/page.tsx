@@ -3042,6 +3042,7 @@ export default function Home() {
       
       // ============================
       // STEP 3: KIRIM FOTO WA
+      // Delay 1800ms supaya WhatsApp sudah terbuka
       // ============================
       setTimeout(async () => {
         try {
@@ -3076,7 +3077,7 @@ export default function Home() {
             toast.error("Gagal mengirim foto");
           }
         }
-      }, 1800);
+      }, 1800); // Delay minimal 1500-2000ms supaya WhatsApp sudah terbuka
       
     } catch (err) {
       console.error("Export error:", err);
