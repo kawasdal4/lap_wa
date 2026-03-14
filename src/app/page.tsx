@@ -3230,79 +3230,84 @@ export default function Home() {
   useEffect(() => { generatePreview(); }, [generatePreview]);
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex flex-col">
-      {/* Animated Background */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+    <main className="min-h-screen bg-slate-950 flex items-center justify-center p-0 sm:p-4">
+      {/* Animated Background - Desktop only */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none hidden sm:block">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-red-500/10 rounded-full blur-3xl animate-pulse" />
         <div className="absolute top-1/2 -left-40 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl animate-pulse delay-1000" />
         <div className="absolute -bottom-40 right-1/3 w-72 h-72 bg-red-600/10 rounded-full blur-3xl animate-pulse delay-500" />
       </div>
 
-      {/* Header */}
-      <header className="sticky top-0 z-50 backdrop-blur-xl bg-slate-900/80 border-b border-white/10">
-        <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-amber-400 rounded-xl blur-md opacity-75" />
-                <img 
-                  src="https://www.e-katalog-sop.cloud/sulapfoto_nomg_1.png" 
-                  alt="Logo" 
-                  className="relative w-12 h-12 rounded-xl shadow-lg object-cover"
-                />
+      {/* Phone Container - 9:16 Aspect Ratio */}
+      <div 
+        className="relative w-full sm:max-w-[420px] bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex flex-col overflow-hidden sm:rounded-3xl sm:shadow-2xl sm:border sm:border-white/10"
+        style={{ 
+          minHeight: "100vh",
+          aspectRatio: "auto",
+        }}
+      >
+        {/* Header */}
+        <header className="sticky top-0 z-50 backdrop-blur-xl bg-slate-900/80 border-b border-white/10">
+          <div className="px-4 py-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="relative">
+                  <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-amber-400 rounded-xl blur-md opacity-75" />
+                  <img 
+                    src="https://www.e-katalog-sop.cloud/sulapfoto_nomg_1.png" 
+                    alt="Logo" 
+                    className="relative w-10 h-10 rounded-xl shadow-lg object-cover"
+                  />
+                </div>
+                <div>
+                  <h1 className="text-lg font-bold bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent">
+                    Laporan WA Basarnas
+                  </h1>
+                  <p className="text-[10px] text-slate-400">
+                    Direktorat Kesiapsiagaan
+                  </p>
+                </div>
               </div>
-              <div>
-                <h1 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent">
-                  Laporan WhatsApp Basarnas
-                </h1>
-                <p className="text-xs text-slate-400 hidden sm:block">
-                  Direktorat Kesiapsiagaan • Generator Laporan Otomatis
-                </p>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setShowDrafts(true)}
+                  className="text-white/70 hover:text-white hover:bg-white/10"
+                >
+                  <Archive className="w-5 h-5" />
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={shareToWhatsApp}
+                  className="bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white"
+                >
+                  <Send className="w-4 h-4" />
+                </Button>
               </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowDrafts(true)}
-                className="hidden sm:flex border-white/20 bg-white/5 hover:bg-white/10 text-white backdrop-blur-sm"
-              >
-                <Archive className="w-4 h-4 mr-2" />
-                Draft ({drafts.length})
-              </Button>
-              <Button
-                size="sm"
-                onClick={shareToWhatsApp}
-                className="bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white shadow-lg shadow-green-500/25 transition-all duration-300 hover:scale-105"
-              >
-                <Send className="w-4 h-4 mr-2" />
-                <span className="hidden sm:inline">Kirim ke WA</span>
-                <span className="sm:hidden">Kirim</span>
-              </Button>
             </div>
           </div>
-        </div>
-      </header>
+        </header>
 
-      {/* Main Content */}
-      <div className="flex-1 max-w-7xl mx-auto px-4 py-6 w-full">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-8 bg-slate-800/50 backdrop-blur-sm border border-white/10 p-1 rounded-xl">
-            <TabsTrigger value="editor" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-red-600 data-[state=active]:to-red-500 data-[state=active]:text-white text-slate-400 rounded-lg transition-all duration-300">
-              <FileText className="w-4 h-4 mr-2" />
-              Editor
-            </TabsTrigger>
-            <TabsTrigger value="preview" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-red-600 data-[state=active]:to-red-500 data-[state=active]:text-white text-slate-400 rounded-lg transition-all duration-300">
-              <Eye className="w-4 h-4 mr-2" />
-              Preview
-            </TabsTrigger>
-            <TabsTrigger value="image" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-red-600 data-[state=active]:to-red-500 data-[state=active]:text-white text-slate-400 rounded-lg transition-all duration-300">
-              <Layers className="w-4 h-4 mr-2" />
-              Foto
-            </TabsTrigger>
-          </TabsList>
+        {/* Main Content - Scrollable */}
+        <div className="flex-1 overflow-y-auto px-4 py-4">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-3 mb-4 bg-slate-800/50 backdrop-blur-sm border border-white/10 p-1 rounded-xl">
+              <TabsTrigger value="editor" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-red-600 data-[state=active]:to-red-500 data-[state=active]:text-white text-slate-400 rounded-lg transition-all duration-300 text-sm py-2">
+                <FileText className="w-4 h-4 mr-1" />
+                Editor
+              </TabsTrigger>
+              <TabsTrigger value="preview" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-red-600 data-[state=active]:to-red-500 data-[state=active]:text-white text-slate-400 rounded-lg transition-all duration-300 text-sm py-2">
+                <Eye className="w-4 h-4 mr-1" />
+                Preview
+              </TabsTrigger>
+              <TabsTrigger value="image" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-red-600 data-[state=active]:to-red-500 data-[state=active]:text-white text-slate-400 rounded-lg transition-all duration-300 text-sm py-2">
+                <Layers className="w-4 h-4 mr-1" />
+                Foto
+              </TabsTrigger>
+            </TabsList>
 
-          {/* Editor Tab */}
+            {/* Editor Tab */}
           <TabsContent value="editor" className="space-y-6">
             {/* Template Section */}
             <Card className="bg-slate-800/50 backdrop-blur-sm border-white/10 shadow-xl">
@@ -3854,10 +3859,9 @@ export default function Home() {
             <canvas ref={canvasRef} className="hidden" />
           </TabsContent>
         </Tabs>
-      </div>
 
-      {/* Drafts Dialog */}
-      <Dialog open={showDrafts} onOpenChange={setShowDrafts}>
+        {/* Drafts Dialog */}
+        <Dialog open={showDrafts} onOpenChange={setShowDrafts}>
         <DialogContent className="max-w-2xl max-h-[80vh] bg-slate-800 border-white/10 text-white">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-white">
@@ -3911,21 +3915,24 @@ export default function Home() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      {/* Footer */}
-      <footer className="bg-slate-900/80 backdrop-blur-sm border-t border-white/10 py-6 mt-auto">
-        <div className="max-w-7xl mx-auto px-4 text-center">
-          <div className="flex items-center justify-center gap-2 mb-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-red-600 to-red-700 flex items-center justify-center">
-              <MessageSquare className="w-4 h-4 text-white" />
-            </div>
-            <span className="text-white font-semibold">Basarnas</span>
-          </div>
-          <p className="text-slate-400 text-sm">
-            © 2024 Laporan WhatsApp Basarnas - Direktorat Kesiapsiagaan
-          </p>
         </div>
-      </footer>
+
+        {/* Footer - Inside Phone Container */}
+        <footer className="bg-slate-900/80 backdrop-blur-sm border-t border-white/10 py-4 mt-auto">
+          <div className="text-center">
+            <div className="flex items-center justify-center gap-2 mb-1">
+              <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-red-600 to-red-700 flex items-center justify-center">
+                <MessageSquare className="w-3 h-3 text-white" />
+              </div>
+              <span className="text-white text-sm font-semibold">Basarnas</span>
+            </div>
+            <p className="text-slate-400 text-[10px]">
+              © 2024 Laporan WhatsApp - Direktorat Kesiapsiagaan
+            </p>
+          </div>
+        </footer>
+      </div>
+      {/* End Phone Container */}
     </main>
   );
 }
