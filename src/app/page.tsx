@@ -3298,16 +3298,16 @@ export default function Home() {
         {/* Main Content - Scrollable */}
         <div className="flex-1 overflow-y-auto px-4 py-4">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-3 mb-4 bg-slate-800/50 backdrop-blur-sm border border-white/10 p-1 rounded-xl">
-              <TabsTrigger value="editor" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-red-600 data-[state=active]:to-red-500 data-[state=active]:text-white text-slate-400 rounded-lg transition-all duration-300 text-sm py-2">
+            <TabsList className="grid w-full grid-cols-3 mb-4 bg-slate-800/50 backdrop-blur-sm border border-white/10 p-1 rounded-xl gap-1">
+              <TabsTrigger value="editor" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-red-600 data-[state=active]:to-red-500 data-[state=active]:text-white text-slate-400 rounded-lg transition-all duration-300 text-sm py-2 h-auto data-[state=active]:shadow-none border-0">
                 <FileText className="w-4 h-4 mr-1" />
                 Editor
               </TabsTrigger>
-              <TabsTrigger value="preview" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-red-600 data-[state=active]:to-red-500 data-[state=active]:text-white text-slate-400 rounded-lg transition-all duration-300 text-sm py-2">
+              <TabsTrigger value="preview" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-red-600 data-[state=active]:to-red-500 data-[state=active]:text-white text-slate-400 rounded-lg transition-all duration-300 text-sm py-2 h-auto data-[state=active]:shadow-none border-0">
                 <Eye className="w-4 h-4 mr-1" />
                 Preview
               </TabsTrigger>
-              <TabsTrigger value="image" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-red-600 data-[state=active]:to-red-500 data-[state=active]:text-white text-slate-400 rounded-lg transition-all duration-300 text-sm py-2">
+              <TabsTrigger value="image" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-red-600 data-[state=active]:to-red-500 data-[state=active]:text-white text-slate-400 rounded-lg transition-all duration-300 text-sm py-2 h-auto data-[state=active]:shadow-none border-0">
                 <Layers className="w-4 h-4 mr-1" />
                 Foto
               </TabsTrigger>
