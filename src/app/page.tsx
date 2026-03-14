@@ -3395,7 +3395,9 @@ export default function Home() {
                         size="sm"
                         variant={jenisTempat === "daring" ? "default" : "outline"}
                         onClick={() => handleJenisTempatChange("daring")}
-                        className={`flex-1 ${jenisTempat === "daring" ? "bg-blue-600 hover:bg-blue-500" : "border-white/20 text-white/70"}`}
+                        className={`flex-1 ${jenisTempat === "daring" 
+                          ? "bg-blue-600 hover:bg-blue-500 text-white" 
+                          : "border-white/30 bg-slate-700/50 text-white hover:bg-slate-700 hover:text-white"}`}
                       >
                         💻 Daring
                       </Button>
@@ -3404,7 +3406,9 @@ export default function Home() {
                         size="sm"
                         variant={jenisTempat === "luring" ? "default" : "outline"}
                         onClick={() => handleJenisTempatChange("luring")}
-                        className={`flex-1 ${jenisTempat === "luring" ? "bg-green-600 hover:bg-green-500" : "border-white/20 text-white/70"}`}
+                        className={`flex-1 ${jenisTempat === "luring" 
+                          ? "bg-green-600 hover:bg-green-500 text-white" 
+                          : "border-white/30 bg-slate-700/50 text-white hover:bg-slate-700 hover:text-white"}`}
                       >
                         🏢 Luring
                       </Button>
