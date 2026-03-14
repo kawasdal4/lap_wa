@@ -3006,16 +3006,65 @@ export default function Home() {
     }
   };
 
-  // Send both report and merged photo to WhatsApp
+  // Send text report first, then photo separately
   const sendAllToWhatsApp = async () => {
-    // First, merge images if not already done
-    if (!mergedImage) {
-      toast.info("Menggabungkan gambar terlebih dahulu...");
-      await mergeImages();
-    }
+    const text = generatePreview();
     
-    // Then call the existing share function
-    await shareToWhatsApp();
+    // STEP 1: Send text report first
+    const loadingToast = toast.loading("Mengirim laporan teks...");
+    
+    try {
+      // Open WhatsApp with text only
+      const encodedText = encodeURIComponent(text);
+      window.open(`https://wa.me/?text=${encodedText}`, "_blank");
+      
+      toast.success("Laporan teks dikirim!", { id: loadingToast });
+      
+      // STEP 2: Prepare and send photo separately after a short delay
+      if (mergedImage) {
+        // Wait a moment before sending photo
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        toast.info("Menyiapkan foto untuk dikirim...");
+        
+        // Try Web Share API for image (works best on mobile)
+        if (navigator.share && navigator.canShare) {
+          try {
+            const response = await fetch(mergedImage);
+            const blob = await response.blob();
+            const file = new File([blob], `dokumentasi.jpg`, { type: 'image/jpeg' });
+            
+            if (navigator.canShare({ files: [file] })) {
+              await navigator.share({
+                title: 'Dokumentasi Kegiatan',
+                files: [file]
+              });
+              toast.success("Foto berhasil dikirim!");
+              return;
+            }
+          } catch (error: unknown) {
+            if (error instanceof Error && error.name === 'AbortError') {
+              // User cancelled
+              return;
+            }
+            console.log('Web Share for image failed:', error);
+          }
+        }
+        
+        // Fallback: Upload to R2 and send link
+        const photoUrl = await uploadImageToR2(mergedImage, "base64", "photos");
+        if (photoUrl) {
+          // Open WhatsApp with photo link
+          const photoText = encodeURIComponent(`📸 Dokumentasi Kegiatan:\n${photoUrl}`);
+          window.open(`https://wa.me/?text=${photoText}`, "_blank");
+          toast.success("Link foto dikirim!");
+        }
+      }
+    } catch (error) {
+      toast.dismiss(loadingToast);
+      console.error("Send error:", error);
+      toast.error("Gagal mengirim");
+    }
   };
 
   useEffect(() => { loadDrafts(); }, []);
