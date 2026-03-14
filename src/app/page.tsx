@@ -3859,6 +3859,8 @@ export default function Home() {
             <canvas ref={canvasRef} className="hidden" />
           </TabsContent>
         </Tabs>
+        </div>
+        {/* End Main Content - Scrollable */}
 
         {/* Drafts Dialog */}
         <Dialog open={showDrafts} onOpenChange={setShowDrafts}>
@@ -3915,7 +3917,6 @@ export default function Home() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-        </div>
 
         {/* Footer - Inside Phone Container */}
         <footer className="bg-slate-900/80 backdrop-blur-sm border-t border-white/10 py-4 mt-auto">
