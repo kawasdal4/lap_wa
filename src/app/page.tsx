@@ -1617,6 +1617,19 @@ const CollageEditor = ({
           50% { box-shadow: 0 0 18px rgba(0, 255, 160, 0.9); }
           100% { box-shadow: 0 0 0 rgba(0, 255, 160, 0.6); }
         }
+        @keyframes logoGlow {
+          0%, 100% { 
+            opacity: 0.5; 
+            transform: scale(1);
+          }
+          50% { 
+            opacity: 1; 
+            transform: scale(1.1);
+          }
+        }
+        .animate-pulse-glow {
+          animation: logoGlow 2s ease-in-out infinite;
+        }
       `}</style>
 
       {/* Tool Panels - Slide up from bottom */}
@@ -3269,10 +3282,12 @@ export default function Home() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-amber-400 rounded-xl blur-md opacity-75" />
-                <div className="relative w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center shadow-lg">
-                  <span className="text-white font-bold text-sm">B</span>
-                </div>
+                <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-amber-400 rounded-xl blur-md opacity-75 animate-pulse-glow" />
+                <img 
+                  src="https://www.e-katalog-sop.cloud/sulapfoto_nomg_1.png" 
+                  alt="Logo" 
+                  className="relative w-10 h-10 rounded-xl shadow-lg object-cover"
+                />
               </div>
               <div>
                 <h1 className="text-lg font-semibold text-white">
@@ -3933,10 +3948,12 @@ export default function Home() {
             <div className="text-center">
               <div className="flex items-center justify-center gap-2 mb-1">
                 <div className="relative">
-                  <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-amber-400 rounded-lg blur-sm opacity-75" />
-                  <div className="relative w-6 h-6 rounded-lg bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center shadow">
-                    <span className="text-white font-bold text-[10px]">B</span>
-                  </div>
+                  <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-amber-400 rounded-lg blur-sm opacity-75 animate-pulse-glow" />
+                  <img 
+                    src="https://www.e-katalog-sop.cloud/sulapfoto_nomg_1.png" 
+                    alt="Logo" 
+                    className="relative w-6 h-6 rounded-lg shadow object-cover"
+                  />
                 </div>
                 <span className="text-white text-sm font-semibold">Basarnas</span>
               </div>
