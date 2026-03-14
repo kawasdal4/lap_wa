@@ -1961,6 +1961,12 @@ export default function Home() {
     { id: generateId(), text: "Pengarahan Direktur Kesiapsiagaan", subItems: [] }
   ]);
   
+  // State untuk jenis tempat (Daring/Luring)
+  const [jenisTempat, setJenisTempat] = useState<"daring" | "luring">("daring");
+  const [zoomLink, setZoomLink] = useState("");
+  const [zoomMeetingTitle, setZoomMeetingTitle] = useState("");
+  const [isLoadingZoomTitle, setIsLoadingZoomTitle] = useState(false);
+  
   // State untuk template
   const [greeting, setGreeting] = useState(DEFAULT_TEMPLATE.greeting);
   const [yth, setYth] = useState(DEFAULT_TEMPLATE.yth);
@@ -2110,6 +2116,62 @@ export default function Home() {
     return formatted;
   }, []);
 
+  // Fetch Zoom meeting title from link
+  const fetchZoomMeetingTitle = useCallback(async (url: string) => {
+    if (!url || !url.includes('zoom.us')) {
+      return null;
+    }
+    
+    setIsLoadingZoomTitle(true);
+    try {
+      // Use our API to fetch the page title
+      const response = await fetch(`/api/fetch-title?url=${encodeURIComponent(url)}`);
+      const data = await response.json();
+      
+      if (data.title) {
+        setZoomMeetingTitle(data.title);
+        // Auto-fill judul if it's still the default
+        if (judul === "RAPAT BRIEFING PETUGAS LIAISON OFFICER") {
+          setJudul(data.title.toUpperCase());
+        }
+        return data.title;
+      }
+    } catch (error) {
+      console.error('Failed to fetch Zoom meeting title:', error);
+    } finally {
+      setIsLoadingZoomTitle(false);
+    }
+    return null;
+  }, [judul]);
+
+  // Handle Zoom link change
+  const handleZoomLinkChange = useCallback((link: string) => {
+    setZoomLink(link);
+    
+    // Auto-fetch title when link changes
+    if (link.includes('zoom.us') && link.length > 20) {
+      // Debounce - wait for user to finish typing
+      const timeoutId = setTimeout(() => {
+        fetchZoomMeetingTitle(link);
+      }, 1000);
+      
+      return () => clearTimeout(timeoutId);
+    }
+  }, [fetchZoomMeetingTitle]);
+
+  // Handle jenis tempat change
+  const handleJenisTempatChange = useCallback((jenis: "daring" | "luring") => {
+    setJenisTempat(jenis);
+    if (jenis === "daring") {
+      setTempat("Daring melalui zoom meeting");
+      setLocationData(null);
+    } else {
+      setTempat("");
+      setZoomLink("");
+      setZoomMeetingTitle("");
+    }
+  }, []);
+
   // Generate preview text
   const generatePreview = useCallback(() => {
     // Convert judul formatting first
@@ -2128,9 +2190,14 @@ export default function Home() {
     
     text += `Selamat ${getWaktuSalam()}, Mohon izin melaporkan kegiatan ${formatForWhatsApp(judul.toLowerCase())}.\n\n`;
     
-    // Location with map image, place name, and address
+    // Location with map image, place name, and address OR Zoom link
     text += `📍 *Tempat:*\n`;
-    if (locationData && locationData.lat && locationData.lng) {
+    if (jenisTempat === "daring") {
+      text += `${formatForWhatsApp(tempat)}\n`;
+      if (zoomLink) {
+        text += `🔗 Link Zoom: ${zoomLink}\n`;
+      }
+    } else if (locationData && locationData.lat && locationData.lng) {
       // Show place name
       text += `📌 *${formatForWhatsApp(locationData.placeName)}*\n`;
       // Show full address
@@ -2168,7 +2235,7 @@ export default function Home() {
     
     setPreviewText(text);
     return text;
-  }, [judul, tempat, tanggal, waktu, pimpinan, peserta, pelaksanaan, greeting, yth, ccList, kalimatPenutup, formatForWhatsApp, locationData]);
+  }, [judul, tempat, tanggal, waktu, pimpinan, peserta, pelaksanaan, greeting, yth, ccList, kalimatPenutup, formatForWhatsApp, locationData, jenisTempat, zoomLink]);
 
   const getWaktuSalam = () => {
     const hour = new Date().getHours();
@@ -3316,61 +3383,120 @@ export default function Home() {
                   />
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     <Label className="text-slate-300 flex items-center gap-2">
                       <span className="text-lg">📍</span> Tempat
                     </Label>
-                    <MapLocationPicker
-                      value={tempat}
-                      onChange={setTempat}
-                      onLocationChange={setLocationData}
-                      placeholder="Daring melalui zoom meeting"
-                    />
-                    {/* Map Preview Card in Editor */}
-                    {locationData && locationData.lat && locationData.lng && (
-                      <div className="mt-3 rounded-lg overflow-hidden border border-white/10 bg-slate-900/50">
-                        <a
-                          href={`https://www.google.com/maps?q=${locationData.lat},${locationData.lng}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="block hover:ring-2 hover:ring-red-500/50 transition-all"
-                        >
-                          <div className="relative">
-                            <img
-                              src={locationData.mapImageUrl}
-                              alt="Map Location"
-                              className="w-full h-32 object-cover"
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                            <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between">
-                              <div className="flex items-center gap-1.5">
-                                <MapPin className="w-4 h-4 text-red-400" />
-                                <span className="text-sm font-medium text-white truncate">
-                                  {locationData.placeName}
-                                </span>
-                              </div>
-                              <span className="text-xs text-white/70 flex items-center gap-1">
-                                <MapIcon className="w-3 h-3" />
-                                Buka Maps
-                              </span>
-                            </div>
-                          </div>
-                        </a>
-                        <div className="p-2 text-xs text-slate-400">
-                          <p className="truncate">{locationData.address}</p>
+                    
+                    {/* Toggle Daring/Luring */}
+                    <div className="flex gap-2 mb-2">
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant={jenisTempat === "daring" ? "default" : "outline"}
+                        onClick={() => handleJenisTempatChange("daring")}
+                        className={`flex-1 ${jenisTempat === "daring" ? "bg-blue-600 hover:bg-blue-500" : "border-white/20 text-white/70"}`}
+                      >
+                        💻 Daring
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant={jenisTempat === "luring" ? "default" : "outline"}
+                        onClick={() => handleJenisTempatChange("luring")}
+                        className={`flex-1 ${jenisTempat === "luring" ? "bg-green-600 hover:bg-green-500" : "border-white/20 text-white/70"}`}
+                      >
+                        🏢 Luring
+                      </Button>
+                    </div>
+                    
+                    {/* Daring - Zoom Link Input */}
+                    {jenisTempat === "daring" ? (
+                      <div className="space-y-3">
+                        <div className="space-y-2">
+                          <Label className="text-slate-400 text-xs">Nama Tempat (opsional)</Label>
+                          <Input
+                            value={tempat === "Daring melalui zoom meeting" ? "" : tempat}
+                            onChange={(e) => setTempat(e.target.value || "Daring melalui zoom meeting")}
+                            placeholder="Daring melalui zoom meeting"
+                            className="bg-slate-900/50 border-white/10 text-white placeholder:text-slate-500 focus:border-red-500"
+                          />
                         </div>
-                        <div className="px-2 pb-2 flex gap-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={downloadMapImage}
-                            className="flex-1 border-white/20 bg-white/5 hover:bg-white/10 text-slate-300 text-xs"
-                          >
-                            <Download className="w-3 h-3 mr-1" />
-                            Download Peta
-                          </Button>
+                        <div className="space-y-2">
+                          <Label className="text-slate-400 text-xs flex items-center gap-2">
+                            🔗 Link Zoom Meeting
+                            {isLoadingZoomTitle && <Loader2 className="w-3 h-3 animate-spin" />}
+                          </Label>
+                          <Input
+                            value={zoomLink}
+                            onChange={(e) => handleZoomLinkChange(e.target.value)}
+                            placeholder="https://zoom.us/j/..."
+                            className="bg-slate-900/50 border-white/10 text-white placeholder:text-slate-500 focus:border-red-500"
+                          />
+                          {zoomMeetingTitle && (
+                            <div className="text-xs text-green-400 flex items-center gap-1">
+                              <Check className="w-3 h-3" />
+                              Judul: {zoomMeetingTitle}
+                            </div>
+                          )}
                         </div>
                       </div>
+                    ) : (
+                      <>
+                        {/* Luring - Map Location Picker */}
+                        <MapLocationPicker
+                          value={tempat}
+                          onChange={setTempat}
+                          onLocationChange={setLocationData}
+                          placeholder="Pilih lokasi atau ketik manual"
+                        />
+                        {/* Map Preview Card */}
+                        {locationData && locationData.lat && locationData.lng && (
+                          <div className="mt-3 rounded-lg overflow-hidden border border-white/10 bg-slate-900/50">
+                            <a
+                              href={`https://www.google.com/maps?q=${locationData.lat},${locationData.lng}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="block hover:ring-2 hover:ring-red-500/50 transition-all"
+                            >
+                              <div className="relative">
+                                <img
+                                  src={locationData.mapImageUrl}
+                                  alt="Map Location"
+                                  className="w-full h-32 object-cover"
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                                <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between">
+                                  <div className="flex items-center gap-1.5">
+                                    <MapPin className="w-4 h-4 text-red-400" />
+                                    <span className="text-sm font-medium text-white truncate">
+                                      {locationData.placeName}
+                                    </span>
+                                  </div>
+                                  <span className="text-xs text-white/70 flex items-center gap-1">
+                                    <MapIcon className="w-3 h-3" />
+                                    Buka Maps
+                                  </span>
+                                </div>
+                              </div>
+                            </a>
+                            <div className="p-2 text-xs text-slate-400">
+                              <p className="truncate">{locationData.address}</p>
+                            </div>
+                            <div className="px-2 pb-2 flex gap-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={downloadMapImage}
+                                className="flex-1 border-white/20 bg-white/5 hover:bg-white/10 text-slate-300 text-xs"
+                              >
+                                <Download className="w-3 h-3 mr-1" />
+                                Download Peta
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
                   <div className="space-y-2">
