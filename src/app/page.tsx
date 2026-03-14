@@ -1108,7 +1108,7 @@ const CollageEditor = ({
     document.addEventListener('touchend', handleUp);
   }, [layers, updateLayer, snapToGrid]);
 
-  // Drag handler for logos with grid snap
+  // Drag handler for logos - FREE DRAG (no grid snap)
   const handleLogoDrag = useCallback((
     logoType: 'left' | 'right',
     e: React.MouseEvent | React.TouchEvent
@@ -1138,13 +1138,13 @@ const CollageEditor = ({
       const deltaX = clientX - startPos.x;
       const deltaY = clientY - startPos.y;
       
-      // Convert pixel delta to percentage and snap to grid
-      const percentX = Math.round((deltaX / rect.width) * 100);
-      const percentY = Math.round((deltaY / rect.height) * 100);
+      // Convert pixel delta to percentage (no grid snap)
+      const percentX = (deltaX / rect.width) * 100;
+      const percentY = (deltaY / rect.height) * 100;
       
-      // Snap to grid and clamp values
-      const newX = Math.max(0, Math.min(100, snapToGrid(startX + percentX)));
-      const newY = Math.max(0, Math.min(100, snapToGrid(startY + percentY)));
+      // Clamp values (no snapping)
+      const newX = Math.max(0, Math.min(100, startX + percentX));
+      const newY = Math.max(0, Math.min(100, startY + percentY));
       
       if (logoType === 'left') {
         setLayers(prev => ({
@@ -1170,7 +1170,7 @@ const CollageEditor = ({
     document.addEventListener('mouseup', handleUp);
     document.addEventListener('touchmove', handleMove, { passive: false, capture: true } as AddEventListenerOptions);
     document.addEventListener('touchend', handleUp);
-  }, [layers.logo, setLayers, snapToGrid]);
+  }, [layers.logo, setLayers]);
 
   // =============================
   // EXPORT IMAGE
