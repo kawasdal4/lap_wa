@@ -1,0 +1,26 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model DraftLaporan {
+  id              String   @id @default(cuid())
+  judul           String
+  tempat          String
+  tanggal         String
+  waktu           String
+  pimpinan        String
+  peserta         String   // JSON array of peserta
+  pelaksanaan     String   // JSON array of poin pelaksanaan
+  fotoPaths       String?  // JSON array of foto paths (base64 or URLs)
+  headerImage     String?  // Base64 header image
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
