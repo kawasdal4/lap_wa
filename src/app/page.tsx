@@ -1217,7 +1217,7 @@ const CollageEditor = ({
   const subtitleColor = isDarkBg ? "#CBD5E1" : "#64748B";
 
   return (
-    <div className="flex flex-col h-full bg-slate-900">
+    <div className="flex flex-col h-full bg-gradient-to-b from-[#0e2238] to-[#081624]">
       {/* Hidden inputs */}
       <input
         ref={backgroundInputRef}
@@ -1242,16 +1242,18 @@ const CollageEditor = ({
       />
 
       {/* Main Canvas Area */}
-      <div className="flex-1 flex flex-col items-center justify-center p-4 pb-20 overflow-auto">
-        {/* Canvas - 9:16 aspect ratio */}
+      <div className="flex-1 flex flex-col items-center justify-center p-3.5 overflow-auto">
+        {/* Canvas - 9:16 aspect ratio with enhanced styling */}
         <div
           ref={canvasRef}
-          className="relative bg-black overflow-hidden shadow-2xl rounded-lg select-none"
+          className="relative overflow-hidden select-none rounded-2xl"
           style={{
             width: "100%",
             maxWidth: "420px",
             aspectRatio: "9 / 16",
-            touchAction: "none"
+            touchAction: "none",
+            background: "linear-gradient(180deg, #173a5e 0%, #0b2035 100%)",
+            boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.05), 0 20px 40px rgba(0,0,0,0.6)"
           }}
         >
           {/* Background */}
@@ -1545,65 +1547,82 @@ const CollageEditor = ({
       </div>
 
       {/* Bottom Toolbar */}
-      <div className="fixed bottom-0 left-0 right-0 bg-slate-800 border-t border-white/10 shadow-lg z-50">
-        <div className="flex justify-around py-3 px-2">
+      <div className="fixed bottom-0 left-0 right-0 bg-[rgba(10,20,35,0.95)] border-t border-white/10 z-50" style={{ height: "72px" }}>
+        <div className="flex justify-around items-center h-full px-2">
           <button
             onClick={() => setActiveTool(activeTool === "background" ? null : "background")}
-            className={`flex flex-col items-center gap-1 px-4 py-2 rounded-lg transition-all ${
-              activeTool === "background" ? "bg-blue-500/20 text-blue-400" : "text-white/70 hover:text-white hover:bg-white/5"
+            className={`flex flex-col items-center gap-1 transition-all ${
+              activeTool === "background" ? "text-blue-400" : "text-white/70 hover:text-white"
             }`}
           >
             <ImageIcon className="w-5 h-5" />
-            <span className="text-xs">Background</span>
+            <span className="text-[11px]">Background</span>
           </button>
           
           <button
             onClick={() => setActiveTool(activeTool === "photos" ? null : "photos")}
-            className={`flex flex-col items-center gap-1 px-4 py-2 rounded-lg transition-all ${
-              activeTool === "photos" ? "bg-purple-500/20 text-purple-400" : "text-white/70 hover:text-white hover:bg-white/5"
+            className={`flex flex-col items-center gap-1 transition-all ${
+              activeTool === "photos" ? "text-purple-400" : "text-white/70 hover:text-white"
             }`}
           >
             <ImagePlus className="w-5 h-5" />
-            <span className="text-xs">Photos</span>
+            <span className="text-[11px]">Photos</span>
           </button>
           
           <button
             onClick={() => setActiveTool(activeTool === "text" ? null : "text")}
-            className={`flex flex-col items-center gap-1 px-4 py-2 rounded-lg transition-all ${
-              activeTool === "text" ? "bg-orange-500/20 text-orange-400" : "text-white/70 hover:text-white hover:bg-white/5"
+            className={`flex flex-col items-center gap-1 transition-all ${
+              activeTool === "text" ? "text-orange-400" : "text-white/70 hover:text-white"
             }`}
           >
             <Type className="w-5 h-5" />
-            <span className="text-xs">Text</span>
+            <span className="text-[11px]">Text</span>
           </button>
           
           <button
             onClick={() => setActiveTool(activeTool === "logo" ? null : "logo")}
-            className={`flex flex-col items-center gap-1 px-4 py-2 rounded-lg transition-all ${
-              activeTool === "logo" ? "bg-cyan-500/20 text-cyan-400" : "text-white/70 hover:text-white hover:bg-white/5"
+            className={`flex flex-col items-center gap-1 transition-all ${
+              activeTool === "logo" ? "text-cyan-400" : "text-white/70 hover:text-white"
             }`}
           >
             <Layers className="w-5 h-5" />
-            <span className="text-xs">Logo</span>
+            <span className="text-[11px]">Logo</span>
           </button>
           
           <button
             onClick={exportImage}
             disabled={isMerging}
-            className={`flex flex-col items-center gap-1 px-4 py-2 rounded-lg transition-all ${
-              isMerging ? "text-white/50" : "text-green-400 hover:bg-green-500/20"
-            }`}
+            className="px-3.5 py-2 rounded-xl font-semibold text-black transition-all disabled:opacity-50"
+            style={{
+              background: "linear-gradient(45deg, #00ff8a, #00ffa2)",
+              animation: isMerging ? "none" : "pulseGlow 2s infinite"
+            }}
           >
-            {isMerging ? <RefreshCw className="w-5 h-5 animate-spin" /> : <Download className="w-5 h-5" />}
-            <span className="text-xs">{isMerging ? "Proses..." : "Export"}</span>
+            {isMerging ? (
+              <span className="flex items-center gap-1.5 text-sm">
+                <RefreshCw className="w-4 h-4 animate-spin" />
+                Proses
+              </span>
+            ) : (
+              <span className="text-sm">Export</span>
+            )}
           </button>
         </div>
       </div>
 
+      {/* Add pulseGlow animation style */}
+      <style jsx global>{`
+        @keyframes pulseGlow {
+          0% { box-shadow: 0 0 0 rgba(0, 255, 160, 0.6); }
+          50% { box-shadow: 0 0 18px rgba(0, 255, 160, 0.9); }
+          100% { box-shadow: 0 0 0 rgba(0, 255, 160, 0.6); }
+        }
+      `}</style>
+
       {/* Tool Panels - Slide up from bottom */}
       {/* Background Panel */}
       {activeTool === "background" && (
-        <div className="fixed bottom-16 left-0 right-0 bg-slate-800 border-t border-white/10 rounded-t-2xl p-4 z-40 max-h-[50vh] overflow-y-auto">
+        <div className="fixed bottom-[72px] left-0 right-0 bg-[#0a1525]/95 backdrop-blur-lg border-t border-white/10 rounded-t-2xl p-4 z-40 max-h-[50vh] overflow-y-auto">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-white font-semibold">Background</h3>
             <button onClick={() => setActiveTool(null)} className="text-white/70 hover:text-white">
@@ -1653,7 +1672,7 @@ const CollageEditor = ({
 
       {/* Photos Panel */}
       {activeTool === "photos" && (
-        <div className="fixed bottom-16 left-0 right-0 bg-slate-800 border-t border-white/10 rounded-t-2xl p-4 z-40 max-h-[50vh] overflow-y-auto">
+        <div className="fixed bottom-[72px] left-0 right-0 bg-[#0a1525]/95 backdrop-blur-lg border-t border-white/10 rounded-t-2xl p-4 z-40 max-h-[50vh] overflow-y-auto">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-white font-semibold">Photos</h3>
             <button onClick={() => setActiveTool(null)} className="text-white/70 hover:text-white">
@@ -1721,7 +1740,7 @@ const CollageEditor = ({
 
       {/* Text Panel */}
       {activeTool === "text" && (
-        <div className="fixed bottom-16 left-0 right-0 bg-slate-800 border-t border-white/10 rounded-t-2xl p-4 z-40 max-h-[60vh] overflow-y-auto">
+        <div className="fixed bottom-[72px] left-0 right-0 bg-[#0a1525]/95 backdrop-blur-lg border-t border-white/10 rounded-t-2xl p-4 z-40 max-h-[60vh] overflow-y-auto">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-white font-semibold">Text</h3>
             <button onClick={() => setActiveTool(null)} className="text-white/70 hover:text-white">
@@ -1829,7 +1848,7 @@ const CollageEditor = ({
 
       {/* Logo Panel */}
       {activeTool === "logo" && (
-        <div className="fixed bottom-16 left-0 right-0 bg-slate-800 border-t border-white/10 rounded-t-2xl p-4 z-40">
+        <div className="fixed bottom-[72px] left-0 right-0 bg-[#0a1525]/95 backdrop-blur-lg border-t border-white/10 rounded-t-2xl p-4 z-40">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-white font-semibold">Logo</h3>
             <button onClick={() => setActiveTool(null)} className="text-white/70 hover:text-white">
@@ -3230,64 +3249,51 @@ export default function Home() {
   useEffect(() => { generatePreview(); }, [generatePreview]);
 
   return (
-    <div className="w-screen h-screen bg-slate-900 flex items-center justify-center overflow-hidden">
-      {/* 9:16 Container */}
+    <div className="w-screen h-screen flex items-center justify-center overflow-hidden"
+      style={{ background: "radial-gradient(circle at top, #102a43, #081520)" }}
+    >
+      {/* Phone Frame Container */}
       <div
-        className="
-          relative
-          h-screen
-          max-h-[920px]
-          aspect-[9/16]
-          bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900
-          shadow-2xl
-          overflow-hidden
-          rounded-xl
-        "
+        className="relative w-full max-w-[430px] h-[96vh] overflow-hidden flex flex-col"
+        style={{
+          aspectRatio: "9/16",
+          background: "linear-gradient(180deg, #0e2238, #081624)",
+          borderRadius: "24px",
+          boxShadow: "0 40px 120px rgba(0,0,0,0.8), inset 0 0 0 1px rgba(255,255,255,0.05)"
+        }}
       >
-        {/* Scroll area */}
-        <div className="absolute inset-0 overflow-y-auto overflow-x-hidden">
-          {/* Header */}
-          <header className="sticky top-0 z-50 backdrop-blur-xl bg-slate-900/80 border-b border-white/10">
-            <div className="px-4 py-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="relative">
-                    <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-amber-400 rounded-xl blur-md opacity-75" />
-                    <img 
-                      src="https://www.e-katalog-sop.cloud/sulapfoto_nomg_1.png" 
-                      alt="Logo" 
-                      className="relative w-10 h-10 rounded-xl shadow-lg object-cover"
-                    />
-                  </div>
-                  <div>
-                    <h1 className="text-lg font-bold bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent">
-                      Laporan WA Basarnas
-                    </h1>
-                    <p className="text-[10px] text-slate-400">
-                      Direktorat Kesiapsiagaan
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setShowDrafts(true)}
-                    className="text-white/70 hover:text-white hover:bg-white/10"
-                  >
-                    <Archive className="w-5 h-5" />
-                  </Button>
-                  <Button
-                    size="sm"
-                    onClick={shareToWhatsApp}
-                    className="bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white"
-                  >
-                    <Send className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
+        {/* Header */}
+        <header className="flex-shrink-0 px-4 py-3.5 backdrop-blur-lg border-b border-white/10"
+          style={{ background: "rgba(255,255,255,0.03)" }}
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-lg font-semibold text-white">
+                Laporan WA Basarnas
+              </h1>
+              <p className="text-xs text-white/60">
+                Direktorat Kesiapsiagaan
+              </p>
             </div>
-          </header>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowDrafts(true)}
+                className="text-white/70 hover:text-white hover:bg-white/10"
+              >
+                <Archive className="w-5 h-5" />
+              </Button>
+              <Button
+                size="sm"
+                onClick={shareToWhatsApp}
+                className="bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white"
+              >
+                <Send className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+        </header>
 
         {/* Main Content - Scrollable */}
         <div className="flex-1 overflow-y-auto px-4 py-4">
@@ -3919,7 +3925,9 @@ export default function Home() {
       </Dialog>
 
           {/* Footer */}
-          <footer className="bg-slate-900/80 backdrop-blur-sm border-t border-white/10 py-4 mt-auto">
+          <footer className="flex-shrink-0 px-4 py-3 backdrop-blur-lg border-t border-white/10 mt-auto"
+            style={{ background: "rgba(255,255,255,0.03)" }}
+          >
             <div className="text-center">
               <div className="flex items-center justify-center gap-2 mb-1">
                 <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-red-600 to-red-700 flex items-center justify-center">
@@ -3927,15 +3935,13 @@ export default function Home() {
                 </div>
                 <span className="text-white text-sm font-semibold">Basarnas</span>
               </div>
-              <p className="text-slate-400 text-[10px]">
+              <p className="text-white/50 text-[10px]">
                 © 2024 Laporan WhatsApp - Direktorat Kesiapsiagaan
               </p>
             </div>
           </footer>
-        </div>
-        {/* End Scroll Area */}
       </div>
-      {/* End 9:16 Container */}
+      {/* End Phone Frame Container */}
     </div>
   );
 }
