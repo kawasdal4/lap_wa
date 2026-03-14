@@ -908,6 +908,11 @@ interface CollageEditorProps {
   reportTitle: string;
   reportSubtitle: string;
   onSendToWhatsApp: () => void;
+  // WhatsApp photo sending states
+  showSendPhotoButton: boolean;
+  isSendingWA: boolean;
+  onSendPhoto: () => void;
+  onClosePreview: () => void;
 }
 
 // Collage Editor Component - Mobile Style Layout with Bottom Toolbar
@@ -932,6 +937,10 @@ const CollageEditor = ({
   reportTitle,
   reportSubtitle,
   onSendToWhatsApp,
+  showSendPhotoButton,
+  isSendingWA,
+  onSendPhoto,
+  onClosePreview,
 }: CollageEditorProps) => {
   const canvasRef = useRef<HTMLDivElement>(null);
   const backgroundInputRef = useRef<HTMLInputElement>(null);
@@ -1874,31 +1883,55 @@ const CollageEditor = ({
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-white font-semibold">Hasil Export</h3>
               <button 
-                onClick={() => setMergedImage("")} 
+                onClick={onClosePreview}
                 className="text-white/70 hover:text-white"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
             <img src={mergedImage} alt="Merged" className="w-full rounded-lg" />
+            
+            {/* Action Buttons */}
             <div className="flex gap-2 mt-4">
               <Button
                 onClick={onDownload}
-                className="flex-1 bg-green-600 hover:bg-green-500"
+                className="flex-1 bg-blue-600 hover:bg-blue-500"
               >
                 <Download className="w-4 h-4 mr-2" />
                 Download
               </Button>
               <Button
                 onClick={onSendToWhatsApp}
-                className="flex-1 bg-green-500 hover:bg-green-400 text-white"
+                disabled={isSendingWA}
+                className="flex-1 bg-green-500 hover:bg-green-400 text-white disabled:opacity-50"
               >
-                <MessageSquare className="w-4 h-4 mr-2" />
-                Kirim WA
+                {isSendingWA ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                    Mengirim...
+                  </>
+                ) : (
+                  <>
+                    <MessageSquare className="w-4 h-4 mr-2" />
+                    Kirim WA
+                  </>
+                )}
               </Button>
             </div>
+            
+            {/* Tombol Kirim Foto - Muncul setelah teks terkirim */}
+            {showSendPhotoButton && (
+              <Button
+                onClick={onSendPhoto}
+                className="w-full mt-2 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white animate-pulse"
+              >
+                <ImageIcon className="w-4 h-4 mr-2" />
+                📸 Kirim Foto ke WhatsApp
+              </Button>
+            )}
+            
             <Button
-              onClick={() => setMergedImage("")}
+              onClick={onClosePreview}
               variant="outline"
               className="w-full mt-2"
             >
@@ -3006,82 +3039,123 @@ export default function Home() {
     }
   };
 
-  // Send text report first, then photo separately
+  // ==============================
+  // STATE FOR WHATSAPP SENDING
+  // ==============================
+  const [showSendPhotoButton, setShowSendPhotoButton] = useState(false);
+  const [exportedPhotoFile, setExportedPhotoFile] = useState<File | null>(null);
+  const [isSendingWA, setIsSendingWA] = useState(false);
+
+  // Reset WA states
+  const resetWAStates = useCallback(() => {
+    setShowSendPhotoButton(false);
+    setExportedPhotoFile(null);
+    setIsSendingWA(false);
+  }, []);
+
+  // Close modal and reset states
+  const handleCloseMergedPreview = useCallback(() => {
+    setMergedImage("");
+    resetWAStates();
+  }, [setMergedImage, resetWAStates]);
+
+  // ==============================
+  // EXPORT PREVIEW MENJADI FOTO
+  // ==============================
+  const exportPhotoFile = async (): Promise<File | null> => {
+    if (!mergedImage) return null;
+    
+    const res = await fetch(mergedImage);
+    const blob = await res.blob();
+    const file = new File([blob], "dokumentasi-basarnas.jpg", { type: "image/jpeg" });
+    
+    setExportedPhotoFile(file);
+    return file;
+  };
+
+  // ==============================
+  // KIRIM TEXT WA
+  // ==============================
+  const kirimTextWA = (phoneNumber: string, laporanText: string) => {
+    const text = encodeURIComponent(laporanText);
+    window.open(
+      `https://wa.me/${phoneNumber}?text=${text}`,
+      "_blank"
+    );
+  };
+
+  // ==============================
+  // SHARE FOTO KE WA
+  // ==============================
+  const kirimFotoWA = async () => {
+    if (!exportedPhotoFile) {
+      toast.error("Foto belum siap");
+      return;
+    }
+
+    try {
+      // Mobile - share file langsung
+      if (navigator.canShare && navigator.canShare({ files: [exportedPhotoFile] })) {
+        await navigator.share({
+          files: [exportedPhotoFile],
+          title: "Foto Laporan",
+          text: ""
+        });
+        toast.success("Foto berhasil dikirim!");
+      }
+      // Desktop - download foto
+      else {
+        const link = document.createElement("a");
+        link.href = mergedImage;
+        link.download = "dokumentasi-basarnas.jpg";
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        toast.success("Foto di-download. Silakan attach di WhatsApp.");
+      }
+    } catch (err) {
+      console.error(err);
+      if (err instanceof Error && err.name !== 'AbortError') {
+        toast.error("Gagal mengirim foto");
+      }
+    }
+  };
+
+  // ==============================
+  // FLOW KIRIM LAPORAN
+  // ==============================
   const sendAllToWhatsApp = async () => {
     const laporanText = generatePreview();
     const phoneNumber = ""; // Kosong = pilih kontak manual
-    
+
     try {
-      // ============================
-      // STEP 1: EXPORT FOTO
-      // ============================
-      toast.info("Export gambar...");
-      
-      // Gunakan CollageEditor's exportImage via mergedImage
+      setIsSendingWA(true);
+
+      // 1️⃣ Export gambar
       if (!mergedImage) {
         toast.error("Silakan klik Export terlebih dahulu!");
         return;
       }
       
-      const response = await fetch(mergedImage);
-      const blob = await response.blob();
-      const file = new File([blob], "dokumentasi-basarnas.jpg", { type: "image/jpeg" });
-      
-      // ============================
-      // STEP 2: KIRIM TEXT WA
-      // ============================
+      toast.info("Menyiapkan foto...");
+      await exportPhotoFile();
+
+      // 2️⃣ Kirim text
       toast.info("Membuka WhatsApp...");
-      
-      const encodedText = encodeURIComponent(laporanText);
-      window.open(
-        `https://wa.me/${phoneNumber}?text=${encodedText}`,
-        "_blank"
-      );
+      kirimTextWA(phoneNumber, laporanText);
       
       toast.success("Laporan teks terkirim!");
-      
-      // ============================
-      // STEP 3: KIRIM FOTO WA
-      // Delay 1800ms supaya WhatsApp sudah terbuka
-      // ============================
-      setTimeout(async () => {
-        try {
-          // HP / Mobile browser - share file langsung
-          if (navigator.canShare && navigator.canShare({ files: [file] })) {
-            toast.info("Mengirim foto...");
-            
-            await navigator.share({
-              files: [file],
-              title: "Foto Laporan",
-              text: ""
-            });
-            
-            toast.success("Foto berhasil dikirim!");
-          }
-          // Desktop fallback - download foto
-          else {
-            toast.info("Mengunduh foto untuk dikirim manual...");
-            
-            const link = document.createElement("a");
-            link.href = mergedImage;
-            link.download = "dokumentasi-basarnas.jpg";
-            document.body.appendChild(link);
-            link.click();
-            link.remove();
-            
-            toast.success("Foto sudah di-download. Silakan attach di WhatsApp.");
-          }
-        } catch (err) {
-          console.error("Share error:", err);
-          if (err instanceof Error && err.name !== 'AbortError') {
-            toast.error("Gagal mengirim foto");
-          }
-        }
-      }, 1800); // Delay minimal 1500-2000ms supaya WhatsApp sudah terbuka
-      
+
+      // 3️⃣ Munculkan tombol kirim foto setelah 1.5 detik
+      setTimeout(() => {
+        setShowSendPhotoButton(true);
+        setIsSendingWA(false);
+      }, 1500);
+
     } catch (err) {
-      console.error("Export error:", err);
-      toast.error("Gagal export laporan");
+      console.error(err);
+      toast.error("Gagal mengirim laporan");
+      setIsSendingWA(false);
     }
   };
 
@@ -3641,6 +3715,10 @@ export default function Home() {
                 return tempat && dateStr ? `${tempat}, ${dateStr}` : tempat || dateStr || "";
               })()}
               onSendToWhatsApp={sendAllToWhatsApp}
+              showSendPhotoButton={showSendPhotoButton}
+              isSendingWA={isSendingWA}
+              onSendPhoto={kirimFotoWA}
+              onClosePreview={handleCloseMergedPreview}
             />
             {/* Hidden Canvas */}
             <canvas ref={canvasRef} className="hidden" />
