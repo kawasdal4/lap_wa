@@ -1627,8 +1627,20 @@ const CollageEditor = ({
             transform: scale(1.1);
           }
         }
+        @keyframes gradientX {
+          0%, 100% { 
+            background-position: 0% 50%;
+          }
+          50% { 
+            background-position: 100% 50%;
+          }
+        }
         .animate-pulse-glow {
           animation: logoGlow 2s ease-in-out infinite;
+        }
+        .animate-gradient-x {
+          background-size: 200% 200%;
+          animation: gradientX 3s ease infinite;
         }
       `}</style>
 
@@ -3276,24 +3288,34 @@ export default function Home() {
         }}
       >
         {/* Header */}
-        <header className="flex-shrink-0 px-4 py-3.5 backdrop-blur-lg border-b border-white/10"
-          style={{ background: "rgba(255,255,255,0.03)" }}
+        <header 
+          className="flex-shrink-0 px-4 py-3.5 relative overflow-hidden"
+          style={{ 
+            background: "linear-gradient(135deg, rgba(185, 28, 28, 0.15) 0%, rgba(234, 88, 12, 0.1) 50%, rgba(251, 146, 60, 0.08) 100%)",
+            borderBottom: "1px solid rgba(255,255,255,0.08)"
+          }}
         >
-          <div className="flex items-center justify-between">
+          {/* Animated gradient overlay */}
+          <div className="absolute inset-0 opacity-50">
+            <div className="absolute inset-0 bg-gradient-to-r from-red-600/10 via-orange-500/10 to-amber-500/10 animate-gradient-x" />
+          </div>
+          <div className="flex items-center justify-between relative z-10">
             <div className="flex items-center gap-3">
-              <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-amber-400 rounded-xl blur-md opacity-75 animate-pulse-glow" />
+              <div className="relative group">
+                {/* Multi-layer glow effect */}
+                <div className="absolute -inset-1 bg-gradient-to-r from-red-500 via-orange-500 to-amber-400 rounded-xl blur opacity-70 group-hover:opacity-100 transition duration-500 animate-pulse-glow" />
+                <div className="absolute -inset-0.5 bg-gradient-to-r from-red-600 to-orange-500 rounded-xl blur-md opacity-50" />
                 <img 
                   src="https://www.e-katalog-sop.cloud/sulapfoto_nomg_1.png" 
                   alt="Logo" 
-                  className="relative w-10 h-10 rounded-xl shadow-lg object-cover"
+                  className="relative w-11 h-11 rounded-xl shadow-2xl object-cover border border-white/20"
                 />
               </div>
               <div>
-                <h1 className="text-lg font-semibold text-white">
+                <h1 className="text-lg font-bold bg-gradient-to-r from-white via-orange-100 to-white bg-clip-text text-transparent drop-shadow-lg">
                   Laporan WA Basarnas
                 </h1>
-                <p className="text-xs text-white/60">
+                <p className="text-xs text-orange-200/70 font-medium tracking-wide">
                   Direktorat Kesiapsiagaan
                 </p>
               </div>
@@ -3303,7 +3325,7 @@ export default function Home() {
                 variant="ghost"
                 size="icon"
                 onClick={() => setShowDrafts(true)}
-                className="text-white/70 hover:text-white hover:bg-white/10"
+                className="text-white/70 hover:text-white hover:bg-white/10 rounded-full"
               >
                 <Archive className="w-5 h-5" />
               </Button>
@@ -3942,23 +3964,35 @@ export default function Home() {
       </Dialog>
 
           {/* Footer */}
-          <footer className="flex-shrink-0 px-4 py-3 backdrop-blur-lg border-t border-white/10 mt-auto"
-            style={{ background: "rgba(255,255,255,0.03)" }}
+          <footer 
+            className="flex-shrink-0 px-4 py-3 relative overflow-hidden mt-auto"
+            style={{ 
+              background: "linear-gradient(135deg, rgba(251, 146, 60, 0.08) 0%, rgba(234, 88, 12, 0.1) 50%, rgba(185, 28, 28, 0.15) 100%)",
+              borderTop: "1px solid rgba(255,255,255,0.08)"
+            }}
           >
-            <div className="text-center">
+            {/* Animated gradient overlay */}
+            <div className="absolute inset-0 opacity-50">
+              <div className="absolute inset-0 bg-gradient-to-l from-red-600/10 via-orange-500/10 to-amber-500/10 animate-gradient-x" />
+            </div>
+            <div className="text-center relative z-10">
               <div className="flex items-center justify-center gap-2 mb-1">
-                <div className="relative">
-                  <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-amber-400 rounded-lg blur-sm opacity-75 animate-pulse-glow" />
+                <div className="relative group">
+                  {/* Multi-layer glow effect */}
+                  <div className="absolute -inset-0.5 bg-gradient-to-r from-red-500 via-orange-500 to-amber-400 rounded-lg blur opacity-70 group-hover:opacity-100 transition duration-500 animate-pulse-glow" />
+                  <div className="absolute -inset-0.25 bg-gradient-to-r from-red-600 to-orange-500 rounded-lg blur-sm opacity-50" />
                   <img 
                     src="https://www.e-katalog-sop.cloud/sulapfoto_nomg_1.png" 
                     alt="Logo" 
-                    className="relative w-6 h-6 rounded-lg shadow object-cover"
+                    className="relative w-6 h-6 rounded-lg shadow-xl object-cover border border-white/20"
                   />
                 </div>
-                <span className="text-white text-sm font-semibold">Basarnas</span>
+                <span className="text-white text-sm font-semibold bg-gradient-to-r from-white via-orange-100 to-white bg-clip-text text-transparent">
+                  Basarnas
+                </span>
               </div>
-              <p className="text-white/50 text-[10px]">
-                © 2024 Laporan WhatsApp - Direktorat Kesiapsiagaan
+              <p className="text-orange-200/50 text-[10px] font-medium">
+                © 2026 Laporan WhatsApp - Direktorat Kesiapsiagaan
               </p>
             </div>
           </footer>
