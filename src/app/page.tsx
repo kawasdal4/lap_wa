@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback, useEffect, forwardRef } from "react";
-import html2canvas from "html2canvas";
+import { toJpeg } from "html-to-image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -899,6 +899,7 @@ interface CollageEditorProps {
   onMerge: () => void;
   onDownload: () => void;
   isMerging: boolean;
+  setIsMerging: (value: boolean) => void;
   mergedImage: string;
   setMergedImage: (img: string) => void;
   basarnasLogo: HTMLImageElement | null;
@@ -922,6 +923,7 @@ const CollageEditor = ({
   onMerge,
   onDownload,
   isMerging,
+  setIsMerging,
   mergedImage,
   setMergedImage,
   basarnasLogo,
@@ -935,7 +937,103 @@ const CollageEditor = ({
   const photoInputRef = useRef<HTMLInputElement>(null);
   const [activeTool, setActiveTool] = useState<string | null>(null);
   const [selectedPhoto, setSelectedPhoto] = useState<number | null>(null);
+
+  // =============================
+  // GRID SNAP SYSTEM
+  // =============================
+  const GRID = 5; // Grid size in percentage points
   
+  const snapToGrid = (value: number): number => {
+    return Math.round(value / GRID) * GRID;
+  };
+
+  // =============================
+  // TOUCH GESTURE SYSTEM
+  // =============================
+  const gestureRef = useRef({
+    startX: 0,
+    startY: 0,
+    startDistance: 0,
+    startScale: 1,
+    startImgX: 0,
+    startImgY: 0,
+    photoIndex: null as number | null,
+    mode: null as "drag" | "zoom" | null
+  });
+
+  // Calculate distance between two touch points
+  const getTouchDistance = (t1: React.Touch, t2: React.Touch): number => {
+    const dx = t1.clientX - t2.clientX;
+    const dy = t1.clientY - t2.clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+  };
+
+  // Touch start handler
+  const handleTouchStart = (e: React.TouchEvent, index: number) => {
+    const touches = e.touches;
+    const photo = layers.photos[index];
+    if (!photo) return;
+
+    gestureRef.current.photoIndex = index;
+
+    if (touches.length === 1) {
+      // Single touch - drag mode
+      gestureRef.current.mode = "drag";
+      gestureRef.current.startX = touches[0].clientX;
+      gestureRef.current.startY = touches[0].clientY;
+      gestureRef.current.startImgX = photo.imgX;
+      gestureRef.current.startImgY = photo.imgY;
+    }
+
+    if (touches.length === 2) {
+      // Two touches - zoom mode
+      gestureRef.current.mode = "zoom";
+      gestureRef.current.startDistance = getTouchDistance(touches[0], touches[1]);
+      gestureRef.current.startScale = photo.scale;
+    }
+  };
+
+  // Touch move handler
+  const handleTouchMove = (e: React.TouchEvent) => {
+    const g = gestureRef.current;
+    if (g.photoIndex === null) return;
+
+    e.preventDefault();
+
+    if (g.mode === "drag" && e.touches.length === 1) {
+      const dx = e.touches[0].clientX - g.startX;
+      const dy = e.touches[0].clientY - g.startY;
+
+      // Convert pixel movement to percentage
+      const scaledDx = dx * 0.1;
+      const scaledDy = dy * 0.1;
+
+      // Snap to grid
+      const newX = snapToGrid(g.startImgX + scaledDx);
+      const newY = snapToGrid(g.startImgY + scaledDy);
+
+      updatePhoto(g.photoIndex, {
+        imgX: newX,
+        imgY: newY
+      });
+    }
+
+    if (g.mode === "zoom" && e.touches.length === 2) {
+      const newDistance = getTouchDistance(e.touches[0], e.touches[1]);
+      const ratio = newDistance / g.startDistance;
+
+      updatePhoto(g.photoIndex, {
+        scale: Math.min(3, Math.max(0.5, g.startScale * ratio))
+      });
+    }
+  };
+
+  // Touch end handler
+  const handleTouchEnd = () => {
+    gestureRef.current.mode = null;
+    gestureRef.current.photoIndex = null;
+  };
+
   // Update layer helper
   const updateLayer = <K extends keyof CollageLayers>(
     key: K,
@@ -956,64 +1054,7 @@ const CollageEditor = ({
     });
   }, [setLayers]);
 
-  // Drag photo inside frame
-  const startDragPhoto = useCallback((e: React.MouseEvent | React.TouchEvent, index: number) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    if (!canvasRef.current) return;
-    const rect = canvasRef.current.getBoundingClientRect();
-    
-    const getClientPos = (ev: React.MouseEvent | React.TouchEvent | MouseEvent | TouchEvent) => {
-      if ('touches' in ev && ev.touches.length > 0) {
-        return { x: ev.touches[0].clientX, y: ev.touches[0].clientY };
-      } else if ('clientX' in ev) {
-        return { x: ev.clientX, y: ev.clientY };
-      }
-      return { x: 0, y: 0 };
-    };
-    
-    const startPos = getClientPos(e);
-    const startImgX = layers.photos[index]?.imgX || 0;
-    const startImgY = layers.photos[index]?.imgY || 0;
-    
-    const handleMove = (moveEvent: MouseEvent | TouchEvent) => {
-      moveEvent.preventDefault(); // Prevent scroll
-      const clientPos = getClientPos(moveEvent);
-      const dx = clientPos.x - startPos.x;
-      const dy = clientPos.y - startPos.y;
-      
-      // Scale delta based on canvas size
-      const scaledDx = (dx / rect.width) * 100;
-      const scaledDy = (dy / rect.height) * 100;
-      
-      setLayers((prev) => {
-        const newPhotos = [...prev.photos];
-        if (newPhotos[index]) {
-          newPhotos[index] = { 
-            ...newPhotos[index], 
-            imgX: startImgX + scaledDx,
-            imgY: startImgY + scaledDy,
-          };
-        }
-        return { ...prev, photos: newPhotos };
-      });
-    };
-    
-    const handleUp = () => {
-      document.removeEventListener('mousemove', handleMove);
-      document.removeEventListener('mouseup', handleUp);
-      document.removeEventListener('touchmove', handleMove, { capture: true } as AddEventListenerOptions);
-      document.removeEventListener('touchend', handleUp);
-    };
-    
-    document.addEventListener('mousemove', handleMove);
-    document.addEventListener('mouseup', handleUp);
-    document.addEventListener('touchmove', handleMove, { passive: false, capture: true } as AddEventListenerOptions);
-    document.addEventListener('touchend', handleUp);
-  }, [layers.photos, setLayers]);
-
-  // Custom drag handler for text elements
+  // Custom drag handler for text elements with grid snap
   const handleElementDrag = useCallback((
     type: 'title' | 'subtitle' | 'footer',
     e: React.MouseEvent | React.TouchEvent
@@ -1035,19 +1076,20 @@ const CollageEditor = ({
     const startLayer = layers[type];
     
     const handleMove = (moveEvent: MouseEvent | TouchEvent) => {
-      moveEvent.preventDefault(); // Prevent scroll
+      moveEvent.preventDefault();
       const clientX = 'touches' in moveEvent ? moveEvent.touches[0].clientX : moveEvent.clientX;
       const clientY = 'touches' in moveEvent ? moveEvent.touches[0].clientY : moveEvent.clientY;
       
       const deltaX = clientX - startPos.x;
       const deltaY = clientY - startPos.y;
       
-      // Convert pixel delta to percentage
+      // Convert pixel delta to percentage and snap to grid
       const percentX = Math.round((deltaX / rect.width) * 100);
       const percentY = Math.round((deltaY / rect.height) * 100);
       
-      const newX = Math.max(0, Math.min(100, startLayer.x + percentX));
-      const newY = Math.max(0, Math.min(100, startLayer.y + percentY));
+      // Snap to grid and clamp values
+      const newX = Math.max(0, Math.min(100, snapToGrid(startLayer.x + percentX)));
+      const newY = Math.max(0, Math.min(100, snapToGrid(startLayer.y + percentY)));
       
       updateLayer(type, { x: newX, y: newY });
     };
@@ -1065,24 +1107,35 @@ const CollageEditor = ({
     document.addEventListener('touchend', handleUp);
   }, [layers, updateLayer]);
 
-  // Export function using html2canvas
+  // =============================
+  // EXPORT IMAGE
+  // Using html-to-image (no color function errors!)
+  // =============================
   const exportImage = async () => {
     if (!canvasRef.current) return;
-    
-    onMerge(); // Use existing merge logic
-    
-    // Alternative: use html2canvas for what-you-see-is-what-you-get
-    // try {
-    //   const canvas = await html2canvas(canvasRef.current, {
-    //     scale: 3,
-    //     useCORS: true,
-    //     allowTaint: true,
-    //   });
-    //   const dataUrl = canvas.toDataURL("image/jpeg", 0.95);
-    //   // Handle download
-    // } catch (error) {
-    //   console.error('Export error:', error);
-    // }
+
+    setIsMerging(true);
+
+    try {
+      await document.fonts.ready;
+
+      const dataUrl = await toJpeg(canvasRef.current, {
+        quality: 0.95,
+        pixelRatio: 3,   // HD export
+        cacheBust: true,
+        backgroundColor: "#0f172a"
+      });
+
+      setMergedImage(dataUrl);
+
+      toast.success("Foto berhasil di-export!");
+
+    } catch (error) {
+      console.error(error);
+      toast.error("Gagal export");
+    } finally {
+      setIsMerging(false);
+    }
   };
 
   const isDarkBg = backgroundBrightness === "dark";
@@ -1147,6 +1200,30 @@ const CollageEditor = ({
             />
           )}
 
+          {/* Grid Guide Overlay */}
+          <div
+            className="absolute inset-0 pointer-events-none z-50"
+            style={{
+              backgroundImage: `
+                linear-gradient(to right, rgba(255,255,255,0.06) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255,255,255,0.06) 1px, transparent 1px)
+              `,
+              backgroundSize: `${GRID}% ${GRID}%`
+            }}
+          />
+
+          {/* Center Guide (Vertical Line) */}
+          <div
+            className="absolute pointer-events-none z-50"
+            style={{
+              left: "50%",
+              top: 0,
+              bottom: 0,
+              width: "1px",
+              background: "rgba(255,255,255,0.3)"
+            }}
+          />
+
           {/* Logos - Transparent with yellow glow */}
           <div className="absolute top-3 left-3 w-12 h-14 flex items-center justify-center overflow-visible z-10">
             {basarnasLogo ? (
@@ -1196,14 +1273,15 @@ const CollageEditor = ({
                   src={photo.url}
                   alt={`Photo ${i + 1}`}
                   draggable={false}
-                  onMouseDown={(e) => startDragPhoto(e, i)}
-                  onTouchStart={(e) => startDragPhoto(e, i)}
                   className="absolute select-none"
+                  onTouchStart={(e) => handleTouchStart(e, i)}
+                  onTouchMove={handleTouchMove}
+                  onTouchEnd={handleTouchEnd}
                   style={{
                     left: `${photo.imgX}%`,
                     top: `${photo.imgY}%`,
                     transform: `scale(${photo.scale})`,
-                    transformOrigin: "center",
+                    transformOrigin: "top left",
                     width: "100%",
                     height: "100%",
                     objectFit: "cover",
@@ -1403,9 +1481,45 @@ const CollageEditor = ({
                     step="0.05"
                     value={layers.background.scale}
                     onChange={(e) => updateLayer("background", { scale: parseFloat(e.target.value) })}
-                    className="w-full"
+                    className="w-full accent-orange-500"
                   />
                 </div>
+                
+                <div className="space-y-2">
+                  <Label className="text-white/70 text-sm">Posisi X: {layers.background.x}px</Label>
+                  <input
+                    type="range"
+                    min="-200"
+                    max="200"
+                    step="5"
+                    value={layers.background.x}
+                    onChange={(e) => updateLayer("background", { x: parseInt(e.target.value) })}
+                    className="w-full accent-blue-500"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label className="text-white/70 text-sm">Posisi Y: {layers.background.y}px</Label>
+                  <input
+                    type="range"
+                    min="-200"
+                    max="200"
+                    step="5"
+                    value={layers.background.y}
+                    onChange={(e) => updateLayer("background", { y: parseInt(e.target.value) })}
+                    className="w-full accent-green-500"
+                  />
+                </div>
+                
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => updateLayer("background", { scale: 1, x: 0, y: 0 })}
+                  className="w-full border-white/20 text-white hover:bg-white/10"
+                >
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  Reset Posisi
+                </Button>
                 
                 <Button
                   variant="destructive"
@@ -3302,6 +3416,7 @@ export default function Home() {
               onMerge={mergeImages}
               onDownload={downloadMergedImage}
               isMerging={isMerging}
+              setIsMerging={setIsMerging}
               mergedImage={mergedImage}
               setMergedImage={setMergedImage}
               basarnasLogo={basarnasLogoRef.current}
