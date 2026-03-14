@@ -3267,13 +3267,21 @@ export default function Home() {
           style={{ background: "rgba(255,255,255,0.03)" }}
         >
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-lg font-semibold text-white">
-                Laporan WA Basarnas
-              </h1>
-              <p className="text-xs text-white/60">
-                Direktorat Kesiapsiagaan
-              </p>
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-amber-400 rounded-xl blur-md opacity-75" />
+                <div className="relative w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center shadow-lg">
+                  <span className="text-white font-bold text-sm">B</span>
+                </div>
+              </div>
+              <div>
+                <h1 className="text-lg font-semibold text-white">
+                  Laporan WA Basarnas
+                </h1>
+                <p className="text-xs text-white/60">
+                  Direktorat Kesiapsiagaan
+                </p>
+              </div>
             </div>
             <div className="flex items-center gap-2">
               <Button
@@ -3924,8 +3932,11 @@ export default function Home() {
           >
             <div className="text-center">
               <div className="flex items-center justify-center gap-2 mb-1">
-                <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-red-600 to-red-700 flex items-center justify-center">
-                  <MessageSquare className="w-3 h-3 text-white" />
+                <div className="relative">
+                  <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-amber-400 rounded-lg blur-sm opacity-75" />
+                  <div className="relative w-6 h-6 rounded-lg bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center shadow">
+                    <span className="text-white font-bold text-[10px]">B</span>
+                  </div>
                 </div>
                 <span className="text-white text-sm font-semibold">Basarnas</span>
               </div>
