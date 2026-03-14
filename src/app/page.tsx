@@ -3010,60 +3010,69 @@ export default function Home() {
   const sendAllToWhatsApp = async () => {
     const text = generatePreview();
     
+    // Check if we have merged image
+    if (!mergedImage) {
+      toast.error("Silakan klik Export terlebih dahulu!");
+      return;
+    }
+    
     // STEP 1: Send text report first
-    const loadingToast = toast.loading("Mengirim laporan teks...");
+    const loadingToast = toast.loading("Mengirim laporan teks ke WhatsApp...");
     
     try {
       // Open WhatsApp with text only
       const encodedText = encodeURIComponent(text);
       window.open(`https://wa.me/?text=${encodedText}`, "_blank");
       
-      toast.success("Laporan teks dikirim!", { id: loadingToast });
+      toast.success("Laporan teks dikirim! Menyiapkan foto...", { id: loadingToast });
       
-      // STEP 2: Prepare and send photo separately after a short delay
-      if (mergedImage) {
-        // Wait a moment before sending photo
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
-        toast.info("Menyiapkan foto untuk dikirim...");
-        
-        // Try Web Share API for image (works best on mobile)
-        if (navigator.share && navigator.canShare) {
-          try {
-            const response = await fetch(mergedImage);
-            const blob = await response.blob();
-            const file = new File([blob], `dokumentasi.jpg`, { type: 'image/jpeg' });
-            
-            if (navigator.canShare({ files: [file] })) {
-              await navigator.share({
-                title: 'Dokumentasi Kegiatan',
-                files: [file]
-              });
-              toast.success("Foto berhasil dikirim!");
-              return;
-            }
-          } catch (error: unknown) {
-            if (error instanceof Error && error.name === 'AbortError') {
-              // User cancelled
-              return;
-            }
-            console.log('Web Share for image failed:', error);
+      // STEP 2: Send photo after a delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      toast.info("Menyiapkan foto...", { duration: 3000 });
+      
+      // Try Web Share API for image (works best on mobile)
+      if (navigator.share && navigator.canShare) {
+        try {
+          console.log("Trying Web Share API for image...");
+          const response = await fetch(mergedImage);
+          const blob = await response.blob();
+          const file = new File([blob], `dokumentasi-basarnas.jpg`, { type: 'image/jpeg' });
+          
+          if (navigator.canShare({ files: [file] })) {
+            await navigator.share({
+              title: 'Dokumentasi Kegiatan',
+              files: [file]
+            });
+            toast.success("Foto berhasil dikirim!");
+            return;
           }
-        }
-        
-        // Fallback: Upload to R2 and send link
-        const photoUrl = await uploadImageToR2(mergedImage, "base64", "photos");
-        if (photoUrl) {
-          // Open WhatsApp with photo link
-          const photoText = encodeURIComponent(`📸 Dokumentasi Kegiatan:\n${photoUrl}`);
-          window.open(`https://wa.me/?text=${photoText}`, "_blank");
-          toast.success("Link foto dikirim!");
+        } catch (error: unknown) {
+          if (error instanceof Error && error.name === 'AbortError') {
+            toast.info("Pengiriman foto dibatalkan");
+            return;
+          }
+          console.log('Web Share for image failed, trying R2 upload:', error);
         }
       }
+      
+      // Fallback: Upload to R2 and send link
+      toast.info("Mengupload foto ke server...", { duration: 5000 });
+      const photoUrl = await uploadImageToR2(mergedImage, "base64", "photos");
+      
+      if (photoUrl) {
+        // Open WhatsApp with photo link
+        const photoText = encodeURIComponent(`📸 Dokumentasi Kegiatan:\n${photoUrl}`);
+        window.open(`https://wa.me/?text=${photoText}`, "_blank");
+        toast.success("Link foto dikirim ke WhatsApp!");
+      } else {
+        toast.error("Gagal mengupload foto. Silakan download dan kirim manual.");
+      }
+      
     } catch (error) {
       toast.dismiss(loadingToast);
       console.error("Send error:", error);
-      toast.error("Gagal mengirim");
+      toast.error("Terjadi kesalahan saat mengirim");
     }
   };
 
