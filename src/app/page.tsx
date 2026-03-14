@@ -876,6 +876,13 @@ interface CollageLayers {
     fontSize: number;
     color: string;
   };
+  logo: {
+    leftX: number;   // percentage position
+    leftY: number;   // percentage position
+    rightX: number;  // percentage position
+    rightY: number;  // percentage position
+    size: number;    // logo size in pixels
+  };
   photos: PhotoLayer[];
 }
 
@@ -937,9 +944,9 @@ const CollageEditor = ({
   // =============================
   const GRID = 5; // Grid size in percentage points
   
-  const snapToGrid = (value: number): number => {
+  const snapToGrid = useCallback((value: number): number => {
     return Math.round(value / GRID) * GRID;
-  };
+  }, []);
 
   // =============================
   // TOUCH GESTURE SYSTEM
@@ -1099,7 +1106,71 @@ const CollageEditor = ({
     document.addEventListener('mouseup', handleUp);
     document.addEventListener('touchmove', handleMove, { passive: false, capture: true } as AddEventListenerOptions);
     document.addEventListener('touchend', handleUp);
-  }, [layers, updateLayer]);
+  }, [layers, updateLayer, snapToGrid]);
+
+  // Drag handler for logos with grid snap
+  const handleLogoDrag = useCallback((
+    logoType: 'left' | 'right',
+    e: React.MouseEvent | React.TouchEvent
+  ) => {
+    e.preventDefault();
+    if (!canvasRef.current) return;
+    
+    const canvas = canvasRef.current;
+    const rect = canvas.getBoundingClientRect();
+    
+    const getClientPos = (e: React.MouseEvent | React.TouchEvent) => {
+      if ('touches' in e) {
+        return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      }
+      return { x: e.clientX, y: e.clientY };
+    };
+    
+    const startPos = getClientPos(e);
+    const startX = logoType === 'left' ? layers.logo.leftX : layers.logo.rightX;
+    const startY = logoType === 'left' ? layers.logo.leftY : layers.logo.rightY;
+    
+    const handleMove = (moveEvent: MouseEvent | TouchEvent) => {
+      moveEvent.preventDefault();
+      const clientX = 'touches' in moveEvent ? moveEvent.touches[0].clientX : moveEvent.clientX;
+      const clientY = 'touches' in moveEvent ? moveEvent.touches[0].clientY : moveEvent.clientY;
+      
+      const deltaX = clientX - startPos.x;
+      const deltaY = clientY - startPos.y;
+      
+      // Convert pixel delta to percentage and snap to grid
+      const percentX = Math.round((deltaX / rect.width) * 100);
+      const percentY = Math.round((deltaY / rect.height) * 100);
+      
+      // Snap to grid and clamp values
+      const newX = Math.max(0, Math.min(100, snapToGrid(startX + percentX)));
+      const newY = Math.max(0, Math.min(100, snapToGrid(startY + percentY)));
+      
+      if (logoType === 'left') {
+        setLayers(prev => ({
+          ...prev,
+          logo: { ...prev.logo, leftX: newX, leftY: newY }
+        }));
+      } else {
+        setLayers(prev => ({
+          ...prev,
+          logo: { ...prev.logo, rightX: newX, rightY: newY }
+        }));
+      }
+    };
+    
+    const handleUp = () => {
+      document.removeEventListener('mousemove', handleMove);
+      document.removeEventListener('mouseup', handleUp);
+      document.removeEventListener('touchmove', handleMove, { capture: true } as AddEventListenerOptions);
+      document.removeEventListener('touchend', handleUp);
+    };
+    
+    document.addEventListener('mousemove', handleMove);
+    document.addEventListener('mouseup', handleUp);
+    document.addEventListener('touchmove', handleMove, { passive: false, capture: true } as AddEventListenerOptions);
+    document.addEventListener('touchend', handleUp);
+  }, [layers.logo, setLayers, snapToGrid]);
 
   // =============================
   // EXPORT IMAGE
@@ -1216,25 +1287,50 @@ const CollageEditor = ({
             }}
           />
 
-          {/* Logos - Transparent with yellow glow */}
-          <div className="absolute top-3 left-3 w-12 h-14 flex items-center justify-center overflow-visible z-10">
+          {/* Logos - Draggable with yellow glow */}
+          {/* Left Logo (Basarnas) */}
+          <div 
+            className="absolute flex items-center justify-center overflow-visible z-10 cursor-move"
+            style={{
+              left: `${layers.logo.leftX}%`,
+              top: `${layers.logo.leftY}%`,
+              width: `${layers.logo.size}px`,
+              height: `${layers.logo.size * 1.2}px`,
+              touchAction: "none"
+            }}
+            onMouseDown={(e) => handleLogoDrag('left', e)}
+            onTouchStart={(e) => handleLogoDrag('left', e)}
+          >
             {basarnasLogo ? (
               <img 
                 src={basarnasLogo.src} 
-                alt="Logo" 
-                className="w-full h-full object-contain"
+                alt="Logo Basarnas" 
+                className="w-full h-full object-contain pointer-events-none"
                 style={{ filter: "drop-shadow(0 0 8px rgba(255, 200, 0, 0.8)) drop-shadow(0 0 15px rgba(255, 180, 0, 0.6))" }}
               />
             ) : (
               <span className="text-[8px] font-bold text-white text-center">BASARNAS</span>
             )}
           </div>
-          <div className="absolute top-3 right-3 w-12 h-14 flex items-center justify-center overflow-visible z-10">
+          
+          {/* Right Logo (BPP) */}
+          <div 
+            className="absolute flex items-center justify-center overflow-visible z-10 cursor-move"
+            style={{
+              left: `${layers.logo.rightX}%`,
+              top: `${layers.logo.rightY}%`,
+              width: `${layers.logo.size}px`,
+              height: `${layers.logo.size * 1.2}px`,
+              touchAction: "none"
+            }}
+            onMouseDown={(e) => handleLogoDrag('right', e)}
+            onTouchStart={(e) => handleLogoDrag('right', e)}
+          >
             {bppLogo ? (
               <img 
                 src={bppLogo.src} 
-                alt="Logo" 
-                className="w-full h-full object-contain"
+                alt="Logo BPP" 
+                className="w-full h-full object-contain pointer-events-none"
                 style={{ filter: "drop-shadow(0 0 8px rgba(255, 200, 0, 0.8)) drop-shadow(0 0 15px rgba(255, 180, 0, 0.6))" }}
               />
             ) : (
@@ -1890,11 +1986,11 @@ export default function Home() {
       color: "#FFFFFF"
     },
     logo: {
-      leftUrl: null,
-      rightUrl: null,
-      x: 10,
-      y: 10,
-      size: 60
+      leftX: 5,      // percentage
+      leftY: 3,      // percentage
+      rightX: 85,    // percentage
+      rightY: 3,     // percentage
+      size: 56       // pixels
     },
     photos: defaultPhotoFrames
   });
