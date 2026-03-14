@@ -3284,13 +3284,6 @@ export default function Home() {
               >
                 <Archive className="w-5 h-5" />
               </Button>
-              <Button
-                size="sm"
-                onClick={shareToWhatsApp}
-                className="bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white"
-              >
-                <Send className="w-4 h-4" />
-              </Button>
             </div>
           </div>
         </header>
@@ -3692,10 +3685,6 @@ export default function Home() {
                 <Copy className="w-4 h-4 mr-2" />
                 Salin Teks
               </Button>
-              <Button onClick={shareToWhatsApp} className="flex-1 sm:flex-none bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white shadow-lg shadow-green-500/25 transition-all duration-300 hover:scale-105">
-                <Send className="w-4 h-4 mr-2" />
-                Kirim ke WhatsApp
-              </Button>
             </div>
           </TabsContent>
 
@@ -3714,10 +3703,6 @@ export default function Home() {
                     <Button size="sm" variant="outline" onClick={copyToClipboard} className="border-white/20 bg-white/5 hover:bg-white/10 text-white">
                       <Copy className="w-4 h-4 mr-2" />
                       Salin
-                    </Button>
-                    <Button size="sm" onClick={shareToWhatsApp} className="bg-gradient-to-r from-green-600 to-green-500 text-white">
-                      <Send className="w-4 h-4 mr-2" />
-                      Kirim ke WA
                     </Button>
                   </div>
                 </div>
