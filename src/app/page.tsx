@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import BackgroundLayer from "@/components/BackgroundLayer";
 import { 
   Bold, Italic, Copy, Save, FileText, ImagePlus, Trash2, 
   Download, Eye, RefreshCw, Plus, Minus, ChevronDown, ChevronUp,
@@ -834,7 +835,7 @@ const renderWhatsAppText = (text: string): React.ReactNode => {
   );
 };
 
-// Layer types for Collage Editor - Using percentage strings for responsive layout
+// Layer types for Collage Editor - Simplified with percentage positioning
 interface PhotoLayer {
   id: string;
   url: string;
@@ -842,8 +843,8 @@ interface PhotoLayer {
   frameY: string;  // percentage e.g. "28%"
   frameW: string;  // percentage e.g. "40%"
   frameH: string;  // percentage e.g. "25%"
-  imgX: number;    // pixel offset for panning
-  imgY: number;    // pixel offset for panning
+  imgX: number;    // pixel offset for panning (percentage)
+  imgY: number;    // pixel offset for panning (percentage)
   scale: number;   // zoom scale
 }
 
@@ -874,13 +875,6 @@ interface CollageLayers {
     y: number;
     fontSize: number;
     color: string;
-  };
-  logo: {
-    leftUrl: string | null;
-    rightUrl: string | null;
-    x: number;
-    y: number;
-    size: number;
   };
   photos: PhotoLayer[];
 }
@@ -1182,14 +1176,12 @@ const CollageEditor = ({
         >
           {/* Background */}
           {layers.background.url ? (
-            <img
+            <BackgroundLayer
               src={layers.background.url}
-              alt="Background"
-              className="absolute inset-0 w-full h-full object-cover"
-              style={{
-                transform: `translate(${layers.background.x}px, ${layers.background.y}px) scale(${layers.background.scale})`,
-                transformOrigin: "center"
-              }}
+              initialScale={layers.background.scale}
+              initialPosition={{ x: layers.background.x, y: layers.background.y }}
+              onScaleChange={(newScale) => updateLayer("background", { scale: newScale })}
+              onPositionChange={(newPos) => updateLayer("background", { x: newPos.x, y: newPos.y })}
             />
           ) : (
             <div 
@@ -1299,6 +1291,59 @@ const CollageEditor = ({
                   <ImagePlus className="w-8 h-8 text-white/50" />
                 </div>
               )}
+              
+              {/* Resize Handle - Bottom Right Corner */}
+              {selectedPhoto === i && photo.url && (
+                <div
+                  className="absolute bottom-0 right-0 w-6 h-6 cursor-se-resize z-20"
+                  style={{ touchAction: "none" }}
+                  onPointerDown={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    
+                    const startX = e.clientX;
+                    const startY = e.clientY;
+                    const startScale = photo.scale;
+                    
+                    const handleMove = (moveEvent: PointerEvent) => {
+                      moveEvent.preventDefault();
+                      const dx = moveEvent.clientX - startX;
+                      const dy = moveEvent.clientY - startY;
+                      const delta = (dx + dy) / 200;
+                      const newScale = Math.min(3, Math.max(0.5, startScale + delta));
+                      updatePhoto(i, { scale: newScale });
+                    };
+                    
+                    const handleUp = () => {
+                      document.removeEventListener('pointermove', handleMove);
+                      document.removeEventListener('pointerup', handleUp);
+                    };
+                    
+                    document.addEventListener('pointermove', handleMove, { passive: false });
+                    document.addEventListener('pointerup', handleUp);
+                  }}
+                >
+                  <div className="w-4 h-4 bg-orange-500 rounded-tl-sm">
+                    <svg viewBox="0 0 10 10" className="w-full h-full text-white">
+                      <path d="M9 1L1 9M9 5L5 9M9 9L9 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                    </svg>
+                  </div>
+                </div>
+              )}
+              
+              {/* Reset Button - Top Right Corner (when selected) */}
+              {selectedPhoto === i && photo.url && (
+                <button
+                  className="absolute top-1 right-1 w-6 h-6 bg-black/50 rounded-full flex items-center justify-center z-20"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    updatePhoto(i, { imgX: 0, imgY: 0, scale: 1 });
+                  }}
+                >
+                  <RefreshCw className="w-3 h-3 text-white" />
+                </button>
+              )}
+              
               <input
                 type="file"
                 accept="image/*"
@@ -1472,44 +1517,9 @@ const CollageEditor = ({
             
             {layers.background.url && (
               <>
-                <div className="space-y-2">
-                  <Label className="text-white/70 text-sm">Skala: {Math.round(layers.background.scale * 100)}%</Label>
-                  <input
-                    type="range"
-                    min="0.5"
-                    max="2"
-                    step="0.05"
-                    value={layers.background.scale}
-                    onChange={(e) => updateLayer("background", { scale: parseFloat(e.target.value) })}
-                    className="w-full accent-orange-500"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label className="text-white/70 text-sm">Posisi X: {layers.background.x}px</Label>
-                  <input
-                    type="range"
-                    min="-200"
-                    max="200"
-                    step="5"
-                    value={layers.background.x}
-                    onChange={(e) => updateLayer("background", { x: parseInt(e.target.value) })}
-                    className="w-full accent-blue-500"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label className="text-white/70 text-sm">Posisi Y: {layers.background.y}px</Label>
-                  <input
-                    type="range"
-                    min="-200"
-                    max="200"
-                    step="5"
-                    value={layers.background.y}
-                    onChange={(e) => updateLayer("background", { y: parseInt(e.target.value) })}
-                    className="w-full accent-green-500"
-                  />
-                </div>
+                <p className="text-white/50 text-xs text-center">
+                  💡 Drag untuk geser, pinch/scroll untuk zoom
+                </p>
                 
                 <Button
                   variant="outline"
@@ -1848,14 +1858,8 @@ export default function Home() {
   // State for Collage Editor - New Layer System
   const [collageSelected, setCollageSelected] = useState<string | null>("title");
   
-  // Default photo frames - Using percentage for responsive 9:16 layout
-  // 4 photos in a 2x2 grid below the title area
-  const defaultPhotoFrames: PhotoLayer[] = [
-    { id: generateId(), url: "", frameX: "5%", frameY: "28%", frameW: "40%", frameH: "25%", imgX: 0, imgY: 0, scale: 1 },
-    { id: generateId(), url: "", frameX: "55%", frameY: "28%", frameW: "40%", frameH: "25%", imgX: 0, imgY: 0, scale: 1 },
-    { id: generateId(), url: "", frameX: "5%", frameY: "55%", frameW: "40%", frameH: "25%", imgX: 0, imgY: 0, scale: 1 },
-    { id: generateId(), url: "", frameX: "55%", frameY: "55%", frameW: "40%", frameH: "25%", imgX: 0, imgY: 0, scale: 1 },
-  ];
+  // Default photo frames - Using pixel-based dimensions with percentage positioning
+  const defaultPhotoFrames: PhotoLayer[] = [];
   
   const [collageLayers, setCollageLayers] = useState<CollageLayers>({
     background: {
@@ -1916,11 +1920,6 @@ export default function Home() {
   // State for custom background
   const [customBackground, setCustomBackground] = useState<string>("");
   const [backgroundBrightness, setBackgroundBrightness] = useState<"light" | "dark">("light");
-  
-  // State for background position adjustment
-  const [bgPositionX, setBgPositionX] = useState(0); // Pixels (-200 to 200)
-  const [bgPositionY, setBgPositionY] = useState(0); // Pixels (-200 to 200)
-  const [bgScale, setBgScale] = useState(100); // Percentage (100 = fit, >100 = zoom in)
   
   const fileInputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -2225,20 +2224,68 @@ export default function Home() {
       });
       setPhotos(updatedPhotos);
       
-      // Also update collageLayers.photos
+      // Calculate how many photos will exist after upload
+      const totalPhotos = updatedPhotos.filter(p => p.preview).length;
+      
+      // Also update collageLayers.photos - create new entries if they don't exist
       setCollageLayers(prev => {
-        const newPhotos = [...prev.photos];
+        const existingCount = prev.photos.filter(p => p.url).length;
+        const newCount = Math.max(existingCount, totalPhotos);
+        
+        // Calculate grid dimensions based on total photos
+        const cols = Math.ceil(Math.sqrt(newCount));
+        const rows = Math.ceil(newCount / cols);
+        
+        // Frame dimensions in percentage
+        const marginH = 10; // horizontal margin from edges (%)
+        const marginTop = 30; // top margin for title (%)
+        const marginBottom = 10; // bottom margin for footer (%)
+        const gap = 3; // gap between photos (%)
+        
+        const availableWidth = 100 - (marginH * 2);
+        const availableHeight = 100 - marginTop - marginBottom;
+        
+        const frameW = (availableWidth - (gap * (cols - 1))) / cols;
+        const frameH = (availableHeight - (gap * (rows - 1))) / rows;
+        
+        // Create a map of existing photos by index
+        const photoMap = new Map<number, PhotoLayer>();
+        prev.photos.forEach((photo, i) => {
+          if (photo && photo.url) photoMap.set(i, photo);
+        });
+        
+        // Update with new photos
         results.forEach(({ index, preview }) => {
-          if (index < 6 && preview && newPhotos[index]) {
-            newPhotos[index] = {
-              ...newPhotos[index],
+          if (index < 6 && preview) {
+            const col = index % cols;
+            const row = Math.floor(index / cols);
+            
+            const frameX = `${marginH + (col * (frameW + gap))}%`;
+            const frameY = `${marginTop + (row * (frameH + gap))}%`;
+            
+            photoMap.set(index, {
+              id: prev.photos[index]?.id || generateId(),
               url: preview,
+              frameX,
+              frameY,
+              frameW: `${frameW}%`,
+              frameH: `${frameH}%`,
               imgX: 0,
               imgY: 0,
-              scale: 1,
-            };
+              scale: 1
+            });
           }
         });
+        
+        // Convert map back to array
+        const maxIndex = Math.max(...Array.from(photoMap.keys()), -1);
+        const newPhotos = [];
+        for (let i = 0; i <= maxIndex; i++) {
+          if (photoMap.has(i)) {
+            newPhotos.push(photoMap.get(i)!);
+          }
+        }
+        
         return { ...prev, photos: newPhotos };
       });
       
@@ -2348,9 +2395,9 @@ export default function Home() {
       // ========== BACKGROUND ==========
       // Use collageLayers for background settings
       const bgUrl = collageLayers.background.url || customBackground;
-      const bgScaleValue = collageLayers.background.url ? collageLayers.background.scale * 100 : bgScale;
-      const bgPosX = collageLayers.background.url ? collageLayers.background.x : bgPositionX;
-      const bgPosY = collageLayers.background.url ? collageLayers.background.y : bgPositionY;
+      const bgScaleValue = collageLayers.background.scale * 100;
+      const bgPosX = collageLayers.background.x;
+      const bgPosY = collageLayers.background.y;
       
       if (bgUrl && customBgRef.current) {
         // Use custom background image with position adjustment
