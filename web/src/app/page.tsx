@@ -4027,56 +4027,60 @@ export default function WAHome() {
             <div className="absolute inset-0 opacity-50">
               <div className="absolute inset-0 bg-gradient-to-l from-red-600/10 via-orange-500/10 to-amber-500/10 animate-gradient-x" />
             </div>
-            <div className="flex flex-col items-center relative z-10 pt-1">
-              {/* Main Branding */}
-              <div className="flex items-center justify-center gap-2 mb-3">
-                <div className="relative group">
-                  <div className="absolute -inset-0.5 bg-gradient-to-r from-red-500 via-orange-500 to-amber-400 rounded-lg blur opacity-70 group-hover:opacity-100 transition duration-500 animate-pulse-glow" />
-                  <div className="absolute -inset-0.25 bg-gradient-to-r from-red-600 to-orange-500 rounded-lg blur-sm opacity-50" />
-                  <img 
-                    src="https://www.e-katalog-sop.cloud/sulapfoto_nomg_1.png" 
-                    alt="Logo" 
-                    className="relative w-7 h-7 rounded-lg shadow-xl object-cover border border-white/20"
-                  />
-                </div>
-                <div className="flex flex-col items-start leading-none gap-0.5">
-                  <span className="text-white text-sm font-black tracking-widest uppercase">
-                    Basarnas
-                  </span>
-                  <span className="text-orange-400/60 text-[8px] font-bold uppercase tracking-tighter">
-                    Direktorat Kesiapsiagaan
-                  </span>
-                </div>
+            <div className="flex flex-col items-center relative z-10 pt-2">
+              {/* Basarnas Branding - Simplified for focus */}
+              <div className="flex items-center gap-2 mb-5 opacity-80 hover:opacity-100 transition-opacity duration-300">
+                <img 
+                  src="https://www.e-katalog-sop.cloud/sulapfoto_nomg_1.png" 
+                  alt="Logo" 
+                  className="w-5 h-5 rounded shadow-lg object-cover border border-white/10"
+                />
+                <span className="text-white/80 text-[10px] font-black tracking-[0.2em] uppercase">
+                  Basarnas
+                </span>
               </div>
               
-              {/* Vercel-style Copyright Bar */}
-              <div className="flex items-center gap-2 px-2.5 py-1 rounded-full bg-black/40 border border-white/10 backdrop-blur-xl shadow-2xl">
-                <div className="w-4 h-4 rounded-full overflow-hidden border border-white/20 ring-1 ring-white/10">
-                  <img 
-                    src="https://www.e-katalog-sop.cloud/foe.jpg" 
-                    alt="FOE" 
-                    className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-500"
-                  />
-                </div>
+              {/* Premium Creator Signature (The WOW Factor) */}
+              <div className="relative group cursor-default">
+                {/* Multi-layer animated glow */}
+                <div className="absolute -inset-4 bg-gradient-to-r from-orange-500/20 via-red-500/20 to-amber-400/20 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-all duration-700 animate-pulse" />
                 
-                <div className="flex items-center gap-2">
-                  <p className="text-white/60 text-[9px] font-medium whitespace-nowrap">
-                    © 2026 Laporan WhatsApp
-                  </p>
-                  <div className="w-[1px] h-3 bg-white/10" />
-                  <div className="flex items-center gap-1.5 text-orange-400/90">
-                    <span className="text-[9px] font-mono tracking-tight font-bold">
-                      prj_X5HQjGPY6x0gIvnPGiIuaBDAZcnN
-                    </span>
-                    <button 
+                <div className="relative flex flex-col items-center">
+                  <div className="relative mb-3">
+                    {/* Verified Ring */}
+                    <div className="absolute -inset-1 bg-gradient-to-tr from-orange-500 to-amber-300 rounded-full animate-spin-slow opacity-70 group-hover:opacity-100 transition-opacity" />
+                    <div className="absolute inset-0.5 bg-[#0b0f1a] rounded-full z-0" />
+                    
+                    {/* Main Signature Photo */}
+                    <div className="relative w-14 h-14 rounded-full overflow-hidden border-2 border-white/20 z-10 shadow-2xl transition-transform duration-500 group-hover:scale-110">
+                      <img 
+                        src="https://www.e-katalog-sop.cloud/foe.jpg" 
+                        alt="Creator" 
+                        className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700"
+                      />
+                    </div>
+                    
+                    {/* Small Verified Badge */}
+                    <div className="absolute bottom-0 right-0 w-5 h-5 bg-blue-500 rounded-full border-2 border-[#0b0f1a] z-20 flex items-center justify-center shadow-lg transform translate-x-1 translate-y-1">
+                      <Check className="w-3 h-3 text-white stroke-[4px]" />
+                    </div>
+                  </div>
+
+                  <div className="text-center">
+                    <p className="text-white font-black text-xs tracking-tighter mb-1 bg-gradient-to-b from-white to-white/60 bg-clip-text text-transparent">
+                      © 2026 LAPORAN WHATSAPP
+                    </p>
+                    <div className="flex items-center justify-center gap-1.5 px-3 py-1 rounded-full bg-white/5 border border-white/10 backdrop-blur-md group-hover:bg-white/10 transition-colors cursor-pointer"
                       onClick={() => {
                         navigator.clipboard.writeText('prj_X5HQjGPY6x0gIvnPGiIuaBDAZcnN');
                         toast.success("Project ID copied!");
                       }}
-                      className="hover:text-white transition-colors"
                     >
-                      <Copy className="w-2.5 h-2.5" />
-                    </button>
+                      <span className="text-orange-400/90 text-[10px] font-mono font-black tracking-tight">
+                        prj_X5HQjGPY6x0gIvnPGiIuaBDAZcnN
+                      </span>
+                      <Copy className="w-2.5 h-2.5 text-white/40 group-hover:text-white/80" />
+                    </div>
                   </div>
                 </div>
               </div>
