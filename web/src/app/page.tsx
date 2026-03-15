@@ -2018,17 +2018,22 @@ const CollageEditor = ({
 };
 
 export default function WAHome() {
-  const [layoutConfig, setLayoutConfig] = useState<any>(null);
+  const [layoutConfig, setLayoutConfig] = useState<any>(DEFAULT_LAYOUT);
 
   useEffect(() => {
+    console.log("Fetching layout config...");
     fetch("/config/layout-config.json")
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) throw new Error("Config fetch failed");
+        return res.json();
+      })
       .then(data => {
+        console.log("Layout config loaded:", data);
         // Merge with defaults to ensure stability
         setLayoutConfig({ ...DEFAULT_LAYOUT, ...data });
       })
-      .catch(() => {
-        console.warn("Using default layout config");
+      .catch(err => {
+        console.warn("Using default layout config:", err.message);
         setLayoutConfig(DEFAULT_LAYOUT);
       });
   }, []);
@@ -3316,16 +3321,6 @@ export default function WAHome() {
   useEffect(() => { loadDrafts(); }, []);
   // Removed static generatePreview call to allow dynamic layoutConfig to settle
 
-  if (!layoutConfig) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-[#0b0f1a] text-white p-10">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-sm tracking-widest uppercase opacity-50">Initializing Web App...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="w-screen h-screen flex items-center justify-center overflow-hidden"
