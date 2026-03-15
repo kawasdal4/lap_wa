@@ -1246,7 +1246,7 @@ const CollageEditor = ({
   const subtitleColor = isDarkBg ? "#CBD5E1" : "#64748B";
 
   return (
-    <div className="flex flex-col h-full bg-gradient-to-b from-[#0e2238] to-[#081624]">
+    <div className="relative flex flex-col h-full bg-gradient-to-b from-[#0e2238] to-[#081624] overflow-hidden">
       {/* Hidden inputs */}
       <input
         ref={backgroundInputRef}
@@ -1576,7 +1576,7 @@ const CollageEditor = ({
       </div>
 
       {/* Bottom Toolbar */}
-      <div className="fixed bottom-0 left-0 right-0 bg-[rgba(10,20,35,0.95)] border-t border-white/10 z-50" style={{ height: "72px" }}>
+      <div className="absolute bottom-0 left-0 right-0 bg-[rgba(10,20,35,0.95)] border-t border-white/10 z-50 px-safe" style={{ height: "72px" }}>
         <div className="flex justify-around items-center h-full px-2">
           <button
             onClick={() => setActiveTool(activeTool === "background" ? null : "background")}
@@ -1676,7 +1676,7 @@ const CollageEditor = ({
       {/* Tool Panels - Slide up from bottom */}
       {/* Background Panel */}
       {activeTool === "background" && (
-        <div className="fixed bottom-[72px] left-0 right-0 bg-[#0a1525]/95 backdrop-blur-lg border-t border-white/10 rounded-t-2xl p-4 z-40 max-h-[50vh] overflow-y-auto">
+        <div className="absolute bottom-[72px] left-0 right-0 bg-[#0a1525]/95 backdrop-blur-lg border-t border-white/10 rounded-t-2xl p-4 z-40 max-h-[50vh] overflow-y-auto">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-white font-semibold">Background</h3>
             <button onClick={() => setActiveTool(null)} className="text-white/70 hover:text-white">
@@ -1726,7 +1726,7 @@ const CollageEditor = ({
 
       {/* Photos Panel */}
       {activeTool === "photos" && (
-        <div className="fixed bottom-[72px] left-0 right-0 bg-[#0a1525]/95 backdrop-blur-lg border-t border-white/10 rounded-t-2xl p-4 z-40 max-h-[50vh] overflow-y-auto">
+        <div className="absolute bottom-[72px] left-0 right-0 bg-[#0a1525]/95 backdrop-blur-lg border-t border-white/10 rounded-t-2xl p-4 z-40 max-h-[50vh] overflow-y-auto">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-white font-semibold">Photos</h3>
             <button onClick={() => setActiveTool(null)} className="text-white/70 hover:text-white">
@@ -1794,7 +1794,7 @@ const CollageEditor = ({
 
       {/* Text Panel */}
       {activeTool === "text" && (
-        <div className="fixed bottom-[72px] left-0 right-0 bg-[#0a1525]/95 backdrop-blur-lg border-t border-white/10 rounded-t-2xl p-4 z-40 max-h-[60vh] overflow-y-auto">
+        <div className="absolute bottom-[72px] left-0 right-0 bg-[#0a1525]/95 backdrop-blur-lg border-t border-white/10 rounded-t-2xl p-4 z-40 max-h-[60vh] overflow-y-auto">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-white font-semibold">Text</h3>
             <button onClick={() => setActiveTool(null)} className="text-white/70 hover:text-white">
@@ -1902,7 +1902,7 @@ const CollageEditor = ({
 
       {/* Logo Panel */}
       {activeTool === "logo" && (
-        <div className="fixed bottom-[72px] left-0 right-0 bg-[#0a1525]/95 backdrop-blur-lg border-t border-white/10 rounded-t-2xl p-4 z-40">
+        <div className="absolute bottom-[72px] left-0 right-0 bg-[#0a1525]/95 backdrop-blur-lg border-t border-white/10 rounded-t-2xl p-4 z-40">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-white font-semibold">Logo</h3>
             <button onClick={() => setActiveTool(null)} className="text-white/70 hover:text-white">
@@ -1951,7 +1951,7 @@ const CollageEditor = ({
 
       {/* Merged Result Preview */}
       {mergedImage && (
-        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+        <div className="absolute inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
           <div className="bg-slate-800 rounded-xl p-4 max-w-md w-full">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-white font-semibold">Hasil Export</h3>
@@ -3377,9 +3377,9 @@ export default function WAHome() {
           </div>
         </header>
 
-        {/* Main Content - Scrollable */}
-        <div className="flex-1 overflow-y-auto px-4 py-4">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        {/* Main Content - No global scroll to allow internal scroll and fixed toolbar in collage */}
+        <div className="flex-1 flex flex-col overflow-hidden px-4 pb-4 pt-2">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
             <TabsList className="w-full mb-4 bg-white/5 backdrop-blur-sm rounded-2xl p-1.5 flex">
               <TabsTrigger 
                 value="editor" 
@@ -3405,7 +3405,9 @@ export default function WAHome() {
             </TabsList>
 
             {/* Editor Tab */}
-          <TabsContent value="editor" className="space-y-6">
+            <TabsContent value="editor" className="flex-1 flex flex-col overflow-hidden mt-0">
+              <ScrollArea className="flex-1 h-full">
+                <div className="space-y-6 pb-20 p-1">
             {/* Template Section */}
             <Card className="bg-slate-800/50 backdrop-blur-sm border-white/10 shadow-xl">
               <CardHeader className="pb-3">
@@ -3775,10 +3777,14 @@ export default function WAHome() {
                 Salin Teks
               </Button>
             </div>
-          </TabsContent>
+          </div>
+        </ScrollArea>
+      </TabsContent>
 
           {/* Preview Tab */}
-          <TabsContent value="preview">
+          <TabsContent value="preview" className="flex-1 flex flex-col overflow-hidden mt-0">
+            <ScrollArea className="flex-1 h-full">
+              <div className="space-y-6 pb-20 p-1">
             <Card className="bg-slate-800/50 backdrop-blur-sm border-white/10 shadow-xl overflow-hidden">
               <CardHeader className="bg-gradient-to-r from-green-600/20 to-green-500/10 border-b border-white/10">
                 <div className="flex items-center justify-between">
@@ -3906,11 +3912,13 @@ export default function WAHome() {
                   </div>
                 </ScrollArea>
               </CardContent>
-            </Card>
+                </Card>
+              </div>
+            </ScrollArea>
           </TabsContent>
 
           {/* Image Merger Tab - Collage Editor */}
-          <TabsContent value="image" className="space-y-4">
+          <TabsContent value="image" className="flex-1 flex flex-col overflow-hidden mt-0">
             <CollageEditor
               layers={collageLayers}
               setLayers={setCollageLayers}
@@ -3948,7 +3956,7 @@ export default function WAHome() {
             <canvas ref={canvasRef} className="hidden" />
           </TabsContent>
         </Tabs>
-        </div>
+      </div>
         {/* End Main Content - Scrollable */}
 
         {/* Drafts Dialog */}
@@ -4020,6 +4028,7 @@ export default function WAHome() {
               <div className="absolute inset-0 bg-gradient-to-l from-red-600/10 via-orange-500/10 to-amber-500/10 animate-gradient-x" />
             </div>
             <div className="text-center relative z-10">
+            <div className="flex flex-col items-center relative z-10">
               <div className="flex items-center justify-center gap-2 mb-1">
                 <div className="relative group">
                   {/* Multi-layer glow effect */}
@@ -4035,11 +4044,21 @@ export default function WAHome() {
                   Basarnas
                 </span>
               </div>
-              <p className="text-orange-200/50 text-[10px] font-medium">
-                ┬⌐ 2026 Laporan WhatsApp - Direktorat Kesiapsiagaan
-              </p>
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 rounded-full overflow-hidden border border-white/20 shadow-sm">
+                  <img 
+                    src="https://www.e-katalog-sop.cloud/foe.jpg" 
+                    alt="Copyright Owner" 
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <p className="text-orange-200/50 text-[10px] font-medium">
+                  © 2026 Laporan WhatsApp - prj_X5HQjGPY6x0gIvnPGiIuaBDAZcnN
+                </p>
+              </div>
             </div>
-          </footer>
+          </div>
+        </footer>
       </div>
       {/* End Phone Frame Container */}
     </div>
