@@ -1,8 +1,17 @@
 {
+  "layout": {
+    "type": "mobile",
+    "width": 390,
+    "height": 844
+  },
   "components": [
     {
       "type": "text",
-      "text": "LAP WA App Running"
+      "text": "LAP WA"
+    },
+    {
+      "type": "text",
+      "text": "Web App Running"
     }
   ]
 }
