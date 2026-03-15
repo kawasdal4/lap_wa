@@ -4027,8 +4027,9 @@ export default function WAHome() {
             <div className="absolute inset-0 opacity-50">
               <div className="absolute inset-0 bg-gradient-to-l from-red-600/10 via-orange-500/10 to-amber-500/10 animate-gradient-x" />
             </div>
-            <div className="flex flex-col items-center relative z-10">
-              <div className="flex items-center justify-center gap-2 mb-2">
+            <div className="flex flex-col items-center relative z-10 pt-1">
+              {/* Main Branding */}
+              <div className="flex items-center justify-center gap-2 mb-3">
                 <div className="relative group">
                   <div className="absolute -inset-0.5 bg-gradient-to-r from-red-500 via-orange-500 to-amber-400 rounded-lg blur opacity-70 group-hover:opacity-100 transition duration-500 animate-pulse-glow" />
                   <div className="absolute -inset-0.25 bg-gradient-to-r from-red-600 to-orange-500 rounded-lg blur-sm opacity-50" />
@@ -4038,26 +4039,45 @@ export default function WAHome() {
                     className="relative w-7 h-7 rounded-lg shadow-xl object-cover border border-white/20"
                   />
                 </div>
-                <span className="text-white text-sm font-bold bg-gradient-to-r from-white via-orange-100 to-white bg-clip-text text-transparent">
-                  Basarnas
-                </span>
+                <div className="flex flex-col items-start leading-none gap-0.5">
+                  <span className="text-white text-sm font-black tracking-widest uppercase">
+                    Basarnas
+                  </span>
+                  <span className="text-orange-400/60 text-[8px] font-bold uppercase tracking-tighter">
+                    Direktorat Kesiapsiagaan
+                  </span>
+                </div>
               </div>
               
-              <div className="flex items-center gap-2.5 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-md">
-                <div className="w-5 h-5 rounded-full overflow-hidden border border-orange-500/50 shadow-inner">
+              {/* Vercel-style Copyright Bar */}
+              <div className="flex items-center gap-2 px-2.5 py-1 rounded-full bg-black/40 border border-white/10 backdrop-blur-xl shadow-2xl">
+                <div className="w-4 h-4 rounded-full overflow-hidden border border-white/20 ring-1 ring-white/10">
                   <img 
                     src="https://www.e-katalog-sop.cloud/foe.jpg" 
                     alt="FOE" 
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-500"
                   />
                 </div>
-                <div className="flex flex-col items-start leading-none">
-                  <p className="text-white/90 text-[10px] font-bold tracking-tight">
+                
+                <div className="flex items-center gap-2">
+                  <p className="text-white/60 text-[9px] font-medium whitespace-nowrap">
                     © 2026 Laporan WhatsApp
                   </p>
-                  <p className="text-orange-400/80 text-[8px] font-mono mt-0.5">
-                    ID: prj_X5HQjGPY6x0gIvnPGiIuaBDAZcnN
-                  </p>
+                  <div className="w-[1px] h-3 bg-white/10" />
+                  <div className="flex items-center gap-1.5 text-orange-400/90">
+                    <span className="text-[9px] font-mono tracking-tight font-bold">
+                      prj_X5HQjGPY6x0gIvnPGiIuaBDAZcnN
+                    </span>
+                    <button 
+                      onClick={() => {
+                        navigator.clipboard.writeText('prj_X5HQjGPY6x0gIvnPGiIuaBDAZcnN');
+                        toast.success("Project ID copied!");
+                      }}
+                      className="hover:text-white transition-colors"
+                    >
+                      <Copy className="w-2.5 h-2.5" />
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
