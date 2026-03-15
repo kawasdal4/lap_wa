@@ -23,8 +23,9 @@ import { toast } from "sonner";
 import { sanitizeColors } from "@/lib/dom-utils";
 import layoutConfigImport from "@/config/layout-config.json";
 
-// Safe fallback loader for layout configuration
-let layoutConfig: any = { ...layoutConfigImport };
+// The app logic expects the layout properties at the top level
+const layoutConfigData: any = layoutConfigImport;
+let layoutConfig: any = { ...(layoutConfigData.layout || layoutConfigData) };
 
 // Build Stability Patch: Ensure all expected properties exist for the current app logic
 layoutConfig = {
