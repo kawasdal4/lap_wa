@@ -20,7 +20,53 @@ import {
   Strikethrough, Code, MapPin, Map as MapIcon, Loader2, Move, ZoomIn, ZoomOut
 } from "lucide-react";
 import { toast } from "sonner";
-import layoutConfig from "@/config/layout-config.json";
+let layoutConfig: any = {};
+
+try {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  layoutConfig = require("@/config/layout-config.json");
+} catch (e) {
+  layoutConfig = {
+    title: { x: 50, y: 8, fontSize: 32, align: "center" },
+    subtitle: { x: 50, y: 14, fontSize: 18, align: "center" },
+    logo: { x: 8, y: 6, size: 64 },
+    footer: { x: 50, y: 94, fontSize: 14, align: "center" },
+    collage: { x: 50, y: 60, maxPhotos: 9, gap: 8 }
+  };
+}
+
+// Build Stability Patch: Ensure all expected properties exist for the current app logic
+layoutConfig = {
+  canvas: { width: 420, height: 747 },
+  background: {
+    gradient: {
+      stops: [
+        { position: 0, color: "#173a5e" },
+        { position: 1, color: "#0b2035" }
+      ]
+    }
+  },
+  header: {
+    height: 120,
+    backgroundColor: "rgba(255,255,255,0.05)",
+    topAccentLine: { color: "rgba(255,255,255,0.1)", height: 2 },
+    logos: [
+      { position: { x: 20, y: 20 }, width: 60, height: 72 },
+      { position: { right: 20, y: 20 }, width: 60, height: 72 }
+    ]
+  },
+  footer: {
+    height: 80,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    content: {
+      organization: { text: "BASARNAS", color: "#FFFFFF", fontSize: 16, fontWeight: "bold" },
+      contactInfo: { color: "#FFFFFF", fontSize: 12, items: [{ label: "Contact Us" }] }
+    }
+  },
+  collage: { x: 50, y: 60, maxPhotos: 9, gap: 8 },
+  ...layoutConfig
+};
+
 import { 
   Dialog,
   DialogContent,

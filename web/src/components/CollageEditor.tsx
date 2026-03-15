@@ -4,13 +4,13 @@ import { useRef, useState, useEffect } from "react"
 import { toJpeg } from "html-to-image"
 
 export default function CollageEditor() {
-  const canvasRef = useRef(null)
+  const canvasRef = useRef<HTMLDivElement>(null)
 
-  const [photos, setPhotos] = useState([])
-  const [dragIndex, setDragIndex] = useState(null)
+  const [photos, setPhotos] = useState<any[]>([])
+  const [dragIndex, setDragIndex] = useState<number | null>(null)
 
   const [bgScale, setBgScale] = useState(1)
-  const [bgImage, setBgImage] = useState(null)
+  const [bgImage, setBgImage] = useState<string | null>(null)
 
   const [showGuide, setShowGuide] = useState(false)
 
@@ -20,7 +20,8 @@ export default function CollageEditor() {
   // =======================
   // upload photos
   // =======================
-  const handleUpload = (e) => {
+  const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files) return
     const files = Array.from(e.target.files)
 
     // Auto grid layout calculation
@@ -34,7 +35,7 @@ export default function CollageEditor() {
       const index = existingCount + i
       return {
         id: Date.now() + i,
-        url: URL.createObjectURL(file),
+        url: URL.createObjectURL(file as unknown as Blob),
         x: (index % cols) * size,
         y: Math.floor(index / cols) * size,
         width: 150,
@@ -55,12 +56,12 @@ export default function CollageEditor() {
   // =======================
   // drag photo
   // =======================
-  const handlePointerDown = (i, e) => {
+  const handlePointerDown = (i: number, e: React.PointerEvent) => {
     setDragIndex(i)
   }
 
-  const handlePointerMove = (e) => {
-    if (dragIndex === null) return
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (dragIndex === null || !canvasRef.current) return
 
     const rect = canvasRef.current.getBoundingClientRect()
 
@@ -89,7 +90,7 @@ export default function CollageEditor() {
   // =======================
   // resize photo
   // =======================
-  const handleResize = (i, dx, dy) => {
+  const handleResize = (i: number, dx: number, dy: number) => {
     setPhotos(prev => {
       const updated = [...prev]
       updated[i] = {
@@ -104,19 +105,19 @@ export default function CollageEditor() {
   // =======================
   // pinch zoom background
   // =======================
-  const getDistance = (touches) => {
+  const getDistance = (touches: React.TouchList | TouchList) => {
     const dx = touches[0].clientX - touches[1].clientX
     const dy = touches[0].clientY - touches[1].clientY
     return Math.sqrt(dx * dx + dy * dy)
   }
 
-  const handleTouchStart = (e) => {
+  const handleTouchStart = (e: React.TouchEvent) => {
     if (e.touches.length === 2) {
       startDistanceRef.current = getDistance(e.touches)
     }
   }
 
-  const handleTouchMove = (e) => {
+  const handleTouchMove = (e: React.TouchEvent) => {
     if (e.touches.length !== 2) return
 
     const dist = getDistance(e.touches)
@@ -136,7 +137,8 @@ export default function CollageEditor() {
   // export image
   // =======================
   const exportImage = async () => {
-    const dataUrl = await toJpeg(canvasRef.current, {
+    if (!canvasRef.current) return
+    const dataUrl = await toJpeg(canvasRef.current as any, {
       quality: 0.95,
       pixelRatio: 3,
       cacheBust: true
@@ -214,7 +216,7 @@ export default function CollageEditor() {
                 const startX = e.clientX
                 const startY = e.clientY
 
-                const move = (ev) => {
+                const move = (ev: PointerEvent) => {
                   handleResize(
                     i,
                     (ev.clientX - startX) / 2,
