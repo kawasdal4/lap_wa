@@ -6,12 +6,15 @@
   },
   "components": [
     {
-      "type": "text",
-      "text": "LAP WA"
+      "type": "header",
+      "text": "LAP WA Builder"
     },
     {
-      "type": "text",
-      "text": "Web App Running"
+      "type": "collage"
+    },
+    {
+      "type": "footer",
+      "text": "App Loaded Successfully"
     }
   ]
 }
