@@ -2021,22 +2021,24 @@ export default function WAHome() {
   const [layoutConfig, setLayoutConfig] = useState<any>(DEFAULT_LAYOUT);
 
   useEffect(() => {
-    console.log("Fetching layout config...");
+    console.log("[WAHome] Fetching layout config...");
     fetch("/config/layout-config.json")
       .then(res => {
-        if (!res.ok) throw new Error("Config fetch failed");
+        console.log("[WAHome] Response status:", res.status);
+        if (!res.ok) throw new Error("Config fetch failed: " + res.status);
         return res.json();
       })
       .then(data => {
-        console.log("Layout config loaded:", data);
-        // Merge with defaults to ensure stability
+        console.log("[WAHome] Layout config loaded successfully:", data);
         setLayoutConfig({ ...DEFAULT_LAYOUT, ...data });
       })
       .catch(err => {
-        console.warn("Using default layout config:", err.message);
+        console.warn("[WAHome] Using default layout config due to error:", err.message);
         setLayoutConfig(DEFAULT_LAYOUT);
       });
   }, []);
+
+  console.log("[WAHome] Rendering with layoutConfig status:", !!layoutConfig);
   // State untuk form input
   const [judul, setJudul] = useState("RAPAT BRIEFING PETUGAS LIAISON OFFICER");
   const [tempat, setTempat] = useState("Daring melalui zoom meeting");
@@ -3323,19 +3325,12 @@ export default function WAHome() {
 
 
   return (
-    <div className="w-screen h-screen flex items-center justify-center overflow-hidden"
-      style={{ background: "radial-gradient(circle at top, #102a43, #081520)" }}
-    >
-      {/* Phone Frame Container */}
-      <div
-        className="relative w-full max-w-[430px] h-[96vh] overflow-hidden flex flex-col"
-        style={{
-          aspectRatio: "9/16",
-          background: "linear-gradient(180deg, #0e2238, #081624)",
-          borderRadius: "24px",
-          boxShadow: "0 40px 120px rgba(0,0,0,0.8), inset 0 0 0 1px rgba(255,255,255,0.05)"
-        }}
-      >
+    <div className="flex-1 flex flex-col overflow-hidden bg-[#0b0f1a]">
+      {/* 
+        The outer framing is now handled by ClientWrapper's .app-frame class.
+        This inner container fills the available space and provides the main app UI.
+      */}
+      <div className="relative flex-1 flex flex-col overflow-hidden">
         {/* Header */}
         <header 
           className="flex-shrink-0 px-4 py-3.5 relative overflow-hidden"
