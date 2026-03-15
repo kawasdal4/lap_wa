@@ -17,15 +17,15 @@ export default function CopyrightModal({ children }: { children: React.ReactNode
         {children}
       </DialogTrigger>
       <DialogContent className="max-w-md bg-[#0b0f1a] border-[#222] text-white p-0 overflow-hidden">
-        <div className="bg-gradient-to-r from-[#d946ef] to-[#ef4444] p-6 flex items-center gap-4">
-          <div className="bg-white/20 p-3 rounded-xl backdrop-blur-sm">
+        <DialogHeader className="bg-gradient-to-r from-[#d946ef] to-[#ef4444] p-6 flex flex-row items-center gap-4 text-left border-none space-y-0">
+          <div className="bg-white/20 p-3 rounded-xl backdrop-blur-sm shrink-0">
             <Shield className="w-8 h-8 text-white" />
           </div>
           <div>
-            <h2 className="text-xl font-bold leading-tight">HAK CIPTA</h2>
+            <DialogTitle className="text-xl font-bold leading-tight">HAK CIPTA</DialogTitle>
             <p className="text-white/80 text-sm">Copyright Notice</p>
           </div>
-        </div>
+        </DialogHeader>
 
         <div className="p-6 space-y-6">
           <section className="space-y-2">
