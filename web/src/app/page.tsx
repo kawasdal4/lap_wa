@@ -20,6 +20,7 @@ import {
   Strikethrough, Code, MapPin, Map as MapIcon, Loader2, Move, ZoomIn, ZoomOut
 } from "lucide-react";
 import { toast } from "sonner";
+import { sanitizeColors } from "@/lib/dom-utils";
 let layoutConfig: any = {};
 
 try {
@@ -1236,24 +1237,29 @@ const CollageEditor = ({
 
     setIsMerging(true);
 
+    // Create a clone for sanitization
+    const clone = canvasRef.current.cloneNode(true) as HTMLElement;
+    document.body.appendChild(clone);
+    sanitizeColors(clone);
+
     try {
       await document.fonts.ready;
 
-      const dataUrl = await toJpeg(canvasRef.current, {
-        quality: 0.95,
-        pixelRatio: 3,   // HD export
+      const dataUrl = await toJpeg(clone, {
+        quality: 1.0,
+        pixelRatio: window.devicePixelRatio * 2,
         cacheBust: true,
         backgroundColor: "#0f172a"
       });
 
       setMergedImage(dataUrl);
-
       toast.success("Foto berhasil di-export!");
 
     } catch (error) {
       console.error(error);
       toast.error("Gagal export");
     } finally {
+      document.body.removeChild(clone);
       setIsMerging(false);
     }
   };
@@ -3274,31 +3280,50 @@ export default function Home() {
   // ==============================
   const sendAllToWhatsApp = async () => {
     const laporanText = generatePreview();
-    const phoneNumber = ""; // Kosong = pilih kontak manual
+    const phoneNumber = ""; // Optional: pre-fill phone number if needed
 
     try {
       setIsSendingWA(true);
 
-      // 1️⃣ Export gambar
+      // 1. Generate image if not already generated
       if (!mergedImage) {
-        toast.error("Silakan klik Export terlebih dahulu!");
+        toast.info("Generating photo collage first...");
+        // This is a bit tricky if merge isn't triggered. Let's assume user must click Export first
+        // OR we trigger it here if possible. 
+        // For stability, we'll prompt the user to export first if missing.
+        toast.error("Silakan klik Export di tab Foto terlebih dahulu!");
+        setIsSendingWA(false);
         return;
       }
       
-      toast.info("Menyiapkan foto...");
-      await exportPhotoFile();
+      toast.info("Menyiapkan pesan...");
+      const file = await exportPhotoFile();
 
-      // 2️⃣ Kirim text
-      toast.info("Membuka WhatsApp...");
+      // 2. Message 1: Send Text Report
+      toast.info("Mengirim Laporan Teks...");
       kirimTextWA(phoneNumber, laporanText);
       
-      toast.success("Laporan teks terkirim!");
-
-      // 3️⃣ Munculkan tombol kirim foto setelah 1.5 detik
-      setTimeout(() => {
-        setShowSendPhotoButton(true);
+      // 3. Message 2: Prompt for Photo Share (actual file)
+      // We wait a bit to let the first tab open
+      setTimeout(async () => {
+        if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
+          toast.info("Silakan pilih kontak yang sama untuk mengirim Foto...");
+          try {
+            await navigator.share({
+              files: [file],
+              title: "Laporan Dokumentasi",
+              text: "Dokumentasi Kegiatan"
+            });
+            toast.success("Teks & Foto berhasil diproses!");
+          } catch (e) {
+            console.log("Share cancelled or failed", e);
+          }
+        } else {
+          toast.success("Teks terkirim. Silakan attach foto secara manual.");
+          setShowSendPhotoButton(true);
+        }
         setIsSendingWA(false);
-      }, 1500);
+      }, 2000);
 
     } catch (err) {
       console.error(err);

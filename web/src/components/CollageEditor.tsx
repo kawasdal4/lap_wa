@@ -2,6 +2,7 @@
 
 import { useRef, useState, useEffect } from "react"
 import { toJpeg } from "html-to-image"
+import { sanitizeColors } from "@/lib/dom-utils"
 
 export default function CollageEditor() {
   const canvasRef = useRef<HTMLDivElement>(null)
@@ -138,16 +139,26 @@ export default function CollageEditor() {
   // =======================
   const exportImage = async () => {
     if (!canvasRef.current) return
-    const dataUrl = await toJpeg(canvasRef.current as any, {
-      quality: 0.95,
-      pixelRatio: 3,
-      cacheBust: true
-    })
 
-    const link = document.createElement("a")
-    link.download = "collage.jpg"
-    link.href = dataUrl
-    link.click()
+    // Create a clone for sanitization
+    const clone = canvasRef.current.cloneNode(true) as HTMLElement
+    document.body.appendChild(clone)
+    sanitizeColors(clone)
+    
+    try {
+      const dataUrl = await toJpeg(clone, {
+        quality: 1.0,
+        pixelRatio: window.devicePixelRatio * 2,
+        cacheBust: true
+      })
+
+      const link = document.createElement("a")
+      link.download = `collage-${Date.now()}.jpg`
+      link.href = dataUrl
+      link.click()
+    } finally {
+      document.body.removeChild(clone)
+    }
   }
 
   // =======================

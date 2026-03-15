@@ -1,9 +1,32 @@
 {
-"name":"WA Report Generator",
-"short_name":"WA Report",
-"display":"standalone",
-"orientation":"portrait",
-"background_color":"#0b0f1a",
-"theme_color":"#0b0f1a",
-"start_url":"/"
+  "name": "Basarnas WA Report Generator",
+  "short_name": "WA Report",
+  "description": "Generate WhatsApp reports with collage export for Basarnas.",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0b0f1a",
+  "theme_color": "#b91c1c",
+  "start_url": "/",
+  "icons": [
+    {
+      "src": "/logo.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logo.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/logo.svg",
+      "type": "image/svg+xml",
+      "sizes": "512x512",
+      "form_factor": "narrow"
+    }
+  ]
 }
