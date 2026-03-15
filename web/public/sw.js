@@ -1,17 +1,5 @@
 self.addEventListener("install", event => {
-  event.waitUntil(
-    caches.open("app-cache").then(cache => {
-      return cache.addAll([
-        "/offline.html"
-      ]);
-    })
-  );
-});
+  console.log("Service worker installed")
+})
 
-self.addEventListener("fetch", event => {
-  event.respondWith(
-    fetch(event.request).catch(() => {
-      return caches.match("/offline.html");
-    })
-  );
-});
+self.addEventListener("fetch", event => {})
