@@ -21,20 +21,10 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { sanitizeColors } from "@/lib/dom-utils";
-let layoutConfig: any = {};
+import layoutConfigImport from "@/config/layout-config.json";
 
-try {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  layoutConfig = require("@/config/layout-config.json");
-} catch (e) {
-  layoutConfig = {
-    title: { x: 50, y: 8, fontSize: 32, align: "center" },
-    subtitle: { x: 50, y: 14, fontSize: 18, align: "center" },
-    logo: { x: 8, y: 6, size: 64 },
-    footer: { x: 50, y: 94, fontSize: 14, align: "center" },
-    collage: { x: 50, y: 60, maxPhotos: 9, gap: 8 }
-  };
-}
+// Safe fallback loader for layout configuration
+let layoutConfig: any = { ...layoutConfigImport };
 
 // Build Stability Patch: Ensure all expected properties exist for the current app logic
 layoutConfig = {
