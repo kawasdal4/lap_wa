@@ -678,6 +678,7 @@ const WAInput = ({ value, onChange, placeholder, className = "", id }: WAInputPr
         ref={inputRef}
         id={id}
         type="text"
+        suppressHydrationWarning
         value={value}
         onChange={(e) => onChange(e.target.value)}
         onSelect={updateSelection}
@@ -739,6 +740,7 @@ const WATextarea = ({ value, onChange, placeholder, className = "", id, rows = 2
       <textarea
         ref={textareaRef}
         id={id}
+        suppressHydrationWarning
         value={value}
         onChange={(e) => onChange(e.target.value)}
         onSelect={updateSelection}
