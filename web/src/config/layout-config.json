@@ -1,0 +1,17 @@
+{
+  "layout": {
+    "type": "mobile",
+    "width": 390,
+    "height": 844
+  },
+  "components": [
+    {
+      "type": "header",
+      "text": "LAP WA"
+    },
+    {
+      "type": "content",
+      "text": "App Loaded Successfully"
+    }
+  ]
+}
