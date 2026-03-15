@@ -1,0 +1,16 @@
+{
+  "projectId": "prj_4UcD5zjaV5HYLqrAEWnJHtB00uxY",
+  "orgId": "team_CWOtW9pMMFIN86gOMWm9oIWE",
+  "projectName": "lap-wa",
+  "settings": {
+    "createdAt": 1773301151414,
+    "framework": "nextjs",
+    "devCommand": null,
+    "installCommand": null,
+    "buildCommand": null,
+    "outputDirectory": null,
+    "rootDirectory": null,
+    "directoryListing": false,
+    "nodeVersion": "24.x"
+  }
+}
