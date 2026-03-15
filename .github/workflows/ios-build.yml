@@ -1,0 +1,27 @@
+name: Build iOS
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+
+      - name: Install Mobile Dependencies
+        run: |
+          cd mobile
+          npm install
+          npm install @capacitor/core @capacitor/cli @capacitor/ios
+
+      - name: Sync Capacitor
+        run: |
+          cd mobile
+          npx cap sync ios

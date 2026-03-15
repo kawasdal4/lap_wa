@@ -1,0 +1,38 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+
+      - name: Install Mobile Dependencies
+        run: |
+          cd mobile
+          npm install
+          npm install @capacitor/core @capacitor/cli @capacitor/android
+
+      - name: Sync Capacitor
+        run: |
+          cd mobile
+          npx cap sync android
+
+      - name: Build APK
+        run: |
+          cd mobile/android
+          ./gradlew assembleRelease
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v3
+        with:
+          name: app-release
+          path: mobile/android/app/build/outputs/apk/release/app-release.apk
