@@ -20,7 +20,6 @@ import {
   Strikethrough, Code, MapPin, Map as MapIcon, Loader2, Move, ZoomIn, ZoomOut
 } from "lucide-react";
 import { toast } from "sonner";
-import { sanitizeColors } from "@/lib/dom-utils";
 // Build Stability: layoutConfig will be loaded dynamically in the WAHome component
 const DEFAULT_LAYOUT = {
   canvas: { width: 420, height: 747 },
@@ -51,7 +50,6 @@ const DEFAULT_LAYOUT = {
   },
   collage: { x: 50, y: 60, maxPhotos: 9, gap: 8 }
 };
-
 import { 
   Dialog,
   DialogContent,
@@ -354,7 +352,7 @@ const MapLocationPicker = ({ value, onChange, onLocationChange, placeholder }: M
       z-index: 100;
       filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
     `;
-    centerMarker.innerHTML = "📍";
+    centerMarker.innerHTML = "≡ƒôì";
     mapRef.current.appendChild(centerMarker);
 
     // Drag start - show loading
@@ -596,9 +594,9 @@ const insertWAFormat = (
   const selectedText = text.substring(selectionStart, selectionEnd);
   // Use double markers for editor (will be converted for WhatsApp)
   const markers: Record<string, { start: string; end: string }> = {
-    bold: { start: '**', end: '**' },       // Editor: **text** → WhatsApp: *text*
-    italic: { start: '__', end: '__' },     // Editor: __text__ → WhatsApp: _text_
-    strike: { start: '~~', end: '~~' },     // Editor: ~~text~~ → WhatsApp: ~text~
+    bold: { start: '**', end: '**' },       // Editor: **text** ΓåÆ WhatsApp: *text*
+    italic: { start: '__', end: '__' },     // Editor: __text__ ΓåÆ WhatsApp: _text_
+    strike: { start: '~~', end: '~~' },     // Editor: ~~text~~ ΓåÆ WhatsApp: ~text~
     mono: { start: '```', end: '```' }      // Editor & WhatsApp: ```text```
   };
   
@@ -1221,29 +1219,24 @@ const CollageEditor = ({
 
     setIsMerging(true);
 
-    // Create a clone for sanitization
-    const clone = canvasRef.current.cloneNode(true) as HTMLElement;
-    document.body.appendChild(clone);
-    sanitizeColors(clone);
-
     try {
       await document.fonts.ready;
 
-      const dataUrl = await toJpeg(clone, {
-        quality: 1.0,
-        pixelRatio: window.devicePixelRatio * 2,
+      const dataUrl = await toJpeg(canvasRef.current, {
+        quality: 0.95,
+        pixelRatio: 3,   // HD export
         cacheBust: true,
         backgroundColor: "#0f172a"
       });
 
       setMergedImage(dataUrl);
+
       toast.success("Foto berhasil di-export!");
 
     } catch (error) {
       console.error(error);
       toast.error("Gagal export");
     } finally {
-      document.body.removeChild(clone);
       setIsMerging(false);
     }
   };
@@ -1277,6 +1270,7 @@ const CollageEditor = ({
         }}
       />
 
+      {/* Main Canvas Area */}
       <div className="flex-1 flex flex-col items-center justify-center p-3.5 overflow-auto">
         {/* Canvas - 9:16 aspect ratio with enhanced styling */}
         <div
@@ -1582,274 +1576,7 @@ const CollageEditor = ({
       </div>
 
       {/* Bottom Toolbar */}
-      {/* Tool Panels Container - Part of flex flow */}
-      {activeTool && (
-        <div className="relative z-40 bg-[#0a1525]/98 backdrop-blur-xl border-t border-white/20 p-4 max-h-[50vh] overflow-y-auto w-full flex-shrink-0 animate-in slide-in-from-bottom duration-300">
-          {/* Background Panel */}
-          {activeTool === "background" && (
-            <div className="space-y-4">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-white font-semibold">Background</h3>
-                <button onClick={() => setActiveTool(null)} className="text-white/70 hover:text-white">
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-              <button
-                onClick={() => backgroundInputRef.current?.click()}
-                className="w-full p-3 border border-white/20 rounded-lg bg-white/5 text-white hover:bg-white/10 flex items-center justify-center gap-2"
-              >
-                <ImageIcon className="w-5 h-5" />
-                {layers.background.url ? "Ganti Background" : "Upload Background"}
-              </button>
-              {layers.background.url && (
-                <>
-                  <p className="text-white/50 text-xs text-center">
-                    💡 Drag untuk geser, pinch/scroll untuk zoom
-                  </p>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => updateLayer("background", { scale: 1, x: 0, y: 0 })}
-                    className="w-full border-white/20 text-white hover:bg-white/10"
-                  >
-                    <RefreshCw className="w-4 h-4 mr-2" />
-                    Reset Posisi
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => updateLayer("background", { url: null })}
-                    className="w-full"
-                  >
-                    <Trash2 className="w-4 h-4 mr-2" />
-                    Hapus Background
-                  </Button>
-                </>
-              )}
-            </div>
-          )}
-
-          {/* Photos Panel */}
-          {activeTool === "photos" && (
-            <div className="space-y-4">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-white font-semibold">Photos</h3>
-                <button onClick={() => setActiveTool(null)} className="text-white/70 hover:text-white">
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-              <button
-                onClick={() => photoInputRef.current?.click()}
-                className="w-full p-3 border border-white/20 rounded-lg bg-white/5 text-white hover:bg-white/10 flex items-center justify-center gap-2"
-              >
-                <ImagePlus className="w-5 h-5" />
-                Tambah Foto
-              </button>
-              {selectedPhoto !== null && layers.photos[selectedPhoto] && (
-                <div className="space-y-3 border-t border-white/10 pt-4">
-                  <h4 className="text-white/70 text-sm">Edit Foto {selectedPhoto + 1}</h4>
-                  <div className="space-y-2">
-                    <Label className="text-white/70 text-xs">Zoom: {Math.round(layers.photos[selectedPhoto].scale * 100)}%</Label>
-                    <input
-                      type="range"
-                      min="0.5"
-                      max="3"
-                      step="0.01"
-                      value={layers.photos[selectedPhoto].scale}
-                      onChange={(e) => updatePhoto(selectedPhoto, { scale: parseFloat(e.target.value) })}
-                      className="w-full"
-                    />
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => updatePhoto(selectedPhoto, { imgX: 0, imgY: 0, scale: 1 })}
-                      className="flex-1"
-                    >
-                      <RefreshCw className="w-3 h-3 mr-1" />
-                      Reset
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => {
-                        setLayers(prev => ({
-                          ...prev,
-                          photos: prev.photos.filter((_, i) => i !== selectedPhoto),
-                        }));
-                        setSelectedPhoto(null);
-                      }}
-                      className="flex-1"
-                    >
-                      <Trash2 className="w-3 h-3 mr-1" />
-                      Hapus
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Text Panel */}
-          {activeTool === "text" && (
-            <div className="space-y-3 max-h-[60vh] overflow-y-auto">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-white font-semibold">Text</h3>
-                <button onClick={() => setActiveTool(null)} className="text-white/70 hover:text-white">
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-              
-              {/* Title Section */}
-              <div className="space-y-3 mb-4 pb-4 border-b border-white/10">
-                <h4 className="text-orange-400 text-sm font-medium">Judul</h4>
-                <p className="text-white/40 text-xs">Default: Judul Laporan dari form</p>
-                <Input
-                  value={layers.title.text}
-                  onChange={(e) => updateLayer("title", { text: e.target.value })}
-                  placeholder={reportTitle || "Judul Laporan"}
-                  className="bg-white/5 border-white/10 text-white"
-                />
-                <div className="flex gap-2">
-                  <div className="flex-1">
-                    <Label className="text-white/50 text-xs">Ukuran: {layers.title.fontSize}px</Label>
-                    <input
-                      type="range"
-                      min="10"
-                      max="48"
-                      value={layers.title.fontSize}
-                      onChange={(e) => updateLayer("title", { fontSize: parseInt(e.target.value) })}
-                      className="w-full"
-                    />
-                  </div>
-                  <Input
-                    type="color"
-                    value={layers.title.color}
-                    onChange={(e) => updateLayer("title", { color: e.target.value })}
-                    className="w-10 h-8 p-1"
-                  />
-                </div>
-              </div>
-              
-              {/* Subtitle Section */}
-              <div className="space-y-3 mb-4 pb-4 border-b border-white/10">
-                <h4 className="text-cyan-400 text-sm font-medium">Subtitle</h4>
-                <p className="text-white/40 text-xs">Default: [Tempat], [Tanggal Bulan Tahun]</p>
-                <Input
-                  value={layers.subtitle.text}
-                  onChange={(e) => updateLayer("subtitle", { text: e.target.value })}
-                  placeholder={reportSubtitle || "Tempat, Tanggal Bulan Tahun"}
-                  className="bg-white/5 border-white/10 text-white"
-                />
-                <div className="flex gap-2">
-                  <div className="flex-1">
-                    <Label className="text-white/50 text-xs">Ukuran: {layers.subtitle.fontSize}px</Label>
-                    <input
-                      type="range"
-                      min="8"
-                      max="32"
-                      value={layers.subtitle.fontSize}
-                      onChange={(e) => updateLayer("subtitle", { fontSize: parseInt(e.target.value) })}
-                      className="w-full"
-                    />
-                  </div>
-                  <Input
-                    type="color"
-                    value={layers.subtitle.color}
-                    onChange={(e) => updateLayer("subtitle", { color: e.target.value })}
-                    className="w-10 h-8 p-1"
-                  />
-                </div>
-              </div>
-              
-              {/* Footer Section */}
-              <div className="space-y-3">
-                <h4 className="text-green-400 text-sm font-medium">Footer</h4>
-                <Input
-                  value={layers.footer.text}
-                  onChange={(e) => updateLayer("footer", { text: e.target.value })}
-                  placeholder="Footer text..."
-                  className="bg-white/5 border-white/10 text-white"
-                />
-                <div className="flex gap-2">
-                  <div className="flex-1">
-                    <Label className="text-white/50 text-xs">Ukuran: {layers.footer.fontSize}px</Label>
-                    <input
-                      type="range"
-                      min="10"
-                      max="20"
-                      value={layers.footer.fontSize}
-                      onChange={(e) => updateLayer("footer", { fontSize: parseInt(e.target.value) })}
-                      className="w-full"
-                    />
-                  </div>
-                  <Input
-                    type="color"
-                    value={layers.footer.color}
-                    onChange={(e) => updateLayer("footer", { color: e.target.value })}
-                    className="w-10 h-8 p-1"
-                  />
-                </div>
-              </div>
-              
-              <p className="text-white/40 text-xs mt-4 text-center">
-                Drag text di canvas untuk mengubah posisi
-              </p>
-            </div>
-          )}
-
-          {/* Logo Panel */}
-          {activeTool === "logo" && (
-            <div className="space-y-4">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-white font-semibold">Logo</h3>
-                <button onClick={() => setActiveTool(null)} className="text-white/70 hover:text-white">
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-              <div className="flex items-center justify-center gap-8">
-                <div className="text-center">
-                  <div className="w-14 h-16 bg-slate-700/50 flex items-center justify-center overflow-visible mb-2 rounded">
-                    {basarnasLogo ? (
-                      <img 
-                        src={basarnasLogo.src} 
-                        alt="Basarnas" 
-                        className="w-full h-full object-contain"
-                        style={{ filter: "drop-shadow(0 0 8px rgba(255, 200, 0, 0.8)) drop-shadow(0 0 15px rgba(255, 180, 0, 0.6))" }}
-                      />
-                    ) : (
-                      <span className="text-[8px] font-bold text-white">BASARNAS</span>
-                    )}
-                  </div>
-                  <span className="text-white/50 text-xs">Basarnas</span>
-                </div>
-                <div className="text-center">
-                  <div className="w-14 h-16 bg-slate-700/50 flex items-center justify-center overflow-visible mb-2 rounded">
-                    {bppLogo ? (
-                      <img 
-                        src={bppLogo.src} 
-                        alt="BPP" 
-                        className="w-full h-full object-contain"
-                        style={{ filter: "drop-shadow(0 0 8px rgba(255, 200, 0, 0.8)) drop-shadow(0 0 15px rgba(255, 180, 0, 0.6))" }}
-                      />
-                    ) : (
-                      <span className="text-[8px] font-bold text-white">BPP</span>
-                    )}
-                  </div>
-                  <span className="text-white/50 text-xs">BPP</span>
-                </div>
-              </div>
-              <p className="text-white/40 text-xs mt-4 text-center">
-                Logo dengan efek glow kuning
-              </p>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Hero Icon Spacer for Better Mobile Feel */}
-      <div className="relative bg-[rgba(10,20,35,0.95)] border-t border-white/10 z-50 flex-shrink-0" style={{ height: "72px" }}>
+      <div className="fixed bottom-0 left-0 right-0 bg-[rgba(10,20,35,0.95)] border-t border-white/10 z-50" style={{ height: "72px" }}>
         <div className="flex justify-around items-center h-full px-2">
           <button
             onClick={() => setActiveTool(activeTool === "background" ? null : "background")}
@@ -1946,6 +1673,281 @@ const CollageEditor = ({
         }
       `}</style>
 
+      {/* Tool Panels - Slide up from bottom */}
+      {/* Background Panel */}
+      {activeTool === "background" && (
+        <div className="fixed bottom-[72px] left-0 right-0 bg-[#0a1525]/95 backdrop-blur-lg border-t border-white/10 rounded-t-2xl p-4 z-40 max-h-[50vh] overflow-y-auto">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-white font-semibold">Background</h3>
+            <button onClick={() => setActiveTool(null)} className="text-white/70 hover:text-white">
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+          
+          <div className="space-y-4">
+            <button
+              onClick={() => backgroundInputRef.current?.click()}
+              className="w-full p-3 border border-white/20 rounded-lg bg-white/5 text-white hover:bg-white/10 flex items-center justify-center gap-2"
+            >
+              <ImageIcon className="w-5 h-5" />
+              {layers.background.url ? "Ganti Background" : "Upload Background"}
+            </button>
+            
+            {layers.background.url && (
+              <>
+                <p className="text-white/50 text-xs text-center">
+                  ≡ƒÆí Drag untuk geser, pinch/scroll untuk zoom
+                </p>
+                
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => updateLayer("background", { scale: 1, x: 0, y: 0 })}
+                  className="w-full border-white/20 text-white hover:bg-white/10"
+                >
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  Reset Posisi
+                </Button>
+                
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => updateLayer("background", { url: null })}
+                  className="w-full"
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Hapus Background
+                </Button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Photos Panel */}
+      {activeTool === "photos" && (
+        <div className="fixed bottom-[72px] left-0 right-0 bg-[#0a1525]/95 backdrop-blur-lg border-t border-white/10 rounded-t-2xl p-4 z-40 max-h-[50vh] overflow-y-auto">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-white font-semibold">Photos</h3>
+            <button onClick={() => setActiveTool(null)} className="text-white/70 hover:text-white">
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+          
+          <div className="space-y-4">
+            <button
+              onClick={() => photoInputRef.current?.click()}
+              className="w-full p-3 border border-white/20 rounded-lg bg-white/5 text-white hover:bg-white/10 flex items-center justify-center gap-2"
+            >
+              <ImagePlus className="w-5 h-5" />
+              Tambah Foto
+            </button>
+            
+            {selectedPhoto !== null && layers.photos[selectedPhoto] && (
+              <div className="space-y-3 border-t border-white/10 pt-4">
+                <h4 className="text-white/70 text-sm">Edit Foto {selectedPhoto + 1}</h4>
+                
+                <div className="space-y-2">
+                  <Label className="text-white/70 text-xs">Zoom: {Math.round(layers.photos[selectedPhoto].scale * 100)}%</Label>
+                  <input
+                    type="range"
+                    min="0.5"
+                    max="3"
+                    step="0.01"
+                    value={layers.photos[selectedPhoto].scale}
+                    onChange={(e) => updatePhoto(selectedPhoto, { scale: parseFloat(e.target.value) })}
+                    className="w-full"
+                  />
+                </div>
+                
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => updatePhoto(selectedPhoto, { imgX: 0, imgY: 0, scale: 1 })}
+                    className="flex-1"
+                  >
+                    <RefreshCw className="w-3 h-3 mr-1" />
+                    Reset
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => {
+                      setLayers(prev => ({
+                        ...prev,
+                        photos: prev.photos.filter((_, i) => i !== selectedPhoto),
+                      }));
+                      setSelectedPhoto(null);
+                    }}
+                    className="flex-1"
+                  >
+                    <Trash2 className="w-3 h-3 mr-1" />
+                    Hapus
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Text Panel */}
+      {activeTool === "text" && (
+        <div className="fixed bottom-[72px] left-0 right-0 bg-[#0a1525]/95 backdrop-blur-lg border-t border-white/10 rounded-t-2xl p-4 z-40 max-h-[60vh] overflow-y-auto">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-white font-semibold">Text</h3>
+            <button onClick={() => setActiveTool(null)} className="text-white/70 hover:text-white">
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+          
+          {/* Title Section */}
+          <div className="space-y-3 mb-4 pb-4 border-b border-white/10">
+            <h4 className="text-orange-400 text-sm font-medium">Judul</h4>
+            <p className="text-white/40 text-xs">Default: Judul Laporan dari form</p>
+            <Input
+              value={layers.title.text}
+              onChange={(e) => updateLayer("title", { text: e.target.value })}
+              placeholder={reportTitle || "Judul Laporan"}
+              className="bg-white/5 border-white/10 text-white"
+            />
+            <div className="flex gap-2">
+              <div className="flex-1">
+                <Label className="text-white/50 text-xs">Ukuran: {layers.title.fontSize}px</Label>
+                <input
+                  type="range"
+                  min="10"
+                  max="48"
+                  value={layers.title.fontSize}
+                  onChange={(e) => updateLayer("title", { fontSize: parseInt(e.target.value) })}
+                  className="w-full"
+                />
+              </div>
+              <Input
+                type="color"
+                value={layers.title.color}
+                onChange={(e) => updateLayer("title", { color: e.target.value })}
+                className="w-10 h-8 p-1"
+              />
+            </div>
+          </div>
+          
+          {/* Subtitle Section */}
+          <div className="space-y-3 mb-4 pb-4 border-b border-white/10">
+            <h4 className="text-cyan-400 text-sm font-medium">Subtitle</h4>
+            <p className="text-white/40 text-xs">Default: [Tempat], [Tanggal Bulan Tahun]</p>
+            <Input
+              value={layers.subtitle.text}
+              onChange={(e) => updateLayer("subtitle", { text: e.target.value })}
+              placeholder={reportSubtitle || "Tempat, Tanggal Bulan Tahun"}
+              className="bg-white/5 border-white/10 text-white"
+            />
+            <div className="flex gap-2">
+              <div className="flex-1">
+                <Label className="text-white/50 text-xs">Ukuran: {layers.subtitle.fontSize}px</Label>
+                <input
+                  type="range"
+                  min="8"
+                  max="32"
+                  value={layers.subtitle.fontSize}
+                  onChange={(e) => updateLayer("subtitle", { fontSize: parseInt(e.target.value) })}
+                  className="w-full"
+                />
+              </div>
+              <Input
+                type="color"
+                value={layers.subtitle.color}
+                onChange={(e) => updateLayer("subtitle", { color: e.target.value })}
+                className="w-10 h-8 p-1"
+              />
+            </div>
+          </div>
+          
+          {/* Footer Section */}
+          <div className="space-y-3">
+            <h4 className="text-green-400 text-sm font-medium">Footer</h4>
+            <Input
+              value={layers.footer.text}
+              onChange={(e) => updateLayer("footer", { text: e.target.value })}
+              placeholder="Footer text..."
+              className="bg-white/5 border-white/10 text-white"
+            />
+            <div className="flex gap-2">
+              <div className="flex-1">
+                <Label className="text-white/50 text-xs">Ukuran: {layers.footer.fontSize}px</Label>
+                <input
+                  type="range"
+                  min="10"
+                  max="20"
+                  value={layers.footer.fontSize}
+                  onChange={(e) => updateLayer("footer", { fontSize: parseInt(e.target.value) })}
+                  className="w-full"
+                />
+              </div>
+              <Input
+                type="color"
+                value={layers.footer.color}
+                onChange={(e) => updateLayer("footer", { color: e.target.value })}
+                className="w-10 h-8 p-1"
+              />
+            </div>
+          </div>
+          
+          <p className="text-white/40 text-xs mt-4 text-center">
+            Drag text di canvas untuk mengubah posisi
+          </p>
+        </div>
+      )}
+
+      {/* Logo Panel */}
+      {activeTool === "logo" && (
+        <div className="fixed bottom-[72px] left-0 right-0 bg-[#0a1525]/95 backdrop-blur-lg border-t border-white/10 rounded-t-2xl p-4 z-40">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-white font-semibold">Logo</h3>
+            <button onClick={() => setActiveTool(null)} className="text-white/70 hover:text-white">
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+          
+          <div className="flex items-center justify-center gap-8">
+            <div className="text-center">
+              <div className="w-14 h-16 bg-slate-700/50 flex items-center justify-center overflow-visible mb-2 rounded">
+                {basarnasLogo ? (
+                  <img 
+                    src={basarnasLogo.src} 
+                    alt="Basarnas" 
+                    className="w-full h-full object-contain"
+                    style={{ filter: "drop-shadow(0 0 8px rgba(255, 200, 0, 0.8)) drop-shadow(0 0 15px rgba(255, 180, 0, 0.6))" }}
+                  />
+                ) : (
+                  <span className="text-[8px] font-bold text-white">BASARNAS</span>
+                )}
+              </div>
+              <span className="text-white/50 text-xs">Basarnas</span>
+            </div>
+            <div className="text-center">
+              <div className="w-14 h-16 bg-slate-700/50 flex items-center justify-center overflow-visible mb-2 rounded">
+                {bppLogo ? (
+                  <img 
+                    src={bppLogo.src} 
+                    alt="BPP" 
+                    className="w-full h-full object-contain"
+                    style={{ filter: "drop-shadow(0 0 8px rgba(255, 200, 0, 0.8)) drop-shadow(0 0 15px rgba(255, 180, 0, 0.6))" }}
+                  />
+                ) : (
+                  <span className="text-[8px] font-bold text-white">BPP</span>
+                )}
+              </div>
+              <span className="text-white/50 text-xs">BPP</span>
+            </div>
+          </div>
+          
+          <p className="text-white/40 text-xs mt-4 text-center">
+            Logo dengan efek glow kuning
+          </p>
+        </div>
+      )}
 
       {/* Merged Result Preview */}
       {mergedImage && (
@@ -1997,7 +1999,7 @@ const CollageEditor = ({
                 className="w-full mt-2 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white animate-pulse"
               >
                 <ImageIcon className="w-4 h-4 mr-2" />
-                📸 Kirim Foto ke WhatsApp
+                ≡ƒô╕ Kirim Foto ke WhatsApp
               </Button>
             )}
             
@@ -2103,7 +2105,7 @@ export default function WAHome() {
       color: "#CBD5E1"
     },
     footer: {
-      text: "© Direktorat Kesiapsiagaan",
+      text: "┬⌐ Direktorat Kesiapsiagaan",
       x: 50,
       y: 95,
       fontSize: 14,
@@ -2129,7 +2131,7 @@ export default function WAHome() {
   const [subtitleFontSize, setSubtitleFontSize] = useState(20);
   
   // State untuk kalimat penutup di teks utama
-  const [kalimatPenutup, setKalimatPenutup] = useState("Demikian disampaikan sebagai laporan. Terima kasih 🙏");
+  const [kalimatPenutup, setKalimatPenutup] = useState("Demikian disampaikan sebagai laporan. Terima kasih ≡ƒÖÅ");
   
   // State untuk Layout & Style
   const [layoutStyle, setLayoutStyle] = useState<"grid" | "vertical" | "horizontal">("grid");
@@ -2189,14 +2191,14 @@ export default function WAHome() {
   // Format text for WhatsApp (convert editor markers to WhatsApp format)
   const formatForWhatsApp = useCallback((text: string): string => {
     let formatted = text;
-    // Bold: **text** → *text*
+    // Bold: **text** ΓåÆ *text*
     formatted = formatted.replace(/\*\*([^*]+)\*\*/g, '*$1*');
-    // Italic: __text__ → _text_
+    // Italic: __text__ ΓåÆ _text_
     formatted = formatted.replace(/__([^_]+)__/g, '_$1_');
-    // Strikethrough: ~~text~~ → ~text~ (or keep as is if already ~)
+    // Strikethrough: ~~text~~ ΓåÆ ~text~ (or keep as is if already ~)
     formatted = formatted.replace(/~~([^~]+)~~/g, '~$1~');
     // Monospace: ```text``` stays the same for WhatsApp
-    // Bold+Italic: ***text*** → *_text_*
+    // Bold+Italic: ***text*** ΓåÆ *_text_*
     formatted = formatted.replace(/\*\*\*([^*]+)\*\*\*/g, '*_$1_*');
     return formatted;
   }, []);
@@ -2276,35 +2278,35 @@ export default function WAHome() {
     text += `Selamat ${getWaktuSalam()}, Mohon izin melaporkan kegiatan ${formatForWhatsApp(judul.toLowerCase())}.\n\n`;
     
     // Location with map image, place name, and address OR Zoom link
-    text += `📍 *Tempat:*\n`;
+    text += `≡ƒôì *Tempat:*\n`;
     if (jenisTempat === "daring") {
       text += `${formatForWhatsApp(tempat)}\n`;
       if (zoomLink) {
-        text += `🔗 Link Zoom: ${zoomLink}\n`;
+        text += `≡ƒöù Link Zoom: ${zoomLink}\n`;
       }
     } else if (locationData && locationData.lat && locationData.lng) {
       // Show place name
-      text += `📌 *${formatForWhatsApp(locationData.placeName)}*\n`;
+      text += `≡ƒôî *${formatForWhatsApp(locationData.placeName)}*\n`;
       // Show full address
       text += `${formatForWhatsApp(locationData.address)}\n`;
       // Show map link
-      text += `🗺️ Lihat di Maps: https://www.google.com/maps?q=${locationData.lat},${locationData.lng}\n`;
+      text += `≡ƒù║∩╕Å Lihat di Maps: https://www.google.com/maps?q=${locationData.lat},${locationData.lng}\n`;
     } else {
       text += `${formatForWhatsApp(tempat)}\n`;
     }
     text += "\n";
     
-    text += `📅 *Hari dan Tanggal:*\n${tanggal}\n\n`;
-    text += `⏰ *Waktu:*\n${waktu}\n\n`;
-    text += `👤 *Pimpinan Rapat:*\n${formatForWhatsApp(pimpinan)}\n\n`;
+    text += `≡ƒôà *Hari dan Tanggal:*\n${tanggal}\n\n`;
+    text += `ΓÅ░ *Waktu:*\n${waktu}\n\n`;
+    text += `≡ƒæñ *Pimpinan Rapat:*\n${formatForWhatsApp(pimpinan)}\n\n`;
     
-    text += `👥 *Peserta Rapat:*\n`;
+    text += `≡ƒæÑ *Peserta Rapat:*\n`;
     peserta.forEach((p) => {
       text += `- ${formatForWhatsApp(p.text)};\n`;
     });
     text += "\n";
     
-    text += `🗒️ *Pelaksanaan Rapat:*\n`;
+    text += `≡ƒùÆ∩╕Å *Pelaksanaan Rapat:*\n`;
     pelaksanaan.forEach((item, index) => {
       text += `${index + 1}. ${formatForWhatsApp(item.text)};\n`;
       if (item.subItems.length > 0) {
@@ -3027,7 +3029,7 @@ export default function WAHome() {
       // Contact info
       ctx.fillStyle = footerContent.contactInfo.color;
       ctx.font = `${footerContent.contactInfo.fontSize}px Arial`;
-      const contactText = footerContent.contactInfo.items.map((item: { label: string }) => item.label).join("  •  ");
+      const contactText = footerContent.contactInfo.items.map((item: { label: string }) => item.label).join("  ΓÇó  ");
       ctx.fillText(contactText, canvasWidth / 2, canvasHeight - footerConfig.height + 60);
 
       // Convert to image
@@ -3089,7 +3091,7 @@ export default function WAHome() {
         toast.loading("Mengunggah peta lokasi...", { id: loadingToast });
         const mapUrl = await uploadImageToR2(locationData.mapImageUrl, "url", "maps");
         if (mapUrl) {
-          uploadedUrls.push(`📍 Peta Lokasi: ${mapUrl}`);
+          uploadedUrls.push(`≡ƒôì Peta Lokasi: ${mapUrl}`);
         }
       }
       
@@ -3098,7 +3100,7 @@ export default function WAHome() {
         toast.loading("Mengunggah dokumentasi foto...", { id: loadingToast });
         const photoUrl = await uploadImageToR2(mergedImage, "base64", "photos");
         if (photoUrl) {
-          uploadedUrls.push(`📸 Dokumentasi: ${photoUrl}`);
+          uploadedUrls.push(`≡ƒô╕ Dokumentasi: ${photoUrl}`);
         }
       }
       
@@ -3278,50 +3280,31 @@ export default function WAHome() {
   // ==============================
   const sendAllToWhatsApp = async () => {
     const laporanText = generatePreview();
-    const phoneNumber = ""; // Optional: pre-fill phone number if needed
+    const phoneNumber = ""; // Kosong = pilih kontak manual
 
     try {
       setIsSendingWA(true);
 
-      // 1. Generate image if not already generated
+      // 1∩╕ÅΓâú Export gambar
       if (!mergedImage) {
-        toast.info("Generating photo collage first...");
-        // This is a bit tricky if merge isn't triggered. Let's assume user must click Export first
-        // OR we trigger it here if possible. 
-        // For stability, we'll prompt the user to export first if missing.
-        toast.error("Silakan klik Export di tab Foto terlebih dahulu!");
-        setIsSendingWA(false);
+        toast.error("Silakan klik Export terlebih dahulu!");
         return;
       }
       
-      toast.info("Menyiapkan pesan...");
-      const file = await exportPhotoFile();
+      toast.info("Menyiapkan foto...");
+      await exportPhotoFile();
 
-      // 2. Message 1: Send Text Report
-      toast.info("Mengirim Laporan Teks...");
+      // 2∩╕ÅΓâú Kirim text
+      toast.info("Membuka WhatsApp...");
       kirimTextWA(phoneNumber, laporanText);
       
-      // 3. Message 2: Prompt for Photo Share (actual file)
-      // We wait a bit to let the first tab open
-      setTimeout(async () => {
-        if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
-          toast.info("Silakan pilih kontak yang sama untuk mengirim Foto...");
-          try {
-            await navigator.share({
-              files: [file],
-              title: "Laporan Dokumentasi",
-              text: "Dokumentasi Kegiatan"
-            });
-            toast.success("Teks & Foto berhasil diproses!");
-          } catch (e) {
-            console.log("Share cancelled or failed", e);
-          }
-        } else {
-          toast.success("Teks terkirim. Silakan attach foto secara manual.");
-          setShowSendPhotoButton(true);
-        }
+      toast.success("Laporan teks terkirim!");
+
+      // 3∩╕ÅΓâú Munculkan tombol kirim foto setelah 1.5 detik
+      setTimeout(() => {
+        setShowSendPhotoButton(true);
         setIsSendingWA(false);
-      }, 2000);
+      }, 1500);
 
     } catch (err) {
       console.error(err);
@@ -3331,7 +3314,7 @@ export default function WAHome() {
   };
 
   useEffect(() => { loadDrafts(); }, []);
-  useEffect(() => { generatePreview(); }, [generatePreview]);
+  // Removed static generatePreview call to allow dynamic layoutConfig to settle
 
   if (!layoutConfig) {
     return (
@@ -3514,7 +3497,7 @@ export default function WAHome() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-3">
                     <Label className="text-slate-300 flex items-center gap-2">
-                      <span className="text-lg">📍</span> Tempat
+                      <span className="text-lg">≡ƒôì</span> Tempat
                     </Label>
                     
                     {/* Toggle Daring/Luring */}
@@ -3528,7 +3511,7 @@ export default function WAHome() {
                           ? "bg-blue-600 hover:bg-blue-500 text-white" 
                           : "border-white/30 bg-slate-700/50 text-white hover:bg-slate-700 hover:text-white"}`}
                       >
-                        💻 Daring
+                        ≡ƒÆ╗ Daring
                       </Button>
                       <Button
                         type="button"
@@ -3539,7 +3522,7 @@ export default function WAHome() {
                           ? "bg-green-600 hover:bg-green-500 text-white" 
                           : "border-white/30 bg-slate-700/50 text-white hover:bg-slate-700 hover:text-white"}`}
                       >
-                        🏢 Luring
+                        ≡ƒÅó Luring
                       </Button>
                     </div>
                     
@@ -3557,7 +3540,7 @@ export default function WAHome() {
                         </div>
                         <div className="space-y-2">
                           <Label className="text-slate-400 text-xs flex items-center gap-2">
-                            🔗 Link Zoom Meeting
+                            ≡ƒöù Link Zoom Meeting
                             {isLoadingZoomTitle && <Loader2 className="w-3 h-3 animate-spin" />}
                           </Label>
                           <Input
@@ -3634,7 +3617,7 @@ export default function WAHome() {
                   </div>
                   <div className="space-y-2">
                     <Label className="text-slate-300 flex items-center gap-2">
-                      <span className="text-lg">👤</span> Pimpinan
+                      <span className="text-lg">≡ƒæñ</span> Pimpinan
                     </Label>
                     <WAInput
                       value={pimpinan}
@@ -3646,7 +3629,7 @@ export default function WAHome() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label className="text-slate-300 flex items-center gap-2">
-                      <span className="text-lg">📅</span> Hari dan Tanggal
+                      <span className="text-lg">≡ƒôà</span> Hari dan Tanggal
                     </Label>
                     <WAInput
                       value={tanggal}
@@ -3656,7 +3639,7 @@ export default function WAHome() {
                   </div>
                   <div className="space-y-2">
                     <Label className="text-slate-300 flex items-center gap-2">
-                      <span className="text-lg">⏰</span> Waktu
+                      <span className="text-lg">ΓÅ░</span> Waktu
                     </Label>
                     <WAInput
                       value={waktu}
@@ -3673,7 +3656,7 @@ export default function WAHome() {
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-base text-white flex items-center gap-2">
-                    <span className="text-lg">👥</span> Peserta Rapat
+                    <span className="text-lg">≡ƒæÑ</span> Peserta Rapat
                   </CardTitle>
                   <Button variant="outline" size="sm" onClick={addPeserta} className="border-white/20 bg-white/5 hover:bg-white/10 text-white">
                     <Plus className="w-4 h-4 mr-2" />
@@ -3706,7 +3689,7 @@ export default function WAHome() {
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-base text-white flex items-center gap-2">
-                    <span className="text-lg">🗒️</span> Pelaksanaan Rapat
+                    <span className="text-lg">≡ƒùÆ∩╕Å</span> Pelaksanaan Rapat
                   </CardTitle>
                   <Button variant="outline" size="sm" onClick={addPelaksanaan} className="border-white/20 bg-white/5 hover:bg-white/10 text-white">
                     <Plus className="w-4 h-4 mr-2" />
@@ -3785,7 +3768,7 @@ export default function WAHome() {
                 <WATextarea
                   value={kalimatPenutup}
                   onChange={setKalimatPenutup}
-                  placeholder="Demikian disampaikan sebagai laporan. Terima kasih 🙏"
+                  placeholder="Demikian disampaikan sebagai laporan. Terima kasih ≡ƒÖÅ"
                   rows={2}
                 />
               </CardContent>
@@ -3852,13 +3835,13 @@ export default function WAHome() {
                         <div className="whitespace-pre-wrap">Selamat {getWaktuSalam()}, Mohon izin melaporkan kegiatan {judul.toLowerCase()}.{"\n\n"}</div>
                         
                         {/* Tempat section */}
-                        <div className="whitespace-pre-wrap">📍 *Tempat:*{"\n"}</div>
+                        <div className="whitespace-pre-wrap">≡ƒôì *Tempat:*{"\n"}</div>
                         
                         {/* Location text or default */}
                         {locationData && locationData.lat && locationData.lng ? (
                           <div className="tempat-section">
                             {/* Place name and address */}
-                            <div className="whitespace-pre-wrap">📌 *{locationData.placeName}*{"\n"}{locationData.address}{"\n"}</div>
+                            <div className="whitespace-pre-wrap">≡ƒôî *{locationData.placeName}*{"\n"}{locationData.address}{"\n"}</div>
                             
                             {/* Map Image - visually grouped with Tempat */}
                             <div className="my-2 border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden">
@@ -3883,18 +3866,18 @@ export default function WAHome() {
                             </div>
                             
                             {/* Maps link */}
-                            <div className="whitespace-pre-wrap text-xs text-slate-500">🗺️ Lihat di Maps: https://www.google.com/maps?q={locationData.lat},{locationData.lng}{"\n\n"}</div>
+                            <div className="whitespace-pre-wrap text-xs text-slate-500">≡ƒù║∩╕Å Lihat di Maps: https://www.google.com/maps?q={locationData.lat},{locationData.lng}{"\n\n"}</div>
                           </div>
                         ) : (
                           <div className="whitespace-pre-wrap">{tempat}{"\n\n"}</div>
                         )}
                         
                         {/* Rest of the message */}
-                        <div className="whitespace-pre-wrap">📅 *Hari dan Tanggal:*{"\n"}{tanggal}{"\n\n"}</div>
-                        <div className="whitespace-pre-wrap">⏰ *Waktu:*{"\n"}{waktu}{"\n\n"}</div>
-                        <div className="whitespace-pre-wrap">👤 *Pimpinan Rapat:*{"\n"}{pimpinan}{"\n\n"}</div>
-                        <div className="whitespace-pre-wrap">👥 *Peserta Rapat:*{"\n"}{peserta.map(p => `- ${p.text};`).join("\n")}{"\n\n"}</div>
-                        <div className="whitespace-pre-wrap">🗒️ *Pelaksanaan Rapat:*{"\n"}{pelaksanaan.map((item, i) => {
+                        <div className="whitespace-pre-wrap">≡ƒôà *Hari dan Tanggal:*{"\n"}{tanggal}{"\n\n"}</div>
+                        <div className="whitespace-pre-wrap">ΓÅ░ *Waktu:*{"\n"}{waktu}{"\n\n"}</div>
+                        <div className="whitespace-pre-wrap">≡ƒæñ *Pimpinan Rapat:*{"\n"}{pimpinan}{"\n\n"}</div>
+                        <div className="whitespace-pre-wrap">≡ƒæÑ *Peserta Rapat:*{"\n"}{peserta.map(p => `- ${p.text};`).join("\n")}{"\n\n"}</div>
+                        <div className="whitespace-pre-wrap">≡ƒùÆ∩╕Å *Pelaksanaan Rapat:*{"\n"}{pelaksanaan.map((item, i) => {
                           let text = `${i + 1}. ${item.text};`;
                           if (item.subItems.length > 0) {
                             text += "\n" + item.subItems.map(sub => `    - ${sub}`).join("\n");
@@ -3909,7 +3892,7 @@ export default function WAHome() {
                         <span className="text-xs text-slate-400">
                           {new Date().toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}
                         </span>
-                        <span className="text-blue-500">✓✓</span>
+                        <span className="text-blue-500">Γ£ôΓ£ô</span>
                       </div>
                     </div>
 
@@ -3926,7 +3909,7 @@ export default function WAHome() {
                           Download Gambar Peta
                         </Button>
                         <p className="text-xs text-slate-400 mt-1 italic">
-                          💡 Download gambar peta, lalu lampirkan manual ke WhatsApp
+                          ≡ƒÆí Download gambar peta, lalu lampirkan manual ke WhatsApp
                         </p>
                       </div>
                     )}
@@ -4006,7 +3989,7 @@ export default function WAHome() {
                     <div className="flex-1 min-w-0">
                       <p className="font-medium truncate text-white">{draft.judul}</p>
                       <p className="text-sm text-slate-400">
-                        {draft.tempat} • {draft.tanggal}
+                        {draft.tempat} ΓÇó {draft.tanggal}
                       </p>
                       <p className="text-xs text-slate-500">
                         Disimpan: {new Date(draft.updatedAt).toLocaleString("id-ID")}
@@ -4063,7 +4046,7 @@ export default function WAHome() {
                 </span>
               </div>
               <p className="text-orange-200/50 text-[10px] font-medium">
-                © 2026 Laporan WhatsApp - Direktorat Kesiapsiagaan
+                ┬⌐ 2026 Laporan WhatsApp - Direktorat Kesiapsiagaan
               </p>
             </div>
           </footer>
