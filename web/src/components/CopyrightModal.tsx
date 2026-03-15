@@ -33,12 +33,23 @@ export default function CopyrightModal({ children }: { children: React.ReactNode
               <Info className="w-3 h-3" />
               <span>Developer & Maintenance</span>
             </div>
-            <p className="text-lg font-semibold text-white">
-              Muhammad Fuadunnas, S.I.Kom., M.IKom.
-            </p>
-            <p className="text-sm text-white/70">
-              PKPP Ahli Muda – Direktorat Kesiapsiagaan
-            </p>
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-white/20 shadow-lg shrink-0">
+                <img 
+                  src="https://www.e-katalog-sop.cloud/foe.jpg" 
+                  alt="Muhammad Fuadunnas" 
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div>
+                <p className="text-lg font-semibold text-white">
+                  Muhammad Fuadunnas, S.I.Kom., M.IKom.
+                </p>
+                <p className="text-sm text-white/70">
+                  PKPP Ahli Muda – Direktorat Kesiapsiagaan
+                </p>
+              </div>
+            </div>
           </section>
 
           <section className="space-y-4 pt-4 border-t border-white/5">
