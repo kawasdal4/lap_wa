@@ -4027,38 +4027,41 @@ export default function WAHome() {
             <div className="absolute inset-0 opacity-50">
               <div className="absolute inset-0 bg-gradient-to-l from-red-600/10 via-orange-500/10 to-amber-500/10 animate-gradient-x" />
             </div>
-            <div className="text-center relative z-10">
             <div className="flex flex-col items-center relative z-10">
-              <div className="flex items-center justify-center gap-2 mb-1">
+              <div className="flex items-center justify-center gap-2 mb-2">
                 <div className="relative group">
-                  {/* Multi-layer glow effect */}
                   <div className="absolute -inset-0.5 bg-gradient-to-r from-red-500 via-orange-500 to-amber-400 rounded-lg blur opacity-70 group-hover:opacity-100 transition duration-500 animate-pulse-glow" />
                   <div className="absolute -inset-0.25 bg-gradient-to-r from-red-600 to-orange-500 rounded-lg blur-sm opacity-50" />
                   <img 
                     src="https://www.e-katalog-sop.cloud/sulapfoto_nomg_1.png" 
                     alt="Logo" 
-                    className="relative w-6 h-6 rounded-lg shadow-xl object-cover border border-white/20"
+                    className="relative w-7 h-7 rounded-lg shadow-xl object-cover border border-white/20"
                   />
                 </div>
-                <span className="text-white text-sm font-semibold bg-gradient-to-r from-white via-orange-100 to-white bg-clip-text text-transparent">
+                <span className="text-white text-sm font-bold bg-gradient-to-r from-white via-orange-100 to-white bg-clip-text text-transparent">
                   Basarnas
                 </span>
               </div>
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded-full overflow-hidden border border-white/20 shadow-sm">
+              
+              <div className="flex items-center gap-2.5 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-md">
+                <div className="w-5 h-5 rounded-full overflow-hidden border border-orange-500/50 shadow-inner">
                   <img 
                     src="https://www.e-katalog-sop.cloud/foe.jpg" 
-                    alt="Copyright Owner" 
+                    alt="FOE" 
                     className="w-full h-full object-cover"
                   />
                 </div>
-                <p className="text-orange-200/50 text-[10px] font-medium">
-                  © 2026 Laporan WhatsApp - prj_X5HQjGPY6x0gIvnPGiIuaBDAZcnN
-                </p>
+                <div className="flex flex-col items-start leading-none">
+                  <p className="text-white/90 text-[10px] font-bold tracking-tight">
+                    © 2026 Laporan WhatsApp
+                  </p>
+                  <p className="text-orange-400/80 text-[8px] font-mono mt-0.5">
+                    ID: prj_X5HQjGPY6x0gIvnPGiIuaBDAZcnN
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
-        </footer>
+          </footer>
       </div>
       {/* End Phone Frame Container */}
     </div>
