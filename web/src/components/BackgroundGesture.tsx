@@ -100,7 +100,7 @@ export default function BackgroundGesture({ src }: BackgroundGestureProps) {
   return (
     <div
       ref={containerRef}
-      className="absolute inset-0 overflow-hidden touch-none"
+      className="absolute inset-0 overflow-hidden touch-auto"
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}

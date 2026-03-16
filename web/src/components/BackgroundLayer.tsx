@@ -141,7 +141,7 @@ export default function BackgroundLayer({
     <div
       ref={containerRef}
       className="absolute inset-0 overflow-hidden"
-      style={{ touchAction: "none" }}
+      style={{ touchAction: "auto" }}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}

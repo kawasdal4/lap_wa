@@ -1356,7 +1356,7 @@ const CollageEditor = ({
             width: "100%",
             maxWidth: "420px",
             aspectRatio: "9 / 16",
-            touchAction: "none",
+            touchAction: "auto",
             background: "linear-gradient(180deg, #173a5e 0%, #0b2035 100%)",
             boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.05), 0 20px 40px rgba(0,0,0,0.6)"
           }}
@@ -1657,7 +1657,7 @@ const CollageEditor = ({
               activeTool === "background" ? "text-blue-400" : "text-white/70 hover:text-white"
             }`}
           >
-            <div className={`p-2 rounded-xl transition-all ${activeTool === "background" ? "bg-blue-500/20 shadow-[0_0_15px_rgba(59,130,246,0.5)]" : "bg-white/5"}`}>
+            <div className={`p-2 rounded-xl transition-all ${activeTool === "background" ? "bg-blue-500/20 filter drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]" : "bg-white/5"}`}>
               <ImageIcon className="w-5 h-5" />
             </div>
             <span className="text-[10px] font-medium tracking-wide">BG</span>
@@ -1669,7 +1669,7 @@ const CollageEditor = ({
               activeTool === "photos" ? "text-purple-400" : "text-white/70 hover:text-white"
             }`}
           >
-            <div className={`p-2 rounded-xl transition-all ${activeTool === "photos" ? "bg-purple-500/20 shadow-[0_0_15px_rgba(168,85,247,0.5)]" : "bg-white/5"}`}>
+            <div className={`p-2 rounded-xl transition-all ${activeTool === "photos" ? "bg-purple-500/20 filter drop-shadow-[0_0_8px_rgba(168,85,247,0.6)]" : "bg-white/5"}`}>
               <ImagePlus className="w-5 h-5" />
             </div>
             <span className="text-[10px] font-medium tracking-wide">Foto</span>
@@ -1681,7 +1681,7 @@ const CollageEditor = ({
               activeTool === "text" ? "text-orange-400" : "text-white/70 hover:text-white"
             }`}
           >
-            <div className={`p-2 rounded-xl transition-all ${activeTool === "text" ? "bg-orange-500/20 shadow-[0_0_15px_rgba(249,115,22,0.5)]" : "bg-white/5"}`}>
+            <div className={`p-2 rounded-xl transition-all ${activeTool === "text" ? "bg-orange-500/20 filter drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]" : "bg-white/5"}`}>
               <Type className="w-5 h-5" />
             </div>
             <span className="text-[10px] font-medium tracking-wide">Teks</span>
@@ -1693,7 +1693,7 @@ const CollageEditor = ({
               activeTool === "logo" ? "text-cyan-400" : "text-white/70 hover:text-white"
             }`}
           >
-            <div className={`p-2 rounded-xl transition-all ${activeTool === "logo" ? "bg-cyan-500/20 shadow-[0_0_15px_rgba(34,211,238,0.5)]" : "bg-white/5"}`}>
+            <div className={`p-2 rounded-xl transition-all ${activeTool === "logo" ? "bg-cyan-500/20 filter drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]" : "bg-white/5"}`}>
               <Layers className="w-5 h-5" />
             </div>
             <span className="text-[10px] font-medium tracking-wide">Logo</span>
@@ -1709,7 +1709,7 @@ const CollageEditor = ({
               animation: isMerging ? "none" : "pulseGlow 2s infinite"
             }}
           >
-            <div className="p-2 rounded-xl bg-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.3)]">
+            <div className="p-2 rounded-xl bg-emerald-500/20">
               {isMerging ? <RefreshCw className="w-5 h-5 animate-spin" /> : <Download className="w-5 h-5" />}
             </div>
             <span className="text-[10px] font-medium tracking-wide">Export</span>
@@ -1720,18 +1720,19 @@ const CollageEditor = ({
       {/* Add pulseGlow animation style */}
       <style jsx global>{`
         @keyframes pulseGlow {
-          0% { box-shadow: 0 0 0 rgba(0, 255, 160, 0.6); }
-          50% { box-shadow: 0 0 18px rgba(0, 255, 160, 0.9); }
-          100% { box-shadow: 0 0 0 rgba(0, 255, 160, 0.6); }
+          0%, 100% { filter: drop-shadow(0 0 2px rgba(16, 185, 129, 0.4)); }
+          50% { filter: drop-shadow(0 0 12px rgba(16, 185, 129, 0.8)); }
         }
         @keyframes logoGlow {
           0%, 100% { 
-            opacity: 0.5; 
+            filter: drop-shadow(0 0 5px currentColor);
+            opacity: 0.7; 
             transform: scale(1);
           }
           50% { 
+            filter: drop-shadow(0 0 15px currentColor);
             opacity: 1; 
-            transform: scale(1.1);
+            transform: scale(1.05);
           }
         }
         @keyframes gradientX {
@@ -1870,9 +1871,9 @@ const CollageEditor = ({
         </div>
       )}
 
-      {/* Text Panel */}
+      {/* Text Panel - Compact & Lower to avoid obscuring preview */}
       {activeTool === "text" && (
-        <div className="absolute bottom-[80px] left-4 right-4 bg-[#0a1525]/95 backdrop-blur-lg border border-white/10 rounded-2xl p-4 z-40 shadow-2xl max-h-[60vh] overflow-y-auto animate-in slide-in-from-bottom-4 duration-300">
+        <div className="absolute bottom-[80px] left-4 right-4 bg-[#0a1525]/95 backdrop-blur-xl border border-white/10 rounded-2xl p-4 z-40 shadow-2xl max-h-[50vh] overflow-y-auto animate-in fade-in slide-in-from-bottom-4 duration-300">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-white font-semibold">Text</h3>
             <button onClick={() => setActiveTool(null)} className="text-white/70 hover:text-white">
@@ -3459,13 +3460,14 @@ export default function WAHome() {
           <div className="flex items-center justify-between relative z-10">
             <div className="flex items-center gap-3">
               <div className="relative group">
-                {/* Multi-layer glow effect */}
-                <div className="absolute -inset-1 bg-gradient-to-r from-red-500 via-orange-500 to-amber-400 rounded-xl blur opacity-70 group-hover:opacity-100 transition duration-500 animate-pulse-glow" />
-                <div className="absolute -inset-0.5 bg-gradient-to-r from-red-600 to-orange-500 rounded-xl blur-md opacity-50" />
+                {/* Organic glow using drop-shadow for the logo shape */}
+                <div className="absolute inset-0 filter blur-md opacity-40 group-hover:opacity-60 transition-opacity duration-500 animate-pulse-glow" style={{ color: "orange" }}>
+                  <img src="https://www.e-katalog-sop.cloud/sulapfoto_nomg_1.png" alt="" className="w-full h-full object-contain brightness-200" />
+                </div>
                 <img 
                   src="https://www.e-katalog-sop.cloud/sulapfoto_nomg_1.png" 
                   alt="Logo" 
-                  className="relative w-11 h-11 rounded-xl shadow-2xl object-cover border border-white/20"
+                  className="relative w-11 h-11 object-contain filter drop-shadow-[0_0_8px_rgba(249,115,22,0.4)]"
                 />
               </div>
               <div>
@@ -3490,9 +3492,9 @@ export default function WAHome() {
           </div>
         </header>
 
-        {/* Main Content - Scrollable area */}
-        <div className="flex-1 flex flex-col min-h-0">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
+        {/* Main Content - Natural Scroll area */}
+        <div className="flex-1 flex flex-col">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
             <div className="px-4 mt-2 mb-2 flex-shrink-0">
               <TabsList className="w-full bg-white/5 backdrop-blur-sm rounded-2xl p-1.5 flex">
                 <TabsTrigger 
@@ -3520,7 +3522,7 @@ export default function WAHome() {
             </div>
 
             {/* Editor Tab */}
-            <TabsContent value="editor" className="flex-1 overflow-y-auto mt-0 scroll-smooth">
+            <TabsContent value="editor" className="flex-1 mt-0">
               <div className="space-y-6 p-4 pb-32">
             {/* Template Section */}
             <Card className="bg-slate-800/50 backdrop-blur-sm border-white/10 shadow-xl">
@@ -4030,7 +4032,7 @@ export default function WAHome() {
           </TabsContent>
 
           {/* Image Merger Tab - Collage Editor */}
-          <TabsContent value="image" className="flex-1 overflow-y-auto mt-0 min-h-0 bg-slate-900/50">
+          <TabsContent value="image" className="flex-1 mt-0 bg-slate-900/50">
             <CollageEditor
               layers={collageLayers}
               setLayers={setCollageLayers}
@@ -4127,50 +4129,6 @@ export default function WAHome() {
           </DialogContent>
         </Dialog>
 
-          {/* Footer */}
-          <footer 
-            className="flex-shrink-0 px-4 py-3 relative overflow-hidden mt-auto"
-            style={{ 
-              background: "linear-gradient(135deg, rgba(251, 146, 60, 0.08) 0%, rgba(234, 88, 12, 0.1) 50%, rgba(185, 28, 28, 0.15) 100%)",
-              borderTop: "1px solid rgba(255,255,255,0.08)"
-            }}
-          >
-            {/* Animated gradient overlay */}
-            <div className="absolute inset-0 opacity-50">
-              <div className="absolute inset-0 bg-gradient-to-l from-red-600/10 via-orange-500/10 to-amber-500/10 animate-gradient-x" />
-            </div>
-            <div className="text-center relative z-10">
-            <div className="flex flex-col items-center relative z-10">
-              <div className="flex items-center justify-center gap-2 mb-1">
-                <div className="relative group">
-                  {/* Multi-layer glow effect */}
-                  <div className="absolute -inset-0.5 bg-gradient-to-r from-red-500 via-orange-500 to-amber-400 rounded-lg blur opacity-70 group-hover:opacity-100 transition duration-500 animate-pulse-glow" />
-                  <div className="absolute -inset-0.25 bg-gradient-to-r from-red-600 to-orange-500 rounded-lg blur-sm opacity-50" />
-                  <img 
-                    src="https://www.e-katalog-sop.cloud/sulapfoto_nomg_1.png" 
-                    alt="Logo" 
-                    className="relative w-6 h-6 rounded-lg shadow-xl object-cover border border-white/20"
-                  />
-                </div>
-                <span className="text-white text-sm font-semibold bg-gradient-to-r from-white via-orange-100 to-white bg-clip-text text-transparent">
-                  Basarnas
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded-full overflow-hidden border border-white/20 shadow-sm">
-                  <img 
-                    src="https://www.e-katalog-sop.cloud/foe.jpg" 
-                    alt="Copyright Owner" 
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <p className="text-orange-200/50 text-[10px] font-medium">
-                  © 2026 Laporan WhatsApp - Direktorat Kesiapsiagaan
-                </p>
-              </div>
-            </div>
-          </div>
-        </footer>
       </div>
       {/* End Phone Frame Container */}
     </div>
