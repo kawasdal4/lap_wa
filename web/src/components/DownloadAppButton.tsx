@@ -1,14 +1,17 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Download, Apple, Android, Smartphone, X, Share2, PlusSquare, ChevronRight } from "lucide-react";
+import { Download, Apple, Smartphone, X, Share2, PlusSquare, ChevronRight } from "lucide-react";
 
 type DeviceType = "android" | "ios" | "other";
 
-// R2 Download URLs - Direct download links
+// R2 Download Base URL
+const R2_PUBLIC_DOMAIN = "https://pub-03210bb1ce9c4a419bd417ee47bd4e6d.r2.dev";
+
+// R2 Download URLs - Direct download links as requested
 const DOWNLOAD_URLS = {
-  android: "https://pub-03210bb1ce9c4a419bd417ee47bd4e6d.r2.dev/lap-wa.apk",
-  ios: "https://pub-03210bb1ce9c4a419bd417ee47bd4e6d.r2.dev/lap-wa.ipa",
+  android: `${R2_PUBLIC_DOMAIN}/mobile-builds/android/app-release.apk`,
+  ios: `${R2_PUBLIC_DOMAIN}/mobile-builds/ios/app-release.ipa`,
 };
 
 export default function DownloadAppButton() {
@@ -16,14 +19,18 @@ export default function DownloadAppButton() {
   const [isHovered, setIsHovered] = useState(false);
   const [showMobilePopup, setShowMobilePopup] = useState(false);
   const [showIOSInstructions, setShowIOSInstructions] = useState(false);
+  const [showDesktopMessage, setShowDesktopMessage] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
 
   useEffect(() => {
     // Detect device type
     const userAgent = navigator.userAgent.toLowerCase();
-    if (userAgent.includes("android")) {
+    const isIOS = /iphone|ipad|ipod/.test(userAgent);
+    const isAndroid = /android/.test(userAgent);
+    
+    if (isAndroid) {
       setDeviceType("android");
-    } else if (userAgent.includes("iphone") || userAgent.includes("ipad") || userAgent.includes("ipod")) {
+    } else if (isIOS) {
       setDeviceType("ios");
     } else {
       setDeviceType("other");
@@ -32,17 +39,21 @@ export default function DownloadAppButton() {
 
   const handleDownload = () => {
     if (deviceType === "ios") {
-      // For iOS, show PWA installation instructions
+      // For iOS, show installation options (PWA or IPA)
       setShowIOSInstructions(true);
-    } else {
-      // Direct download for Android and other devices
+    } else if (deviceType === "android") {
+      // Direct download for Android
       const link = document.createElement('a');
       link.href = DOWNLOAD_URLS.android;
-      link.download = 'lap-wa.apk';
+      link.download = 'app-release.apk';
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       setShowMobilePopup(false);
+    } else {
+      // For Desktop/Other, show message suggesting mobile installation
+      setShowDesktopMessage(true);
+      setShowMobilePopup(true);
     }
   };
 
@@ -50,7 +61,7 @@ export default function DownloadAppButton() {
     // Download IPA for sideloading
     const link = document.createElement('a');
     link.href = DOWNLOAD_URLS.ios;
-    link.download = 'lap-wa.ipa';
+    link.download = 'app-release.ipa';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -60,14 +71,14 @@ export default function DownloadAppButton() {
 
   const getDeviceIcon = (size: string = "w-5 h-5") => {
     if (deviceType === "ios") return <Apple className={`${size} xl:w-4 xl:h-4`} />;
-    if (deviceType === "android") return <Android className={`${size} xl:w-4 xl:h-4`} />;
+    if (deviceType === "android") return <Smartphone className={`${size} xl:w-4 xl:h-4`} />;
     return <Smartphone className={`${size} xl:w-4 xl:h-4`} />;
   };
 
   const getDownloadText = () => {
     if (deviceType === "ios") return "Install di iOS";
     if (deviceType === "android") return "Download APK";
-    return "Get App";
+    return "Download App";
   };
 
   if (!isVisible) return null;
@@ -115,93 +126,123 @@ export default function DownloadAppButton() {
         </button>
       </div>
 
-      {/* Mobile Popup Modal */}
+      {/* Mobile/Desktop Popup Modal */}
       {showMobilePopup && !showIOSInstructions && (
-        <div className="fixed inset-0 z-[200] flex items-end justify-center xl:hidden">
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
           {/* Backdrop */}
           <div 
             className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-            onClick={() => setShowMobilePopup(false)}
+            onClick={() => {
+              setShowMobilePopup(false);
+              setShowDesktopMessage(false);
+            }}
           />
-
+ 
           {/* Modal Content */}
-          <div className="relative w-full max-w-sm mx-3 mb-6 animate-slide-up">
+          <div className="relative w-full max-w-sm animate-slide-up">
             {/* Glow Background */}
             <div className="absolute inset-0 rounded-3xl bg-gradient-to-r from-blue-500/20 via-cyan-400/20 to-blue-500/20 blur-xl" />
-
-            <div className="relative bg-slate-900/95 border border-cyan-500/30 rounded-3xl p-5 backdrop-blur-xl shadow-2xl">
+ 
+            <div className="relative bg-slate-900/95 border border-cyan-500/30 rounded-3xl p-6 backdrop-blur-xl shadow-2xl">
               {/* Close Button */}
               <button
-                onClick={() => setShowMobilePopup(false)}
+                onClick={() => {
+                  setShowMobilePopup(false);
+                  setShowDesktopMessage(false);
+                }}
                 className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/20 transition-all"
               >
                 <X className="w-4 h-4" />
               </button>
-
+ 
               {/* Header */}
-              <div className="text-center mb-4">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-400 mb-3 shadow-lg">
-                  {deviceType === "ios" ? (
+              <div className="text-center mb-6">
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-400 mb-4 shadow-lg">
+                  {showDesktopMessage ? (
+                    <Smartphone className="w-8 h-8 text-white animate-bounce" />
+                  ) : deviceType === "ios" ? (
                     <Apple className="w-8 h-8 text-white" />
-                  ) : deviceType === "android" ? (
-                    <Android className="w-8 h-8 text-white" />
                   ) : (
                     <Smartphone className="w-8 h-8 text-white" />
                   )}
                 </div>
                 <h3 className="text-xl font-bold text-white">
-                  Install Aplikasi
+                  {showDesktopMessage ? "Buka di HP" : "Install Aplikasi"}
                 </h3>
-                <p className="text-sm text-cyan-200/70 mt-1">
-                  Nikmati pengalaman lebih baik dengan aplikasi native
+                <p className="text-sm text-cyan-200/70 mt-2">
+                  {showDesktopMessage 
+                    ? "Gunakan perangkat Android atau iOS untuk menginstall aplikasi ini."
+                    : "Nikmati pengalaman lebih baik dengan aplikasi native."}
                 </p>
               </div>
-
-              {/* Features */}
-              <div className="space-y-2 mb-5">
-                {[
-                  "Akses offline tanpa internet",
-                  "Notifikasi real-time",
-                  "Performa lebih cepat",
-                  "Integrasi native device"
-                ].map((feature, i) => (
-                  <div key={i} className="flex items-center gap-2 text-sm text-gray-300">
-                    <div className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
-                    {feature}
+ 
+              {!showDesktopMessage && (
+                <>
+                  {/* Features */}
+                  <div className="space-y-3 mb-6">
+                    {[
+                      "Akses offline tanpa internet",
+                      "Notifikasi real-time",
+                      "Performa lebih cepat",
+                      "Integrasi native device"
+                    ].map((feature, i) => (
+                      <div key={i} className="flex items-center gap-3 text-sm text-gray-300">
+                        <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.6)]" />
+                        {feature}
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-
-              {/* Download Button */}
-              <button
-                onClick={handleDownload}
-                className="w-full py-4 rounded-2xl font-bold text-white transition-all duration-300 active:scale-95 relative overflow-hidden"
-                style={{
-                  background: "linear-gradient(135deg, #1e40af 0%, #0891b2 50%, #1e40af 100%)",
-                  boxShadow: `
-                    0 0 25px rgba(59, 130, 246, 0.5),
-                    0 4px 15px rgba(0, 0, 0, 0.3)
-                  `,
-                }}
-              >
-                <div className="relative flex items-center justify-center gap-2">
-                  <Download className="w-5 h-5" />
-                  <span className="text-sm uppercase tracking-wider">
-                    {getDownloadText()}
-                  </span>
+ 
+                  {/* Download Button */}
+                    <button
+                    onClick={handleDownload}
+                    className="w-full py-4 rounded-2xl font-bold text-white transition-all duration-300 active:scale-95 relative overflow-hidden group"
+                    style={{
+                      background: "linear-gradient(135deg, #1e40af 0%, #0891b2 50%, #1e40af 100%)",
+                      boxShadow: "0 10px 25px -5px rgba(59, 130, 246, 0.5)",
+                    }}
+                  >
+                    <div className="relative flex items-center justify-center gap-2">
+                      <Download className="w-5 h-5 group-hover:animate-bounce" />
+                      <span className="text-sm uppercase tracking-wider">
+                        {getDownloadText()}
+                      </span>
+                    </div>
+                  </button>
+                </>
+              )}
+ 
+              {showDesktopMessage && (
+                <div className="space-y-4">
+                  <div className="p-4 rounded-2xl bg-white/5 border border-white/10 text-center">
+                    <p className="text-sm text-gray-300">
+                      Scan QR Code ini atau buka langsung alamat situs ini di browser ponsel Anda.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setShowMobilePopup(false);
+                      setShowDesktopMessage(false);
+                    }}
+                    className="w-full py-3 rounded-2xl font-semibold text-white/80 border border-white/10 hover:bg-white/5 transition-all"
+                  >
+                    Tutup
+                  </button>
                 </div>
-              </button>
-
+              )}
+ 
               {/* Dismiss Link */}
-              <button
-                onClick={() => {
-                  setIsVisible(false);
-                  setShowMobilePopup(false);
-                }}
-                className="w-full mt-3 py-2 text-xs text-gray-400 hover:text-gray-300 transition-colors"
-              >
-                Jangan tampilkan lagi
-              </button>
+              {!showDesktopMessage && (
+                <button
+                  onClick={() => {
+                    setIsVisible(false);
+                    setShowMobilePopup(false);
+                  }}
+                  className="w-full mt-4 py-2 text-xs text-gray-400 hover:text-gray-300 transition-colors"
+                >
+                  Jangan tampilkan lagi
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -281,7 +322,7 @@ export default function DownloadAppButton() {
                   </div>
                   <div className="text-left">
                     <p className="text-white font-semibold text-sm">Download IPA</p>
-                    <p className="text-xs text-cyan-200/70">Untuk sideloading (AltStore, Sideloadly)</p>
+                    <p className="text-xs text-cyan-200/70">app-release.ipa</p>
                   </div>
                 </div>
                 <ChevronRight className="w-5 h-5 text-white/60 group-hover:text-white group-hover:translate-x-1 transition-all" />

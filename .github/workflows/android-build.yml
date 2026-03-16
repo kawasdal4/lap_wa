@@ -20,77 +20,48 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install Node
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 22
-
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '21'
-
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Debug - List mobile folder
+          node-version: 20
+ 
+      - name: Install Dependencies
         run: |
-          ls -la mobile/
-          cat mobile/package.json
-          cat mobile/capacitor.config.ts || echo "No capacitor.config.ts"
-
-      - name: Install Mobile Dependencies
-        run: |
-          cd mobile
+          cd web
           npm install
-          npm list --depth=0
-
-      - name: Create www directory
+ 
+      - name: Sync Capacitor
         run: |
-          mkdir -p mobile/www
-          echo '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Laporan WA</title></head><body><script>window.location.href="https://ap-wa.vercel.app"</script></body></html>' > mobile/www/index.html
-          ls -la mobile/www/
-
-      - name: Initialize Capacitor
-        run: |
-          cd mobile
-          npx cap init "Laporan WA" "id.go.basarnas.lapwa" --web-dir www || echo "Capacitor already initialized"
-
-      - name: Add Android Platform
-        run: |
-          cd mobile
-          rm -rf android
-          npx cap add android
+          cd web
           npx cap sync android
-
-      - name: Build Debug APK
+ 
+      - name: Build Release APK
         run: |
-          cd mobile/android
-          ./gradlew assembleDebug
-
+          cd web/android
+          chmod +x gradlew
+          ./gradlew assembleRelease
+ 
       - name: Rename APK
         run: |
-          mv mobile/android/app/build/outputs/apk/debug/app-debug.apk lap-wa.apk
-
+          cp web/android/app/build/outputs/apk/release/app-release.apk lap-wa-release.apk
+ 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: lap-wa-android
-          path: lap-wa.apk
+          path: lap-wa-release.apk
 
       - name: Upload to R2
         env:
-          R2_ACCESS_KEY: ${{ secrets.R2_ACCESS_KEY }}
-          R2_SECRET_KEY: ${{ secrets.R2_SECRET_KEY }}
-          R2_BUCKET: ${{ secrets.R2_BUCKET }}
-          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_ACCESS_KEY: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          R2_BUCKET: ${{ secrets.R2_BUCKET_NAME }}
+          R2_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
         if: ${{ env.R2_ACCESS_KEY != '' }}
         run: |
           pip install awscli
-          aws s3 cp lap-wa.apk s3://${R2_BUCKET}/lap-wa.apk \
-            --endpoint-url https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com \
-            --acl public-read
+          aws s3 cp lap-wa-release.apk s3://${R2_BUCKET}/mobile-builds/android/app-release.apk \
+            --endpoint-url ${R2_ENDPOINT}
 
       - name: Create Release
         if: startsWith(github.ref, 'refs/tags/')

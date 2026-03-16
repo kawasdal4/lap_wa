@@ -11,14 +11,14 @@
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:reset": "prisma migrate reset",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "mobile-build": "npx ts-node scripts/build-mobile.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1007.0",
     "@capacitor/android": "^8.2.0",
     "@capacitor/cli": "^8.2.0",
     "@capacitor/core": "^8.2.0",
-    "@capacitor/ios": "^8.2.0",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
@@ -95,13 +95,17 @@
     "zustand": "^5.0.6"
   },
   "devDependencies": {
+    "@capacitor/ios": "^8.2.0",
     "@tailwindcss/postcss": "^4",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "bun-types": "^1.3.4",
+    "dotenv": "^17.3.1",
     "eslint": "^9",
     "eslint-config-next": "^15.1.7",
+    "libsodium-wrappers": "^0.8.2",
     "tailwindcss": "^4",
+    "ts-node": "^10.9.2",
     "tw-animate-css": "^1.3.5",
     "typescript": "^5"
   }
