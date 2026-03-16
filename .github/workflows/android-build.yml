@@ -46,25 +46,18 @@ jobs:
           rm -rf node_modules
           npm install
 
-      - name: Build Web App
+      - name: Build Mobile (Export)
         env:
           DATABASE_URL: "file:./dummy.db"
           NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: "AIzaSy..."
         run: |
           cd web
-          npm run build
+          npm run build:mobile
 
-      - name: Prepare Capacitor Web Assets
-        run: |
-          cd web
-          mkdir -p android/app/src/main/assets/public
-          echo "<html><body>App Loader</body></html>" > android/app/src/main/assets/public/index.html
- 
-      - name: Platform Verification & Sync
+      - name: Capacitor Sync
         run: |
           cd web
           npx cap sync android
-          npx cap doctor
 
       - name: Build Signed APK
         run: |

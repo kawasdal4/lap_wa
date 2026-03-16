@@ -12,7 +12,8 @@
     "db:migrate": "prisma migrate dev",
     "db:reset": "prisma migrate reset",
     "postinstall": "prisma generate",
-    "mobile-build": "npx ts-node scripts/build-mobile.ts"
+    "mobile-build": "npx ts-node scripts/build-mobile.ts",
+    "build:mobile": "prisma generate && NEXT_OUTPUT=export next build"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1007.0",
