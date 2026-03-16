@@ -1,14 +1,21 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Download, Apple, Android, Smartphone, X } from "lucide-react";
+import { Download, Apple, Android, Smartphone, X, Share2, PlusSquare, ChevronRight } from "lucide-react";
 
 type DeviceType = "android" | "ios" | "other";
+
+// R2 Download URLs - Direct download links
+const DOWNLOAD_URLS = {
+  android: "https://pub-03210bb1ce9c4a419bd417ee47bd4e6d.r2.dev/lap-wa.apk",
+  ios: "https://pub-03210bb1ce9c4a419bd417ee47bd4e6d.r2.dev/lap-wa.ipa",
+};
 
 export default function DownloadAppButton() {
   const [deviceType, setDeviceType] = useState<DeviceType>("other");
   const [isHovered, setIsHovered] = useState(false);
   const [showMobilePopup, setShowMobilePopup] = useState(false);
+  const [showIOSInstructions, setShowIOSInstructions] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
 
   useEffect(() => {
@@ -24,25 +31,41 @@ export default function DownloadAppButton() {
   }, []);
 
   const handleDownload = () => {
-    // In a real app, these would be actual download URLs
-    if (deviceType === "android") {
-      window.open("https://github.com/kawasdal4/lap_wa/releases", "_blank");
-    } else if (deviceType === "ios") {
-      window.open("https://github.com/kawasdal4/lap_wa/releases", "_blank");
+    if (deviceType === "ios") {
+      // For iOS, show PWA installation instructions
+      setShowIOSInstructions(true);
     } else {
-      window.open("https://github.com/kawasdal4/lap_wa/releases", "_blank");
+      // Direct download for Android and other devices
+      const link = document.createElement('a');
+      link.href = DOWNLOAD_URLS.android;
+      link.download = 'lap-wa.apk';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setShowMobilePopup(false);
     }
+  };
+
+  const handleIOSIPAInstall = () => {
+    // Download IPA for sideloading
+    const link = document.createElement('a');
+    link.href = DOWNLOAD_URLS.ios;
+    link.download = 'lap-wa.ipa';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setShowIOSInstructions(false);
     setShowMobilePopup(false);
   };
 
-  const getDeviceIcon = () => {
-    if (deviceType === "ios") return <Apple className="w-5 h-5 xl:w-4 xl:h-4" />;
-    if (deviceType === "android") return <Android className="w-5 h-5 xl:w-4 xl:h-4" />;
-    return <Smartphone className="w-5 h-5 xl:w-4 xl:h-4" />;
+  const getDeviceIcon = (size: string = "w-5 h-5") => {
+    if (deviceType === "ios") return <Apple className={`${size} xl:w-4 xl:h-4`} />;
+    if (deviceType === "android") return <Android className={`${size} xl:w-4 xl:h-4`} />;
+    return <Smartphone className={`${size} xl:w-4 xl:h-4`} />;
   };
 
   const getDownloadText = () => {
-    if (deviceType === "ios") return "Download iOS";
+    if (deviceType === "ios") return "Install di iOS";
     if (deviceType === "android") return "Download APK";
     return "Get App";
   };
@@ -55,13 +78,13 @@ export default function DownloadAppButton() {
       <div className="fixed bottom-20 right-3 z-[100] xl:hidden">
         {/* Glow Effect */}
         <div className="absolute inset-0 scale-125">
-          <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 via-cyan-400 to-blue-500 animate-glow-pulse-mobile blur-lg" />
+          <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 via-cyan-400 to-blue-500 opacity-60 animate-pulse blur-lg" />
         </div>
 
         {/* Floating Particles - Mobile */}
         <div className="absolute -inset-4 overflow-visible pointer-events-none">
-          <div className="absolute top-0 left-1/2 w-1.5 h-1.5 bg-cyan-400 rounded-full animate-float-particle-1 opacity-60" />
-          <div className="absolute bottom-0 right-0 w-1 h-1 bg-blue-400 rounded-full animate-float-particle-2 opacity-50" />
+          <div className="absolute top-0 left-1/2 w-1.5 h-1.5 bg-cyan-400 rounded-full animate-bounce opacity-60" style={{ animationDelay: '0s' }} />
+          <div className="absolute bottom-0 right-0 w-1 h-1 bg-blue-400 rounded-full animate-bounce opacity-50" style={{ animationDelay: '0.5s' }} />
         </div>
 
         {/* FAB Button */}
@@ -71,7 +94,6 @@ export default function DownloadAppButton() {
           style={{
             background: "linear-gradient(135deg, #1e40af 0%, #0891b2 50%, #1e40af 100%)",
             backgroundSize: "200% 200%",
-            animation: "gradientShift 3s ease infinite",
             boxShadow: `
               0 0 20px rgba(59, 130, 246, 0.6),
               0 0 40px rgba(59, 130, 246, 0.4),
@@ -82,28 +104,28 @@ export default function DownloadAppButton() {
         >
           {/* Shimmer */}
           <div className="absolute inset-0 rounded-full overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-transparent -translate-x-full animate-shimmer" />
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-transparent animate-pulse" />
           </div>
 
           {/* Icon */}
           <Download className="w-6 h-6 relative z-10" />
 
           {/* Pulse Ring */}
-          <div className="absolute inset-0 rounded-full border-2 border-cyan-400/50 animate-ping-slow" />
+          <div className="absolute inset-0 rounded-full border-2 border-cyan-400/50 animate-ping opacity-20" />
         </button>
       </div>
 
       {/* Mobile Popup Modal */}
-      {showMobilePopup && (
+      {showMobilePopup && !showIOSInstructions && (
         <div className="fixed inset-0 z-[200] flex items-end justify-center xl:hidden">
           {/* Backdrop */}
           <div 
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in"
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
             onClick={() => setShowMobilePopup(false)}
           />
 
           {/* Modal Content */}
-          <div className="relative w-full max-w-sm mx-3 mb-6 animate-slide-up-mobile">
+          <div className="relative w-full max-w-sm mx-3 mb-6 animate-slide-up">
             {/* Glow Background */}
             <div className="absolute inset-0 rounded-3xl bg-gradient-to-r from-blue-500/20 via-cyan-400/20 to-blue-500/20 blur-xl" />
 
@@ -156,16 +178,12 @@ export default function DownloadAppButton() {
                 className="w-full py-4 rounded-2xl font-bold text-white transition-all duration-300 active:scale-95 relative overflow-hidden"
                 style={{
                   background: "linear-gradient(135deg, #1e40af 0%, #0891b2 50%, #1e40af 100%)",
-                  backgroundSize: "200% 200%",
-                  animation: "gradientShift 3s ease infinite",
                   boxShadow: `
                     0 0 25px rgba(59, 130, 246, 0.5),
                     0 4px 15px rgba(0, 0, 0, 0.3)
                   `,
                 }}
               >
-                {/* Shimmer */}
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full animate-shimmer-slow" />
                 <div className="relative flex items-center justify-center gap-2">
                   <Download className="w-5 h-5" />
                   <span className="text-sm uppercase tracking-wider">
@@ -189,6 +207,98 @@ export default function DownloadAppButton() {
         </div>
       )}
 
+      {/* iOS Instructions Modal */}
+      {showIOSInstructions && (
+        <div className="fixed inset-0 z-[200] flex items-end justify-center xl:hidden">
+          {/* Backdrop */}
+          <div 
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={() => setShowIOSInstructions(false)}
+          />
+
+          {/* Modal Content */}
+          <div className="relative w-full max-w-sm mx-3 mb-6 animate-slide-up">
+            {/* Glow Background */}
+            <div className="absolute inset-0 rounded-3xl bg-gradient-to-r from-blue-500/20 via-cyan-400/20 to-blue-500/20 blur-xl" />
+
+            <div className="relative bg-slate-900/95 border border-cyan-500/30 rounded-3xl p-5 backdrop-blur-xl shadow-2xl">
+              {/* Close Button */}
+              <button
+                onClick={() => setShowIOSInstructions(false)}
+                className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/20 transition-all"
+              >
+                <X className="w-4 h-4" />
+              </button>
+
+              {/* Header */}
+              <div className="text-center mb-4">
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-gray-700 to-gray-900 mb-3 shadow-lg border border-gray-600">
+                  <Apple className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-xl font-bold text-white">
+                  Install di iOS
+                </h3>
+                <p className="text-sm text-cyan-200/70 mt-1">
+                  Pilih metode instalasi
+                </p>
+              </div>
+
+              {/* Option 1: Add to Home Screen (PWA) */}
+              <div className="mb-3 p-4 rounded-2xl bg-white/5 border border-white/10">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center">
+                    <PlusSquare className="w-4 h-4 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-white font-semibold text-sm">Add to Home Screen</p>
+                    <p className="text-xs text-gray-400">Cara termudah (PWA)</p>
+                  </div>
+                </div>
+                <div className="space-y-2 text-sm text-gray-300">
+                  <div className="flex items-center gap-2">
+                    <span className="w-5 h-5 rounded-full bg-white/10 flex items-center justify-center text-xs">1</span>
+                    <span>Ketuk tombol <Share2 className="w-4 h-4 inline mx-1 text-blue-400" /> Share di bawah</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="w-5 h-5 rounded-full bg-white/10 flex items-center justify-center text-xs">2</span>
+                    <span>Pilih &quot;Add to Home Screen&quot;</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="w-5 h-5 rounded-full bg-white/10 flex items-center justify-center text-xs">3</span>
+                    <span>Ketuk &quot;Add&quot; di pojok kanan atas</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Option 2: Download IPA */}
+              <button
+                onClick={handleIOSIPAInstall}
+                className="w-full p-4 rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-500 border border-cyan-400/30 flex items-center justify-between group"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
+                    <Download className="w-5 h-5 text-white" />
+                  </div>
+                  <div className="text-left">
+                    <p className="text-white font-semibold text-sm">Download IPA</p>
+                    <p className="text-xs text-cyan-200/70">Untuk sideloading (AltStore, Sideloadly)</p>
+                  </div>
+                </div>
+                <ChevronRight className="w-5 h-5 text-white/60 group-hover:text-white group-hover:translate-x-1 transition-all" />
+              </button>
+
+              {/* Back Button */}
+              <button
+                onClick={() => setShowIOSInstructions(false)}
+                className="w-full mt-3 py-2 text-xs text-gray-400 hover:text-gray-300 transition-colors"
+              >
+                ← Kembali
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Desktop Download Button - xl screens only */}
       <div 
         className="fixed bottom-6 right-6 z-[100] hidden xl:flex"
@@ -199,17 +309,16 @@ export default function DownloadAppButton() {
         <div className="relative">
           {/* Animated Glow Rings */}
           <div className="absolute inset-0 scale-150">
-            <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 via-cyan-400 to-blue-500 opacity-0 animate-glow-pulse-1 blur-xl" />
-            <div className="absolute inset-0 rounded-full bg-gradient-to-r from-cyan-400 via-blue-500 to-cyan-400 opacity-0 animate-glow-pulse-2 blur-lg" />
-            <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-400 via-cyan-300 to-blue-400 opacity-0 animate-glow-pulse-3 blur-md" />
+            <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 via-cyan-400 to-blue-500 opacity-30 animate-pulse blur-xl" />
+            <div className="absolute inset-0 rounded-full bg-gradient-to-r from-cyan-400 via-blue-500 to-cyan-400 opacity-20 animate-pulse blur-lg" style={{ animationDelay: '0.5s' }} />
           </div>
 
           {/* Floating Particles */}
           <div className="absolute -inset-8 overflow-visible pointer-events-none">
-            <div className="absolute top-0 left-1/2 w-2 h-2 bg-cyan-400 rounded-full animate-float-particle-1 opacity-60" />
-            <div className="absolute top-1/4 right-0 w-1.5 h-1.5 bg-blue-400 rounded-full animate-float-particle-2 opacity-50" />
-            <div className="absolute bottom-1/4 left-0 w-1 h-1 bg-cyan-300 rounded-full animate-float-particle-3 opacity-70" />
-            <div className="absolute bottom-0 right-1/4 w-1.5 h-1.5 bg-blue-300 rounded-full animate-float-particle-4 opacity-40" />
+            <div className="absolute top-0 left-1/2 w-2 h-2 bg-cyan-400 rounded-full animate-bounce opacity-60" />
+            <div className="absolute top-1/4 right-0 w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce opacity-50" style={{ animationDelay: '0.5s' }} />
+            <div className="absolute bottom-1/4 left-0 w-1 h-1 bg-cyan-300 rounded-full animate-bounce opacity-70" style={{ animationDelay: '1s' }} />
+            <div className="absolute bottom-0 right-1/4 w-1.5 h-1.5 bg-blue-300 rounded-full animate-bounce opacity-40" style={{ animationDelay: '1.5s' }} />
           </div>
 
           {/* Button */}
@@ -219,7 +328,6 @@ export default function DownloadAppButton() {
             style={{
               background: "linear-gradient(135deg, #1e40af 0%, #0891b2 50%, #1e40af 100%)",
               backgroundSize: "200% 200%",
-              animation: "gradientShift 3s ease infinite",
               boxShadow: `
                 0 0 20px rgba(59, 130, 246, 0.5),
                 0 0 40px rgba(59, 130, 246, 0.3),
@@ -283,82 +391,11 @@ export default function DownloadAppButton() {
 
       {/* Global Styles */}
       <style jsx global>{`
-        @keyframes glow-pulse-1 {
-          0%, 100% { opacity: 0.3; transform: scale(1); }
-          50% { opacity: 0.6; transform: scale(1.2); }
-        }
-        @keyframes glow-pulse-2 {
-          0%, 100% { opacity: 0.2; transform: scale(1.1); }
-          50% { opacity: 0.5; transform: scale(1); }
-        }
-        @keyframes glow-pulse-3 {
-          0%, 100% { opacity: 0.4; transform: scale(0.9); }
-          50% { opacity: 0.7; transform: scale(1.1); }
-        }
-        @keyframes glow-pulse-mobile {
-          0%, 100% { opacity: 0.4; transform: scale(1); }
-          50% { opacity: 0.7; transform: scale(1.15); }
-        }
-        .animate-glow-pulse-1 { animation: glow-pulse-1 2s ease-in-out infinite; }
-        .animate-glow-pulse-2 { animation: glow-pulse-2 2s ease-in-out infinite 0.3s; }
-        .animate-glow-pulse-3 { animation: glow-pulse-3 2s ease-in-out infinite 0.6s; }
-        .animate-glow-pulse-mobile { animation: glow-pulse-mobile 1.5s ease-in-out infinite; }
-
-        @keyframes float-particle-1 {
-          0%, 100% { transform: translateY(0) translateX(0); opacity: 0.6; }
-          50% { transform: translateY(-20px) translateX(5px); opacity: 1; }
-        }
-        @keyframes float-particle-2 {
-          0%, 100% { transform: translateY(0) translateX(0); opacity: 0.5; }
-          50% { transform: translateY(-15px) translateX(-10px); opacity: 0.8; }
-        }
-        @keyframes float-particle-3 {
-          0%, 100% { transform: translateY(0) translateX(0); opacity: 0.7; }
-          50% { transform: translateY(-25px) translateX(-5px); opacity: 1; }
-        }
-        @keyframes float-particle-4 {
-          0%, 100% { transform: translateY(0) translateX(0); opacity: 0.4; }
-          50% { transform: translateY(-18px) translateX(8px); opacity: 0.7; }
-        }
-        .animate-float-particle-1 { animation: float-particle-1 3s ease-in-out infinite; }
-        .animate-float-particle-2 { animation: float-particle-2 2.5s ease-in-out infinite 0.5s; }
-        .animate-float-particle-3 { animation: float-particle-3 3.5s ease-in-out infinite 1s; }
-        .animate-float-particle-4 { animation: float-particle-4 2.8s ease-in-out infinite 0.8s; }
-
-        @keyframes gradientShift {
-          0% { background-position: 0% 50%; }
-          50% { background-position: 100% 50%; }
-          100% { background-position: 0% 50%; }
-        }
-
-        @keyframes shimmer {
-          0% { transform: translateX(-100%); }
-          100% { transform: translateX(100%); }
-        }
-        @keyframes shimmer-slow {
-          0% { transform: translateX(-100%); }
-          100% { transform: translateX(100%); }
-        }
-        .animate-shimmer { animation: shimmer 2s ease-in-out infinite; }
-        .animate-shimmer-slow { animation: shimmer 3s ease-in-out infinite; }
-
-        @keyframes ping-slow {
-          0% { transform: scale(1); opacity: 0.5; }
-          100% { transform: scale(1.5); opacity: 0; }
-        }
-        .animate-ping-slow { animation: ping-slow 1.5s ease-out infinite; }
-
-        @keyframes fade-in {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-        .animate-fade-in { animation: fade-in 0.2s ease-out; }
-
-        @keyframes slide-up-mobile {
+        @keyframes slide-up {
           from { opacity: 0; transform: translateY(20px); }
           to { opacity: 1; transform: translateY(0); }
         }
-        .animate-slide-up-mobile { animation: slide-up-mobile 0.3s ease-out; }
+        .animate-slide-up { animation: slide-up 0.3s ease-out; }
       `}</style>
     </>
   );
