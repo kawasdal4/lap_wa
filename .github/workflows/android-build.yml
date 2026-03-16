@@ -24,7 +24,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: 'npm'
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -39,15 +38,13 @@ jobs:
         run: |
           node -v
           npm -v
+          npx cap --version || true
 
-      - name: Dependency Cleanup & Install
+      - name: Dependency Installation
         run: |
           cd web
           rm -rf node_modules
-          rm -f package-lock.json
           npm install
-          npm install @capacitor/core @capacitor/cli @capacitor/android
-          npx cap --version
 
       - name: Build Web App
         env:
