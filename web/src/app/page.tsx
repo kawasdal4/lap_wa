@@ -1873,7 +1873,7 @@ const CollageEditor = ({
 
       {/* Text Panel - Compact & Lower to avoid obscuring preview */}
       {activeTool === "text" && (
-        <div className="absolute bottom-[80px] left-4 right-4 bg-[#0a1525]/95 backdrop-blur-xl border border-white/10 rounded-2xl p-4 z-40 shadow-2xl max-h-[50vh] overflow-y-auto animate-in fade-in slide-in-from-bottom-4 duration-300">
+        <div className="absolute bottom-[80px] left-4 right-4 bg-[#0a1525]/95 backdrop-blur-xl border border-white/10 rounded-2xl p-4 z-40 shadow-2xl max-h-[45vh] overflow-y-auto animate-in fade-in slide-in-from-bottom-4 duration-300">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-white font-semibold">Text</h3>
             <button onClick={() => setActiveTool(null)} className="text-white/70 hover:text-white">
@@ -4010,15 +4010,18 @@ export default function WAHome() {
                     {/* Download button outside the message bubble */}
                     {locationData && locationData.lat && locationData.lng && (
                       <div className="max-w-[90%]">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={downloadMapImage}
-                          className="w-full border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-gray-200 text-xs"
-                        >
-                          <Download className="w-3 h-3 mr-1" />
-                          Download Gambar Peta
-                        </Button>
+                        {/* Hide download button on Android/Native App */}
+                        {(typeof window !== 'undefined' && !(window as any).Capacitor?.isNativePlatform()) && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={downloadMapImage}
+                            className="w-full border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-gray-200 text-xs"
+                          >
+                            <Download className="w-3 h-3 mr-1" />
+                            Download Gambar Peta
+                          </Button>
+                        )}
                         <p className="text-xs text-gray-200 mt-1 italic">
                           💡 Download gambar peta, lalu lampirkan manual ke WhatsApp
                         </p>

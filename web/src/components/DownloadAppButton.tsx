@@ -24,11 +24,25 @@ export default function DownloadAppButton() {
 
   useEffect(() => {
     // Hide inside Native App
-    import('@capacitor/core').then(({ Capacitor }) => {
-      if (Capacitor.isNativePlatform()) {
+    const checkNative = async () => {
+      try {
+        const { Capacitor } = await import('@capacitor/core');
+        console.log("Capacitor Platform:", Capacitor.getPlatform());
+        if (Capacitor.isNativePlatform()) {
+          setIsVisible(false);
+          return;
+        }
+      } catch (e) {
+        console.log("Capacitor not loaded yet or not available");
+      }
+      
+      // Secondary check via window
+      if (typeof window !== 'undefined' && (window as any).Capacitor?.isNativePlatform()) {
         setIsVisible(false);
       }
-    }).catch(() => {});
+    };
+
+    checkNative();
 
     // Detect device type
     const userAgent = navigator.userAgent.toLowerCase();

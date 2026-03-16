@@ -8,6 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogClose,
 } from "@/components/ui/dialog"
 
 export default function CopyrightModal({ children }: { children: React.ReactNode }) {
@@ -16,7 +17,7 @@ export default function CopyrightModal({ children }: { children: React.ReactNode
       <DialogTrigger asChild>
         {children}
       </DialogTrigger>
-      <DialogContent className="max-w-md bg-[#0b0f1a] border-[#222] text-white p-0 overflow-hidden">
+      <DialogContent className="max-w-md bg-[#0b0f1a] border-[#222] text-white p-0 overflow-hidden" showCloseButton={false}>
         <DialogHeader className="bg-gradient-to-r from-[#d946ef] to-[#ef4444] p-6 flex flex-row items-center gap-4 text-left border-none space-y-0">
           <div className="bg-white/20 p-3 rounded-xl backdrop-blur-sm shrink-0">
             <Shield className="w-8 h-8 text-white" />
@@ -28,6 +29,13 @@ export default function CopyrightModal({ children }: { children: React.ReactNode
         </DialogHeader>
 
         <div className="p-6 space-y-6">
+          {/* Custom Aesthetic Close Button */}
+          <DialogClose asChild>
+            <button className="absolute top-4 right-4 z-50 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white/70 hover:text-white transition-all backdrop-blur-md border border-white/10 group active:scale-95 focus:outline-none">
+              <X className="w-4 h-4 group-hover:rotate-90 transition-transform duration-300" />
+            </button>
+          </DialogClose>
+
           <section className="space-y-2">
             <div className="flex items-center gap-3 text-white/60 text-xs font-semibold uppercase tracking-wider">
               <Info className="w-3 h-3" />
@@ -38,7 +46,7 @@ export default function CopyrightModal({ children }: { children: React.ReactNode
                 <img 
                   src="https://www.e-katalog-sop.cloud/foe.jpg" 
                   alt="Muhammad Fuadunnas" 
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover object-[center_12%]"
                 />
               </div>
               <div>
