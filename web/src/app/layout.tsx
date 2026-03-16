@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import ClientWrapper from "@/components/ClientWrapper";
+import DownloadAppButton from "@/components/DownloadAppButton";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -131,6 +132,8 @@ export default function RootLayout({
           {children}
         </ClientWrapper>
         <Toaster />
+        {/* Download App Button - Desktop Only */}
+        <DownloadAppButton />
       </body>
     </html>
   );
