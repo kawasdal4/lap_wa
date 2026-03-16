@@ -3513,7 +3513,7 @@ export default function WAHome() {
             </TabsList>
 
             {/* Editor Tab */}
-            <TabsContent value="editor" className="flex-1 flex flex-col mt-0">
+            <TabsContent value="editor" className="flex-1 overflow-y-auto mt-0 scroll-smooth">
               <div className="space-y-6 p-4 pb-32">
             {/* Template Section */}
             <Card className="bg-slate-800/50 backdrop-blur-sm border-white/10 shadow-xl">
@@ -3889,7 +3889,7 @@ export default function WAHome() {
       </TabsContent>
 
           {/* Preview Tab */}
-          <TabsContent value="preview" className="flex-1 flex flex-col mt-0">
+          <TabsContent value="preview" className="flex-1 overflow-y-auto mt-0 scroll-smooth">
             <div className="space-y-6 p-4 pb-32">
             <Card className="bg-slate-800/50 backdrop-blur-sm border-white/10 shadow-xl overflow-hidden">
               <CardHeader className="bg-gradient-to-r from-green-600/20 to-green-500/10 border-b border-white/10">
