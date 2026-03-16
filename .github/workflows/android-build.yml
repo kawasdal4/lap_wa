@@ -57,6 +57,8 @@ jobs:
       - name: Platform Verification & Sync
         run: |
           cd web
+          mkdir -p android/app/src/main/assets
+          mkdir -p android/app/src/main/assets/public
           npx cap add android || echo "Android platform already exists"
           npx cap sync android
           npx cap doctor
