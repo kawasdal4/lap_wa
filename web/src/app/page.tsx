@@ -352,7 +352,7 @@ const MapLocationPicker = ({ value, onChange, onLocationChange, placeholder }: M
       z-index: 100;
       filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
     `;
-    centerMarker.innerHTML = "≡ƒôì";
+    centerMarker.innerHTML = "📍";
     mapRef.current.appendChild(centerMarker);
 
     // Drag start - show loading
@@ -449,16 +449,16 @@ const MapLocationPicker = ({ value, onChange, onLocationChange, placeholder }: M
             value={value}
             onChange={(e) => onChange(e.target.value)}
             placeholder={placeholder}
-            className="bg-slate-900/50 border-white/10 text-white placeholder:text-slate-500 focus:border-red-500 pr-10"
+            className="bg-slate-900/50 border-white/10 text-white placeholder:text-gray-400 focus:border-red-500 pr-12 h-11 rounded-lg text-base"
           />
           <Button
             type="button"
             variant="ghost"
             size="icon"
             onClick={() => handleOpenChange(true)}
-            className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 text-slate-400 hover:text-white hover:bg-white/10"
+            className="absolute right-1 top-1/2 -translate-y-1/2 h-9 w-9 text-gray-200 hover:text-white hover:bg-white/10"
           >
-            <MapPin className="w-4 h-4" />
+            <MapPin className="w-5 h-5" />
           </Button>
         </div>
       </div>
@@ -470,7 +470,7 @@ const MapLocationPicker = ({ value, onChange, onLocationChange, placeholder }: M
               <MapIcon className="w-5 h-5 text-red-500" />
               Pilih Lokasi
             </DialogTitle>
-            <DialogDescription className="text-slate-400">
+            <DialogDescription className="text-gray-200">
               Geser peta atau cari lokasi
             </DialogDescription>
           </DialogHeader>
@@ -483,7 +483,7 @@ const MapLocationPicker = ({ value, onChange, onLocationChange, placeholder }: M
                   ref={searchInputRef}
                   onChange={(e) => handleSearch(e.target.value)}
                   placeholder="Cari lokasi..."
-                  className="w-full bg-slate-900/50 border-white/10 text-white placeholder:text-slate-500"
+                  className="w-full bg-slate-900/50 border-white/10 text-white placeholder:text-gray-400 h-11 rounded-lg text-base"
                 />
                 {predictions.length > 0 && (
                   <div
@@ -501,7 +501,7 @@ const MapLocationPicker = ({ value, onChange, onLocationChange, placeholder }: M
                           {p.structured_formatting?.main_text || p.description}
                         </div>
                         {p.structured_formatting?.secondary_text && (
-                          <div className="text-xs text-slate-400 mt-0.5">
+                          <div className="text-xs text-gray-200 mt-0.5">
                             {p.structured_formatting.secondary_text}
                           </div>
                         )}
@@ -534,7 +534,7 @@ const MapLocationPicker = ({ value, onChange, onLocationChange, placeholder }: M
               {isLoadingAddress ? (
                 <div className="flex items-center gap-2">
                   <Loader2 className="w-4 h-4 animate-spin text-orange-500" />
-                  <span className="text-slate-400">Mencari alamat...</span>
+                  <span className="text-gray-200">Mencari alamat...</span>
                 </div>
               ) : address ? (
                 <div className="flex items-start gap-2">
@@ -542,7 +542,7 @@ const MapLocationPicker = ({ value, onChange, onLocationChange, placeholder }: M
                   <span className="text-white">{address}</span>
                 </div>
               ) : markerPosition ? (
-                <div className="flex items-center gap-2 text-slate-400">
+                <div className="flex items-center gap-2 text-gray-200">
                   <MapPin className="w-4 h-4" />
                   <span>{markerPosition.lat.toFixed(6)}, {markerPosition.lng.toFixed(6)}</span>
                 </div>
@@ -625,19 +625,23 @@ const insertWAFormat = (
   }
 };
 
-// Compact toolbar button
-const ToolbarButton = ({ onClick, icon: Icon, title }: { onClick: () => void; icon: React.ElementType; title: string }) => (
+// Compact toolbar button - smaller and more compact
+const ToolbarButton = ({ onClick, icon: Icon, title, active }: { onClick: () => void; icon: React.ElementType; title: string; active?: boolean }) => (
   <button
     type="button"
     onClick={onClick}
-    className="w-5 h-5 flex items-center justify-center rounded text-slate-400 hover:text-white hover:bg-white/15 transition-colors"
+    className={`h-5 w-5 flex items-center justify-center rounded transition-all duration-150 ${
+      active 
+        ? 'bg-orange-500/20 text-orange-400' 
+        : 'text-gray-200 hover:text-white hover:bg-white/10 active:scale-95'
+    }`}
     title={title}
   >
     <Icon className="w-3 h-3" />
   </button>
 );
 
-// Input with integrated toolbar
+// Input with integrated toolbar - toolbar BELOW input (compact, aligned)
 interface WAInputProps {
   value: string;
   onChange: (value: string) => void;
@@ -672,8 +676,11 @@ const WAInput = ({ value, onChange, placeholder, className = "", id }: WAInputPr
     }
   };
 
+  // Check if input has value for contrast styling
+  const hasValue = value && value.trim().length > 0;
+
   return (
-    <div className="relative">
+    <div className="w-full space-y-1">
       <input
         ref={inputRef}
         id={id}
@@ -687,19 +694,19 @@ const WAInput = ({ value, onChange, placeholder, className = "", id }: WAInputPr
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
         placeholder={placeholder}
-        className={`w-full bg-slate-900/50 border border-white/10 text-white placeholder:text-slate-500 focus:border-red-500 focus:outline-none rounded-md py-2 pl-3 pr-24 ${className}`}
+        className={`w-full bg-slate-800/80 border border-white/20 rounded-lg ${hasValue ? 'text-amber-300 font-semibold' : 'text-white'} placeholder:text-gray-400 focus:border-orange-500 focus:outline-none py-2.5 px-3 text-sm ${className}`}
       />
-      <div className={`absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center gap-0.5 px-1 py-0.5 rounded bg-slate-800/80 border border-slate-700/50 transition-opacity ${isFocused ? 'opacity-100' : 'opacity-60 hover:opacity-100'}`}>
-        <ToolbarButton onClick={() => handleFormat('bold')} icon={Bold} title="Bold (*teks*)" />
-        <ToolbarButton onClick={() => handleFormat('italic')} icon={Italic} title="Italic (_teks_)" />
-        <ToolbarButton onClick={() => handleFormat('strike')} icon={Strikethrough} title="Strikethrough (~teks~)" />
-        <ToolbarButton onClick={() => handleFormat('mono')} icon={Code} title="Monospace (```teks```)" />
+      <div className={`flex items-center justify-end gap-1 px-1 transition-opacity duration-200 ${isFocused ? 'opacity-100' : 'opacity-60 hover:opacity-90'}`}>
+        <ToolbarButton onClick={() => handleFormat('bold')} icon={Bold} title="Bold" />
+        <ToolbarButton onClick={() => handleFormat('italic')} icon={Italic} title="Italic" />
+        <ToolbarButton onClick={() => handleFormat('strike')} icon={Strikethrough} title="Strike" />
+        <ToolbarButton onClick={() => handleFormat('mono')} icon={Code} title="Mono" />
       </div>
     </div>
   );
 };
 
-// Textarea with integrated toolbar
+// Textarea with integrated toolbar - toolbar BELOW textarea (compact, aligned)
 interface WATextareaProps {
   value: string;
   onChange: (value: string) => void;
@@ -735,8 +742,11 @@ const WATextarea = ({ value, onChange, placeholder, className = "", id, rows = 2
     }
   };
 
+  // Check if textarea has value for contrast styling
+  const hasValue = value && value.trim().length > 0;
+
   return (
-    <div className="relative">
+    <div className="w-full space-y-1">
       <textarea
         ref={textareaRef}
         id={id}
@@ -750,13 +760,13 @@ const WATextarea = ({ value, onChange, placeholder, className = "", id, rows = 2
         onBlur={() => setIsFocused(false)}
         placeholder={placeholder}
         rows={rows}
-        className={`w-full resize-none bg-slate-900/50 border border-white/10 text-white placeholder:text-slate-500 focus:border-red-500 focus:outline-none rounded-md py-2 pl-3 pr-24 ${className}`}
+        className={`w-full resize-none bg-slate-800/80 border border-white/20 rounded-lg ${hasValue ? 'text-amber-300 font-semibold' : 'text-white'} placeholder:text-gray-400 focus:border-orange-500 focus:outline-none py-2 px-3 text-sm ${className}`}
       />
-      <div className={`absolute right-1.5 top-2 flex items-center gap-0.5 px-1 py-0.5 rounded bg-slate-800/80 border border-slate-700/50 transition-opacity ${isFocused ? 'opacity-100' : 'opacity-60 hover:opacity-100'}`}>
-        <ToolbarButton onClick={() => handleFormat('bold')} icon={Bold} title="Bold (*teks*)" />
-        <ToolbarButton onClick={() => handleFormat('italic')} icon={Italic} title="Italic (_teks_)" />
-        <ToolbarButton onClick={() => handleFormat('strike')} icon={Strikethrough} title="Strikethrough (~teks~)" />
-        <ToolbarButton onClick={() => handleFormat('mono')} icon={Code} title="Monospace (```teks```)" />
+      <div className={`flex items-center justify-end gap-1 px-1 transition-opacity duration-200 ${isFocused ? 'opacity-100' : 'opacity-60 hover:opacity-90'}`}>
+        <ToolbarButton onClick={() => handleFormat('bold')} icon={Bold} title="Bold" />
+        <ToolbarButton onClick={() => handleFormat('italic')} icon={Italic} title="Italic" />
+        <ToolbarButton onClick={() => handleFormat('strike')} icon={Strikethrough} title="Strike" />
+        <ToolbarButton onClick={() => handleFormat('mono')} icon={Code} title="Mono" />
       </div>
     </div>
   );
@@ -1248,7 +1258,7 @@ const CollageEditor = ({
   const subtitleColor = isDarkBg ? "#CBD5E1" : "#64748B";
 
   return (
-    <div className="relative flex flex-col h-full bg-gradient-to-b from-[#0e2238] to-[#081624] overflow-hidden">
+    <div className="relative flex flex-col h-full bg-gradient-to-b from-[#0e2238] to-[#081624]">
       {/* Hidden inputs */}
       <input
         ref={backgroundInputRef}
@@ -1698,7 +1708,7 @@ const CollageEditor = ({
             {layers.background.url && (
               <>
                 <p className="text-white/50 text-xs text-center">
-                  ≡ƒÆí Drag untuk geser, pinch/scroll untuk zoom
+                  💡 Drag untuk geser, pinch/scroll untuk zoom
                 </p>
                 
                 <Button
@@ -2001,7 +2011,7 @@ const CollageEditor = ({
                 className="w-full mt-2 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white animate-pulse"
               >
                 <ImageIcon className="w-4 h-4 mr-2" />
-                ≡ƒô╕ Kirim Foto ke WhatsApp
+                📸 Kirim Foto ke WhatsApp
               </Button>
             )}
             
@@ -2140,7 +2150,7 @@ export default function WAHome() {
   const [subtitleFontSize, setSubtitleFontSize] = useState(20);
   
   // State untuk kalimat penutup di teks utama
-  const [kalimatPenutup, setKalimatPenutup] = useState("Demikian disampaikan sebagai laporan. Terima kasih ≡ƒÖÅ");
+  const [kalimatPenutup, setKalimatPenutup] = useState("Demikian disampaikan sebagai laporan. Terima kasih 🙏");
   
   // State untuk Layout & Style
   const [layoutStyle, setLayoutStyle] = useState<"grid" | "vertical" | "horizontal">("grid");
@@ -2287,35 +2297,35 @@ export default function WAHome() {
     text += `Selamat ${getWaktuSalam()}, Mohon izin melaporkan kegiatan ${formatForWhatsApp(judul.toLowerCase())}.\n\n`;
     
     // Location with map image, place name, and address OR Zoom link
-    text += `≡ƒôì *Tempat:*\n`;
+    text += `📍 *Tempat:*\n`;
     if (jenisTempat === "daring") {
       text += `${formatForWhatsApp(tempat)}\n`;
       if (zoomLink) {
-        text += `≡ƒöù Link Zoom: ${zoomLink}\n`;
+        text += `🔗 Link Zoom: ${zoomLink}\n`;
       }
     } else if (locationData && locationData.lat && locationData.lng) {
       // Show place name
-      text += `≡ƒôî *${formatForWhatsApp(locationData.placeName)}*\n`;
+      text += `📌 *${formatForWhatsApp(locationData.placeName)}*\n`;
       // Show full address
       text += `${formatForWhatsApp(locationData.address)}\n`;
       // Show map link
-      text += `≡ƒù║∩╕Å Lihat di Maps: https://www.google.com/maps?q=${locationData.lat},${locationData.lng}\n`;
+      text += `🗺️ Lihat di Maps: https://www.google.com/maps?q=${locationData.lat},${locationData.lng}\n`;
     } else {
       text += `${formatForWhatsApp(tempat)}\n`;
     }
     text += "\n";
     
-    text += `≡ƒôà *Hari dan Tanggal:*\n${tanggal}\n\n`;
-    text += `ΓÅ░ *Waktu:*\n${waktu}\n\n`;
-    text += `≡ƒæñ *Pimpinan Rapat:*\n${formatForWhatsApp(pimpinan)}\n\n`;
+    text += `📅 *Hari dan Tanggal:*\n${tanggal}\n\n`;
+    text += `⏰ *Waktu:*\n${waktu}\n\n`;
+    text += `👤 *Pimpinan Rapat:*\n${formatForWhatsApp(pimpinan)}\n\n`;
     
-    text += `≡ƒæÑ *Peserta Rapat:*\n`;
+    text += `👥 *Peserta Rapat:*\n`;
     peserta.forEach((p) => {
       text += `- ${formatForWhatsApp(p.text)};\n`;
     });
     text += "\n";
     
-    text += `≡ƒùÆ∩╕Å *Pelaksanaan Rapat:*\n`;
+    text += `🗒️ *Pelaksanaan Rapat:*\n`;
     pelaksanaan.forEach((item, index) => {
       text += `${index + 1}. ${formatForWhatsApp(item.text)};\n`;
       if (item.subItems.length > 0) {
@@ -3038,7 +3048,7 @@ export default function WAHome() {
       // Contact info
       ctx.fillStyle = footerContent.contactInfo.color;
       ctx.font = `${footerContent.contactInfo.fontSize}px Arial`;
-      const contactText = footerContent.contactInfo.items.map((item: { label: string }) => item.label).join("  ΓÇó  ");
+      const contactText = footerContent.contactInfo.items.map((item: { label: string }) => item.label).join("  •  ");
       ctx.fillText(contactText, canvasWidth / 2, canvasHeight - footerConfig.height + 60);
 
       // Convert to image
@@ -3100,7 +3110,7 @@ export default function WAHome() {
         toast.loading("Mengunggah peta lokasi...", { id: loadingToast });
         const mapUrl = await uploadImageToR2(locationData.mapImageUrl, "url", "maps");
         if (mapUrl) {
-          uploadedUrls.push(`≡ƒôì Peta Lokasi: ${mapUrl}`);
+          uploadedUrls.push(`📍 Peta Lokasi: ${mapUrl}`);
         }
       }
       
@@ -3109,7 +3119,7 @@ export default function WAHome() {
         toast.loading("Mengunggah dokumentasi foto...", { id: loadingToast });
         const photoUrl = await uploadImageToR2(mergedImage, "base64", "photos");
         if (photoUrl) {
-          uploadedUrls.push(`≡ƒô╕ Dokumentasi: ${photoUrl}`);
+          uploadedUrls.push(`📸 Dokumentasi: ${photoUrl}`);
         }
       }
       
@@ -3327,13 +3337,12 @@ export default function WAHome() {
 
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden bg-[#0b0f1a]">
+    <div className="flex-1 flex flex-col bg-[#0b0f1a]">
       {/* 
-        The outer framing is now handled by ClientWrapper's .app-frame class.
-        This inner container fills the available space and provides the main app UI.
+        Mobile-first layout with proper scrolling
       */}
-      <div className="relative flex-1 flex flex-col overflow-hidden">
-        {/* Header */}
+      <div className="relative flex-1 flex flex-col">
+        {/* Header - Fixed at top */}
         <header 
           className="flex-shrink-0 px-4 py-3.5 relative overflow-hidden"
           style={{ 
@@ -3379,10 +3388,10 @@ export default function WAHome() {
           </div>
         </header>
 
-        {/* Main Content - No global scroll to allow internal scroll and fixed toolbar in collage */}
-        <div className="flex-1 flex flex-col overflow-hidden px-4 pb-4 pt-2">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
-            <TabsList className="w-full mb-4 bg-white/5 backdrop-blur-sm rounded-2xl p-1.5 flex">
+        {/* Main Content - Scrollable area */}
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden h-full">
+            <TabsList className="w-full bg-white/5 backdrop-blur-sm rounded-2xl p-1.5 mx-4 mt-2 mb-2 flex flex-shrink-0">
               <TabsTrigger 
                 value="editor" 
                 className="flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-sm font-medium transition-all duration-300 data-[state=active]:bg-white/10 data-[state=active]:text-white data-[state=active]:shadow-lg text-white/50 hover:text-white/80"
@@ -3407,9 +3416,9 @@ export default function WAHome() {
             </TabsList>
 
             {/* Editor Tab */}
-            <TabsContent value="editor" className="flex-1 flex flex-col overflow-hidden mt-0">
+            <TabsContent value="editor" className="flex-1 flex flex-col mt-0 overflow-hidden">
               <ScrollArea className="flex-1 h-full">
-                <div className="space-y-6 pb-20 p-1">
+                <div className="space-y-6 p-4 pb-32">
             {/* Template Section */}
             <Card className="bg-slate-800/50 backdrop-blur-sm border-white/10 shadow-xl">
               <CardHeader className="pb-3">
@@ -3419,39 +3428,37 @@ export default function WAHome() {
                   </div>
                   Template & Salam
                 </CardTitle>
-                <CardDescription className="text-slate-400">
+                <CardDescription className="text-gray-200">
                   Sesuaikan salam dan template laporan
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label className="text-slate-300">Salam Pembuka</Label>
-                    <WAInput
-                      value={greeting}
-                      onChange={setGreeting}
-                      placeholder="Assalamualaikum..."
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-slate-300">Yth (Kepada Yth)</Label>
-                    <WAInput
-                      value={yth}
-                      onChange={setYth}
-                      placeholder="Direktur Kesiapsiagaan"
-                    />
-                  </div>
+                <div className="space-y-2">
+                  <Label className="text-white">Salam Pembuka</Label>
+                  <WAInput
+                    value={greeting}
+                    onChange={setGreeting}
+                    placeholder="Assalamualaikum..."
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-white">Yth (Kepada Yth)</Label>
+                  <WAInput
+                    value={yth}
+                    onChange={setYth}
+                    placeholder="Direktur Kesiapsiagaan"
+                  />
                 </div>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <Label className="text-slate-300">Daftar CC</Label>
-                    <Button variant="ghost" size="sm" onClick={addCc} className="text-slate-400 hover:text-white hover:bg-white/10">
+                    <Label className="text-white">Daftar CC</Label>
+                    <Button variant="ghost" size="sm" onClick={addCc} className="text-gray-200 hover:text-white hover:bg-white/10">
                       <Plus className="w-4 h-4" />
                     </Button>
                   </div>
                   {ccList.map((cc, index) => (
                     <div key={index} className="flex gap-2">
-                      <span className="flex items-center text-sm text-slate-500 w-6">{index + 1}.</span>
+                      <span className="flex items-center text-sm text-gray-300 w-6">{index + 1}.</span>
                       <WAInput
                         value={cc}
                         onChange={(val) => updateCc(index, val)}
@@ -3459,7 +3466,7 @@ export default function WAHome() {
                         className="flex-1"
                       />
                       {ccList.length > 1 && (
-                        <Button variant="ghost" size="icon" onClick={() => removeCc(index)} className="text-slate-400 hover:text-red-400 hover:bg-red-500/10">
+                        <Button variant="ghost" size="icon" onClick={() => removeCc(index)} className="text-gray-200 hover:text-red-400 hover:bg-red-500/10">
                           <Minus className="w-4 h-4" />
                         </Button>
                       )}
@@ -3481,149 +3488,153 @@ export default function WAHome() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label className="text-slate-300">Judul Kegiatan</Label>
+                  <Label className="text-white">Judul Kegiatan</Label>
                   <WAInput
                     value={judul}
                     onChange={setJudul}
                     placeholder="RAPAT BRIEFING..."
                   />
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-3">
-                    <Label className="text-slate-300 flex items-center gap-2">
-                      <span className="text-lg">≡ƒôì</span> Tempat
-                    </Label>
+                
+                {/* Pimpinan - moved above Tempat */}
+                <div className="space-y-2">
+                  <Label className="text-white flex items-center gap-2">
+                    <span className="text-lg">👤</span> Pimpinan
+                  </Label>
+                  <WAInput
+                    value={pimpinan}
+                    onChange={setPimpinan}
+                    placeholder="Kasubdit Siaga dan Latihan"
+                  />
+                </div>
+                
+                {/* Tempat - full width */}
+                <div className="space-y-3">
+                  <Label className="text-white flex items-center gap-2">
+                    <span className="text-lg">📍</span> Tempat
+                  </Label>
                     
-                    {/* Toggle Daring/Luring */}
-                    <div className="flex gap-2 mb-2">
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant={jenisTempat === "daring" ? "default" : "outline"}
-                        onClick={() => handleJenisTempatChange("daring")}
-                        className={`flex-1 ${jenisTempat === "daring" 
-                          ? "bg-blue-600 hover:bg-blue-500 text-white" 
-                          : "border-white/30 bg-slate-700/50 text-white hover:bg-slate-700 hover:text-white"}`}
-                      >
-                        ≡ƒÆ╗ Daring
-                      </Button>
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant={jenisTempat === "luring" ? "default" : "outline"}
-                        onClick={() => handleJenisTempatChange("luring")}
-                        className={`flex-1 ${jenisTempat === "luring" 
-                          ? "bg-green-600 hover:bg-green-500 text-white" 
-                          : "border-white/30 bg-slate-700/50 text-white hover:bg-slate-700 hover:text-white"}`}
-                      >
-                        ≡ƒÅó Luring
-                      </Button>
-                    </div>
+                  {/* Toggle Daring/Luring */}
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant={jenisTempat === "daring" ? "default" : "outline"}
+                      onClick={() => handleJenisTempatChange("daring")}
+                      className={`flex-1 ${jenisTempat === "daring" 
+                        ? "bg-blue-600 hover:bg-blue-500 text-white" 
+                        : "border-white/30 bg-slate-700/50 text-white hover:bg-slate-700 hover:text-white"}`}
+                    >
+                      💻 Daring
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant={jenisTempat === "luring" ? "default" : "outline"}
+                      onClick={() => handleJenisTempatChange("luring")}
+                      className={`flex-1 ${jenisTempat === "luring" 
+                        ? "bg-green-600 hover:bg-green-500 text-white" 
+                        : "border-white/30 bg-slate-700/50 text-white hover:bg-slate-700 hover:text-white"}`}
+                    >
+                      🏢 Luring
+                    </Button>
+                  </div>
                     
-                    {/* Daring - Zoom Link Input */}
-                    {jenisTempat === "daring" ? (
-                      <div className="space-y-3">
-                        <div className="space-y-2">
-                          <Label className="text-slate-400 text-xs">Nama Tempat (opsional)</Label>
-                          <Input
-                            value={tempat === "Daring melalui zoom meeting" ? "" : tempat}
-                            onChange={(e) => setTempat(e.target.value || "Daring melalui zoom meeting")}
-                            placeholder="Daring melalui zoom meeting"
-                            className="bg-slate-900/50 border-white/10 text-white placeholder:text-slate-500 focus:border-red-500"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label className="text-slate-400 text-xs flex items-center gap-2">
-                            ≡ƒöù Link Zoom Meeting
-                            {isLoadingZoomTitle && <Loader2 className="w-3 h-3 animate-spin" />}
-                          </Label>
-                          <Input
-                            value={zoomLink}
-                            onChange={(e) => handleZoomLinkChange(e.target.value)}
-                            placeholder="https://zoom.us/j/..."
-                            className="bg-slate-900/50 border-white/10 text-white placeholder:text-slate-500 focus:border-red-500"
-                          />
-                          {zoomMeetingTitle && (
-                            <div className="text-xs text-green-400 flex items-center gap-1">
-                              <Check className="w-3 h-3" />
-                              Judul: {zoomMeetingTitle}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    ) : (
-                      <>
-                        {/* Luring - Map Location Picker */}
-                        <MapLocationPicker
-                          value={tempat}
-                          onChange={setTempat}
-                          onLocationChange={setLocationData}
-                          placeholder="Pilih lokasi atau ketik manual"
+                  {/* Daring - Zoom Link Input */}
+                  {jenisTempat === "daring" ? (
+                    <div className="space-y-3">
+                      <div className="space-y-2">
+                        <Label className="text-gray-200 text-xs">Nama Tempat (opsional)</Label>
+                        <Input
+                          value={tempat === "Daring melalui zoom meeting" ? "" : tempat}
+                          onChange={(e) => setTempat(e.target.value || "Daring melalui zoom meeting")}
+                          placeholder="Daring melalui zoom meeting"
+                          className="bg-slate-900/50 border-white/10 text-white placeholder:text-gray-400 focus:border-red-500 h-11 rounded-lg text-base"
                         />
-                        {/* Map Preview Card */}
-                        {locationData && locationData.lat && locationData.lng && (
-                          <div className="mt-3 rounded-lg overflow-hidden border border-white/10 bg-slate-900/50">
-                            <a
-                              href={`https://www.google.com/maps?q=${locationData.lat},${locationData.lng}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="block hover:ring-2 hover:ring-red-500/50 transition-all"
-                            >
-                              <div className="relative">
-                                <img
-                                  src={locationData.mapImageUrl}
-                                  alt="Map Location"
-                                  className="w-full h-32 object-cover"
-                                />
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                                <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between">
-                                  <div className="flex items-center gap-1.5">
-                                    <MapPin className="w-4 h-4 text-red-400" />
-                                    <span className="text-sm font-medium text-white truncate">
-                                      {locationData.placeName}
-                                    </span>
-                                  </div>
-                                  <span className="text-xs text-white/70 flex items-center gap-1">
-                                    <MapIcon className="w-3 h-3" />
-                                    Buka Maps
-                                  </span>
-                                </div>
-                              </div>
-                            </a>
-                            <div className="p-2 text-xs text-slate-400">
-                              <p className="truncate">{locationData.address}</p>
-                            </div>
-                            <div className="px-2 pb-2 flex gap-2">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={downloadMapImage}
-                                className="flex-1 border-white/20 bg-white/5 hover:bg-white/10 text-slate-300 text-xs"
-                              >
-                                <Download className="w-3 h-3 mr-1" />
-                                Download Peta
-                              </Button>
-                            </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-gray-200 text-xs flex items-center gap-2">
+                          🔗 Link Zoom Meeting
+                          {isLoadingZoomTitle && <Loader2 className="w-3 h-3 animate-spin" />}
+                        </Label>
+                        <Input
+                          value={zoomLink}
+                          onChange={(e) => handleZoomLinkChange(e.target.value)}
+                          placeholder="https://zoom.us/j/..."
+                          className="bg-slate-900/50 border-white/10 text-white placeholder:text-gray-400 focus:border-red-500 h-11 rounded-lg text-base"
+                        />
+                        {zoomMeetingTitle && (
+                          <div className="text-xs text-green-400 flex items-center gap-1">
+                            <Check className="w-3 h-3" />
+                            Judul: {zoomMeetingTitle}
                           </div>
                         )}
-                      </>
-                    )}
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-slate-300 flex items-center gap-2">
-                      <span className="text-lg">≡ƒæñ</span> Pimpinan
-                    </Label>
-                    <WAInput
-                      value={pimpinan}
-                      onChange={setPimpinan}
-                      placeholder="Kasubdit Siaga dan Latihan"
-                    />
-                  </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      {/* Luring - Map Location Picker */}
+                      <MapLocationPicker
+                        value={tempat}
+                        onChange={setTempat}
+                        onLocationChange={setLocationData}
+                        placeholder="Pilih lokasi atau ketik manual"
+                      />
+                      {/* Map Preview Card */}
+                      {locationData && locationData.lat && locationData.lng && (
+                        <div className="mt-3 rounded-lg overflow-hidden border border-white/10 bg-slate-900/50">
+                          <a
+                            href={`https://www.google.com/maps?q=${locationData.lat},${locationData.lng}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="block hover:ring-2 hover:ring-red-500/50 transition-all"
+                          >
+                            <div className="relative">
+                              <img
+                                src={locationData.mapImageUrl}
+                                alt="Map Location"
+                                className="w-full h-32 object-cover"
+                              />
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                              <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between">
+                                <div className="flex items-center gap-1.5">
+                                  <MapPin className="w-4 h-4 text-red-400" />
+                                  <span className="text-sm font-medium text-white truncate">
+                                    {locationData.placeName}
+                                  </span>
+                                </div>
+                                <span className="text-xs text-white/70 flex items-center gap-1">
+                                  <MapIcon className="w-3 h-3" />
+                                  Buka Maps
+                                </span>
+                              </div>
+                            </div>
+                          </a>
+                          <div className="p-2 text-xs text-gray-200">
+                            <p className="truncate">{locationData.address}</p>
+                          </div>
+                          <div className="px-2 pb-2 flex gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={downloadMapImage}
+                              className="flex-1 border-white/20 bg-white/5 hover:bg-white/10 text-gray-200 text-xs"
+                            >
+                              <Download className="w-3 h-3 mr-1" />
+                              Download Peta
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  )}
                 </div>
+                
+                {/* Hari/Tanggal dan Waktu */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-slate-300 flex items-center gap-2">
-                      <span className="text-lg">≡ƒôà</span> Hari dan Tanggal
+                    <Label className="text-white flex items-center gap-2">
+                      <span className="text-lg">📅</span> Hari dan Tanggal
                     </Label>
                     <WAInput
                       value={tanggal}
@@ -3632,8 +3643,8 @@ export default function WAHome() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-slate-300 flex items-center gap-2">
-                      <span className="text-lg">ΓÅ░</span> Waktu
+                    <Label className="text-white flex items-center gap-2">
+                      <span className="text-lg">⏰</span> Waktu
                     </Label>
                     <WAInput
                       value={waktu}
@@ -3650,7 +3661,7 @@ export default function WAHome() {
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-base text-white flex items-center gap-2">
-                    <span className="text-lg">≡ƒæÑ</span> Peserta Rapat
+                    <span className="text-lg">👥</span> Peserta Rapat
                   </CardTitle>
                   <Button variant="outline" size="sm" onClick={addPeserta} className="border-white/20 bg-white/5 hover:bg-white/10 text-white">
                     <Plus className="w-4 h-4 mr-2" />
@@ -3661,7 +3672,7 @@ export default function WAHome() {
               <CardContent className="space-y-3">
                 {peserta.map((p, index) => (
                   <div key={p.id} className="flex gap-2 items-center group">
-                    <span className="text-slate-500">-</span>
+                    <span className="text-gray-300">-</span>
                     <WAInput
                       value={p.text}
                       onChange={(val) => updatePeserta(p.id, val)}
@@ -3669,7 +3680,7 @@ export default function WAHome() {
                       className="flex-1"
                     />
                     {peserta.length > 1 && (
-                      <Button variant="ghost" size="icon" onClick={() => removePeserta(p.id)} className="opacity-0 group-hover:opacity-100 transition-opacity text-slate-400 hover:text-red-400 hover:bg-red-500/10">
+                      <Button variant="ghost" size="icon" onClick={() => removePeserta(p.id)} className="opacity-0 group-hover:opacity-100 transition-opacity text-gray-200 hover:text-red-400 hover:bg-red-500/10">
                         <Trash2 className="w-4 h-4" />
                       </Button>
                     )}
@@ -3683,7 +3694,7 @@ export default function WAHome() {
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-base text-white flex items-center gap-2">
-                    <span className="text-lg">≡ƒùÆ∩╕Å</span> Pelaksanaan Rapat
+                    <span className="text-lg">🗒️</span> Pelaksanaan Rapat
                   </CardTitle>
                   <Button variant="outline" size="sm" onClick={addPelaksanaan} className="border-white/20 bg-white/5 hover:bg-white/10 text-white">
                     <Plus className="w-4 h-4 mr-2" />
@@ -3706,12 +3717,12 @@ export default function WAHome() {
                         variant="ghost"
                         size="icon"
                         onClick={() => toggleExpand(item.id)}
-                        className="text-slate-400 hover:text-white hover:bg-white/10"
+                        className="text-gray-200 hover:text-white hover:bg-white/10"
                       >
                         {expandedItems.has(item.id) ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                       </Button>
                       {pelaksanaan.length > 1 && (
-                        <Button variant="ghost" size="icon" onClick={() => removePelaksanaan(item.id)} className="text-slate-400 hover:text-red-400 hover:bg-red-500/10">
+                        <Button variant="ghost" size="icon" onClick={() => removePelaksanaan(item.id)} className="text-gray-200 hover:text-red-400 hover:bg-red-500/10">
                           <Trash2 className="w-4 h-4" />
                         </Button>
                       )}
@@ -3720,20 +3731,20 @@ export default function WAHome() {
                       <div className="space-y-2 animate-in slide-in-from-top-2 duration-200">
                         {item.subItems.map((sub, subIndex) => (
                           <div key={subIndex} className="flex gap-2 items-center pl-8">
-                            <span className="text-slate-500 w-4">-</span>
+                            <span className="text-gray-300 w-4">-</span>
                             <WAInput
                               value={sub}
                               onChange={(val) => updateSubItem(item.id, subIndex, val)}
                               placeholder="Sub poin"
                               className="flex-1"
                             />
-                            <Button variant="ghost" size="icon" onClick={() => removeSubItem(item.id, subIndex)} className="text-slate-500 hover:text-red-400 hover:bg-red-500/10">
+                            <Button variant="ghost" size="icon" onClick={() => removeSubItem(item.id, subIndex)} className="text-gray-300 hover:text-red-400 hover:bg-red-500/10">
                               <X className="w-4 h-4" />
                             </Button>
                           </div>
                         ))}
                         <div className="flex items-center gap-2 ml-8">
-                          <Button variant="ghost" size="sm" onClick={() => addSubItem(item.id)} className="text-slate-400 hover:text-white hover:bg-white/5">
+                          <Button variant="ghost" size="sm" onClick={() => addSubItem(item.id)} className="text-gray-200 hover:text-white hover:bg-white/5">
                             <Plus className="w-4 h-4 mr-2" />
                             Sub Poin
                           </Button>
@@ -3754,7 +3765,7 @@ export default function WAHome() {
                   </div>
                   Kalimat Penutup
                 </CardTitle>
-                <CardDescription className="text-slate-400">
+                <CardDescription className="text-gray-200">
                   Kalimat penutup di akhir laporan WhatsApp
                 </CardDescription>
               </CardHeader>
@@ -3762,7 +3773,7 @@ export default function WAHome() {
                 <WATextarea
                   value={kalimatPenutup}
                   onChange={setKalimatPenutup}
-                  placeholder="Demikian disampaikan sebagai laporan. Terima kasih ≡ƒÖÅ"
+                  placeholder="Demikian disampaikan sebagai laporan. Terima kasih 🙏"
                   rows={2}
                 />
               </CardContent>
@@ -3784,9 +3795,9 @@ export default function WAHome() {
       </TabsContent>
 
           {/* Preview Tab */}
-          <TabsContent value="preview" className="flex-1 flex flex-col overflow-hidden mt-0">
+          <TabsContent value="preview" className="flex-1 flex flex-col mt-0 overflow-hidden">
             <ScrollArea className="flex-1 h-full">
-              <div className="space-y-6 pb-20 p-1">
+              <div className="space-y-6 p-4 pb-32">
             <Card className="bg-slate-800/50 backdrop-blur-sm border-white/10 shadow-xl overflow-hidden">
               <CardHeader className="bg-gradient-to-r from-green-600/20 to-green-500/10 border-b border-white/10">
                 <div className="flex items-center justify-between">
@@ -3803,7 +3814,7 @@ export default function WAHome() {
                     </Button>
                   </div>
                 </div>
-                <CardDescription className="text-slate-400">
+                <CardDescription className="text-gray-200">
                   Tampilan teks yang akan dikirim ke WhatsApp
                 </CardDescription>
               </CardHeader>
@@ -3833,13 +3844,13 @@ export default function WAHome() {
                         <div className="whitespace-pre-wrap">Selamat {getWaktuSalam()}, Mohon izin melaporkan kegiatan {judul.toLowerCase()}.{"\n\n"}</div>
                         
                         {/* Tempat section */}
-                        <div className="whitespace-pre-wrap">≡ƒôì *Tempat:*{"\n"}</div>
+                        <div className="whitespace-pre-wrap">📍 *Tempat:*{"\n"}</div>
                         
                         {/* Location text or default */}
                         {locationData && locationData.lat && locationData.lng ? (
                           <div className="tempat-section">
                             {/* Place name and address */}
-                            <div className="whitespace-pre-wrap">≡ƒôî *{locationData.placeName}*{"\n"}{locationData.address}{"\n"}</div>
+                            <div className="whitespace-pre-wrap">📌 *{locationData.placeName}*{"\n"}{locationData.address}{"\n"}</div>
                             
                             {/* Map Image - visually grouped with Tempat */}
                             <div className="my-2 border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden">
@@ -3857,25 +3868,25 @@ export default function WAHome() {
                                   />
                                   <div className="absolute bottom-1 right-1 bg-white/90 dark:bg-slate-800/90 px-1.5 py-0.5 rounded-full flex items-center gap-1 shadow-sm">
                                     <MapPin className="w-2.5 h-2.5 text-red-500" />
-                                    <span className="text-[10px] font-medium text-slate-700 dark:text-slate-300">Buka di Maps</span>
+                                    <span className="text-[10px] font-medium text-slate-700 dark:text-gray-200">Buka di Maps</span>
                                   </div>
                                 </div>
                               </a>
                             </div>
                             
                             {/* Maps link */}
-                            <div className="whitespace-pre-wrap text-xs text-slate-500">≡ƒù║∩╕Å Lihat di Maps: https://www.google.com/maps?q={locationData.lat},{locationData.lng}{"\n\n"}</div>
+                            <div className="whitespace-pre-wrap text-xs text-gray-300">🗺️ Lihat di Maps: https://www.google.com/maps?q={locationData.lat},{locationData.lng}{"\n\n"}</div>
                           </div>
                         ) : (
                           <div className="whitespace-pre-wrap">{tempat}{"\n\n"}</div>
                         )}
                         
                         {/* Rest of the message */}
-                        <div className="whitespace-pre-wrap">≡ƒôà *Hari dan Tanggal:*{"\n"}{tanggal}{"\n\n"}</div>
-                        <div className="whitespace-pre-wrap">ΓÅ░ *Waktu:*{"\n"}{waktu}{"\n\n"}</div>
-                        <div className="whitespace-pre-wrap">≡ƒæñ *Pimpinan Rapat:*{"\n"}{pimpinan}{"\n\n"}</div>
-                        <div className="whitespace-pre-wrap">≡ƒæÑ *Peserta Rapat:*{"\n"}{peserta.map(p => `- ${p.text};`).join("\n")}{"\n\n"}</div>
-                        <div className="whitespace-pre-wrap">≡ƒùÆ∩╕Å *Pelaksanaan Rapat:*{"\n"}{pelaksanaan.map((item, i) => {
+                        <div className="whitespace-pre-wrap">📅 *Hari dan Tanggal:*{"\n"}{tanggal}{"\n\n"}</div>
+                        <div className="whitespace-pre-wrap">⏰ *Waktu:*{"\n"}{waktu}{"\n\n"}</div>
+                        <div className="whitespace-pre-wrap">👤 *Pimpinan Rapat:*{"\n"}{pimpinan}{"\n\n"}</div>
+                        <div className="whitespace-pre-wrap">👥 *Peserta Rapat:*{"\n"}{peserta.map(p => `- ${p.text};`).join("\n")}{"\n\n"}</div>
+                        <div className="whitespace-pre-wrap">🗒️ *Pelaksanaan Rapat:*{"\n"}{pelaksanaan.map((item, i) => {
                           let text = `${i + 1}. ${item.text};`;
                           if (item.subItems.length > 0) {
                             text += "\n" + item.subItems.map(sub => `    - ${sub}`).join("\n");
@@ -3887,10 +3898,10 @@ export default function WAHome() {
                       </div>
                       
                       <div className="flex justify-end items-center gap-1 mt-2 pt-2 border-t border-slate-100 dark:border-slate-700">
-                        <span className="text-xs text-slate-400">
+                        <span className="text-xs text-gray-200">
                           {new Date().toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}
                         </span>
-                        <span className="text-blue-500">Γ£ôΓ£ô</span>
+                        <span className="text-blue-500">✓✓</span>
                       </div>
                     </div>
 
@@ -3901,13 +3912,13 @@ export default function WAHome() {
                           size="sm"
                           variant="outline"
                           onClick={downloadMapImage}
-                          className="w-full border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs"
+                          className="w-full border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-gray-200 text-xs"
                         >
                           <Download className="w-3 h-3 mr-1" />
                           Download Gambar Peta
                         </Button>
-                        <p className="text-xs text-slate-400 mt-1 italic">
-                          ≡ƒÆí Download gambar peta, lalu lampirkan manual ke WhatsApp
+                        <p className="text-xs text-gray-200 mt-1 italic">
+                          💡 Download gambar peta, lalu lampirkan manual ke WhatsApp
                         </p>
                       </div>
                     )}
@@ -3920,7 +3931,7 @@ export default function WAHome() {
           </TabsContent>
 
           {/* Image Merger Tab - Collage Editor */}
-          <TabsContent value="image" className="flex-1 flex flex-col overflow-hidden mt-0">
+          <TabsContent value="image" className="flex-1 flex flex-col mt-0">
             <CollageEditor
               layers={collageLayers}
               setLayers={setCollageLayers}
@@ -3963,59 +3974,59 @@ export default function WAHome() {
 
         {/* Drafts Dialog */}
         <Dialog open={showDrafts} onOpenChange={setShowDrafts}>
-        <DialogContent className="max-w-2xl max-h-[80vh] bg-slate-800 border-white/10 text-white">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-white">
-              <Archive className="w-5 h-5" />
-              Draft Tersimpan
-            </DialogTitle>
-            <DialogDescription className="text-slate-400">
-              Pilih draft untuk dimuat atau dihapus
-            </DialogDescription>
-          </DialogHeader>
-          <ScrollArea className="h-[400px]">
-            {drafts.length === 0 ? (
-              <div className="text-center py-8 text-slate-400">
-                <History className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                <p>Belum ada draft tersimpan</p>
-              </div>
-            ) : (
-              <div className="space-y-3 p-2">
-                {drafts.map((draft) => (
-                  <div
-                    key={draft.id}
-                    className="flex items-center justify-between p-4 rounded-xl bg-slate-900/50 border border-white/10 hover:bg-slate-900/70 hover:border-red-500/30 transition-all duration-300"
-                  >
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate text-white">{draft.judul}</p>
-                      <p className="text-sm text-slate-400">
-                        {draft.tempat} ΓÇó {draft.tanggal}
-                      </p>
-                      <p className="text-xs text-slate-500">
-                        Disimpan: {new Date(draft.updatedAt).toLocaleString("id-ID")}
-                      </p>
+          <DialogContent className="sm:max-w-lg bg-slate-800 border-white/10 text-white overflow-hidden flex flex-col">
+            <DialogHeader className="flex-shrink-0">
+              <DialogTitle className="flex items-center gap-2 text-white">
+                <Archive className="w-5 h-5" />
+                Draft Tersimpan
+              </DialogTitle>
+              <DialogDescription className="text-gray-200">
+                Pilih draft untuk dimuat atau dihapus
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex-1 min-h-0 overflow-y-auto -mx-6 px-6">
+              {drafts.length === 0 ? (
+                <div className="text-center py-8 text-gray-200">
+                  <History className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                  <p>Belum ada draft tersimpan</p>
+                </div>
+              ) : (
+                <div className="space-y-3 py-1">
+                  {drafts.map((draft) => (
+                    <div
+                      key={draft.id}
+                      className="p-3 rounded-xl bg-slate-900/50 border border-white/10 hover:bg-slate-900/70 hover:border-red-500/30 transition-all duration-300"
+                    >
+                      <div className="flex-1 min-w-0 mb-2">
+                        <p className="font-medium truncate text-white">{draft.judul}</p>
+                        <p className="text-sm text-gray-200">
+                          {draft.tempat} • {draft.tanggal}
+                        </p>
+                        <p className="text-xs text-gray-300">
+                          Disimpan: {new Date(draft.updatedAt).toLocaleString("id-ID")}
+                        </p>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button size="sm" variant="outline" onClick={() => { loadDraft(draft); setShowDrafts(false); }} className="flex-1 border-white/20 bg-white/5 hover:bg-white/10 text-white h-9">
+                          <Eye className="w-4 h-4 mr-1" />
+                          Muat
+                        </Button>
+                        <Button size="sm" variant="destructive" onClick={() => deleteDraft(draft.id)} className="bg-red-600 hover:bg-red-500 h-9 px-3">
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </div>
-                    <div className="flex gap-2 ml-4">
-                      <Button size="sm" variant="outline" onClick={() => loadDraft(draft)} className="border-white/20 bg-white/5 hover:bg-white/10 text-white">
-                        <Eye className="w-4 h-4 mr-1" />
-                        Muat
-                      </Button>
-                      <Button size="sm" variant="destructive" onClick={() => deleteDraft(draft.id)} className="bg-red-600 hover:bg-red-500">
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </ScrollArea>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowDrafts(false)} className="border-white/20 bg-white/5 hover:bg-white/10 text-white">
-              Tutup
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+                  ))}
+                </div>
+              )}
+            </div>
+            <DialogFooter className="flex-shrink-0 mt-4">
+              <Button variant="outline" onClick={() => setShowDrafts(false)} className="border-white/20 bg-white/5 hover:bg-white/10 text-white">
+                Tutup
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
           {/* Footer */}
           <footer 

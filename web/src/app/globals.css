@@ -44,7 +44,7 @@
 }
 
 :root {
-  --radius: 0.625rem;
+  --radius: 0.75rem;
   --background: #ffffff;
   --foreground: #0b0f1a;
   --card: #ffffff;
@@ -76,6 +76,12 @@
   --sidebar-accent-foreground: #0b0f1a;
   --sidebar-border: #e2e8f0;
   --sidebar-ring: #94a3b8;
+  
+  /* Safe area variables */
+  --safe-area-top: env(safe-area-inset-top, 0px);
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-left: env(safe-area-inset-left, 0px);
+  --safe-area-right: env(safe-area-inset-right, 0px);
 }
 
 .dark {
@@ -112,45 +118,579 @@
   --sidebar-ring: #94a3b8;
 }
 
+/* ============================================
+   MOBILE-FIRST BASE STYLES
+   ============================================ */
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
   }
+  
+  html {
+    width: 100%;
+    height: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+  
   body {
     @apply bg-[#0b0f1a] text-foreground;
+    width: 100%;
+    min-height: 100vh;
+    min-height: 100dvh;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: none;
+    -webkit-overflow-scrolling: touch;
+    
+    /* Safe area support for notch devices */
     padding-top: env(safe-area-inset-top);
     padding-bottom: env(safe-area-inset-bottom);
     padding-left: env(safe-area-inset-left);
     padding-right: env(safe-area-inset-right);
+    
+    /* Native app feel */
+    position: relative;
+    touch-action: manipulation;
+  }
+  
+  /* Prevent pull-to-refresh on mobile */
+  body {
+    overscroll-behavior-y: contain;
   }
 }
 
+/* ============================================
+   MOBILE APP FRAME - Full Screen
+   ============================================ */
+
 .app-frame {
   width: 100%;
-  max-width: 420px; /* Strict mobile width */
-  height: 100dvh;
-  margin: 0 auto;
+  min-height: 100vh;
+  min-height: 100dvh;
+  height: auto;
   background: #0b0f1a;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
   position: relative;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 0 40px rgba(0,0,0,0.8);
+  
+  /* Smooth scrolling */
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  
+  /* Safe area support */
+  padding-top: constant(safe-area-inset-top); /* iOS 11.0-11.2 */
+  padding-top: env(safe-area-inset-top); /* iOS 11.2+ */
+  padding-bottom: constant(safe-area-inset-bottom);
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
-/* Centering on desktop */
-@media (min-width: 420px) {
+/* Desktop: Show as centered phone frame */
+@media (min-width: 480px) {
   body {
     display: flex;
     justify-content: center;
     align-items: center;
     min-height: 100vh;
-    background: #05070a; /* Darker outer bg */
+    background: linear-gradient(135deg, #05070a 0%, #0a0f1a 50%, #050810 100%);
   }
   
   .app-frame {
-    height: 92vh;
+    width: 100%;
+    max-width: 430px;
+    height: 95vh;
     border-radius: 2.5rem;
-    border: 8px solid #1e293b;
+    border: 6px solid #1a2332;
+    box-shadow: 
+      0 0 60px rgba(0, 0, 0, 0.5),
+      0 0 120px rgba(185, 28, 28, 0.1),
+      inset 0 0 1px rgba(255, 255, 255, 0.05);
+    overflow-y: auto;
+    overflow-x: hidden;
   }
+}
+
+/* ============================================
+   TOUCH-OPTIMIZED UI ELEMENTS
+   ============================================ */
+
+/* Minimum tap target size (44px) - only for main interactive elements */
+button:not(.touch-small):not([role="button"]), 
+[role="button"],
+input[type="button"],
+input[type="submit"],
+input[type="reset"],
+a:not(.touch-small),
+select {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Small touch targets for toolbar buttons */
+button.touch-small {
+  min-height: 36px;
+  min-width: 36px;
+}
+
+/* Touch-friendly inputs */
+input, 
+textarea, 
+select {
+  font-size: 16px !important; /* Prevents iOS zoom on focus */
+  touch-action: manipulation;
+}
+
+/* ============================================
+   NATIVE-STYLE ANIMATIONS
+   ============================================ */
+
+/* Ripple effect for touch feedback */
+@keyframes ripple {
+  0% {
+    transform: scale(0);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(2.5);
+    opacity: 0;
+  }
+}
+
+.ripple {
+  position: relative;
+  overflow: hidden;
+}
+
+.ripple::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%);
+  border-radius: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.ripple:active::after {
+  animation: ripple 0.4s ease-out;
+}
+
+/* Skeleton shimmer animation */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.05) 25%,
+    rgba(255, 255, 255, 0.1) 50%,
+    rgba(255, 255, 255, 0.05) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite linear;
+}
+
+/* Pulse glow animation */
+@keyframes pulseGlow {
+  0%, 100% { 
+    opacity: 0.5; 
+    transform: scale(1);
+  }
+  50% { 
+    opacity: 1; 
+    transform: scale(1.05);
+  }
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 2s ease-in-out infinite;
+}
+
+/* Button press animation */
+@keyframes buttonPress {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(0.96);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.btn-press:active {
+  animation: buttonPress 0.15s ease-out;
+}
+
+/* Fade in animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Slide up animation */
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-up {
+  animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Slide down animation */
+@keyframes slideDown {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+}
+
+.animate-slide-down {
+  animation: slideDown 0.25s ease-in;
+}
+
+/* Scale in animation */
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.2s ease-out;
+}
+
+/* ============================================
+   SMOOTH TRANSITIONS
+   ============================================ */
+
+/* Fast transitions for interactions - exclude color from transition for instant feedback */
+button,
+a,
+input,
+select,
+textarea,
+[role="button"] {
+  transition: background-color 0.15s ease-out, border-color 0.15s ease-out, transform 0.15s ease-out, opacity 0.15s ease-out;
+}
+
+/* Page transitions */
+.page-enter {
+  animation: fadeIn 0.25s ease-out;
+}
+
+/* Card hover/press effect */
+.card-interactive {
+  transition: transform 0.15s ease-out, box-shadow 0.15s ease-out;
+}
+
+.card-interactive:active {
+  transform: scale(0.98);
+}
+
+/* ============================================
+   SCROLLBAR STYLING (Mobile Native Look)
+   ============================================ */
+
+/* Hide scrollbar on mobile for native feel */
+@media (max-width: 479px) {
+  ::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+  }
+  
+  * {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+}
+
+/* Thin scrollbar on desktop */
+@media (min-width: 480px) {
+  ::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 4px;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+}
+
+/* ============================================
+   NATIVE-STYLE FORM ELEMENTS
+   ============================================ */
+
+/* Inputs with native feel - base styles only, colors handled by Tailwind utilities */
+input[type="text"],
+input[type="email"],
+input[type="number"],
+input[type="tel"],
+input[type="url"],
+input[type="search"],
+textarea,
+select {
+  -webkit-appearance: none;
+  appearance: none;
+  border-radius: 12px;
+  font-size: 16px;
+  width: 100%;
+  outline: none;
+  /* Removed: padding, background, border, color - handled by Tailwind utilities */
+}
+
+/* Focus styles - border handled by Tailwind, only add subtle glow */
+input:focus,
+textarea:focus,
+select:focus {
+  box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.15);
+}
+
+/* Round checkboxes for native feel */
+input[type="checkbox"],
+input[type="radio"] {
+  width: 22px;
+  height: 22px;
+  min-height: 22px;
+  min-width: 22px;
+  accent-color: #f97316;
+}
+
+/* ============================================
+   LOADING STATES
+   ============================================ */
+
+.loading-dots {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.loading-dots span {
+  width: 6px;
+  height: 6px;
+  background: currentColor;
+  border-radius: 50%;
+  animation: loadingDot 1.2s infinite ease-in-out both;
+}
+
+.loading-dots span:nth-child(1) {
+  animation-delay: -0.32s;
+}
+
+.loading-dots span:nth-child(2) {
+  animation-delay: -0.16s;
+}
+
+@keyframes loadingDot {
+  0%, 80%, 100% {
+    transform: scale(0.6);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Spinner */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spinner {
+  animation: spin 0.8s linear infinite;
+}
+
+/* ============================================
+   UTILITY CLASSES
+   ============================================ */
+
+/* Safe area padding helpers */
+.px-safe {
+  padding-left: max(16px, env(safe-area-inset-left));
+  padding-right: max(16px, env(safe-area-inset-right));
+}
+
+.py-safe {
+  padding-top: max(16px, env(safe-area-inset-top));
+  padding-bottom: max(16px, env(safe-area-inset-bottom));
+}
+
+.pb-safe {
+  padding-bottom: max(24px, env(safe-area-inset-bottom));
+}
+
+.pt-safe {
+  padding-top: max(16px, env(safe-area-inset-top));
+}
+
+/* Bottom toolbar safe area */
+.bottom-toolbar {
+  padding-bottom: max(16px, env(safe-area-inset-bottom));
+}
+
+/* Touch-optimized button */
+.touch-btn {
+  min-height: 48px;
+  min-width: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+  transition: all 0.15s ease-out;
+}
+
+.touch-btn:active {
+  transform: scale(0.96);
+  opacity: 0.9;
+}
+
+/* Glassmorphism effect */
+.glass {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Prevent text selection on interactive elements */
+.no-select {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Smooth momentum scrolling */
+.scroll-smooth {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/* Hide on mobile */
+@media (max-width: 479px) {
+  .hide-mobile {
+    display: none !important;
+  }
+}
+
+/* Hide on desktop */
+@media (min-width: 480px) {
+  .hide-desktop {
+    display: none !important;
+  }
+}
+
+/* ============================================
+   RESPONSIVE TYPOGRAPHY
+   ============================================ */
+
+.text-responsive-sm {
+  font-size: clamp(0.75rem, 2.5vw, 0.875rem);
+}
+
+.text-responsive-base {
+  font-size: clamp(0.875rem, 3vw, 1rem);
+}
+
+.text-responsive-lg {
+  font-size: clamp(1rem, 3.5vw, 1.125rem);
+}
+
+.text-responsive-xl {
+  font-size: clamp(1.125rem, 4vw, 1.25rem);
+}
+
+.text-responsive-2xl {
+  font-size: clamp(1.25rem, 5vw, 1.5rem);
+}
+
+/* ============================================
+   GRADIENT BACKGROUNDS
+   ============================================ */
+
+@keyframes gradientX {
+  0%, 100% { 
+    background-position: 0% 50%;
+  }
+  50% { 
+    background-position: 100% 50%;
+  }
+}
+
+.animate-gradient-x {
+  background-size: 200% 200%;
+  animation: gradientX 3s ease infinite;
+}
+
+@keyframes gradientY {
+  0%, 100% { 
+    background-position: 50% 0%;
+  }
+  50% { 
+    background-position: 50% 100%;
+  }
+}
+
+.animate-gradient-y {
+  background-size: 100% 200%;
+  animation: gradientY 3s ease infinite;
 }

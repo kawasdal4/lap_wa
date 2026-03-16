@@ -1,40 +1,63 @@
 "use client"
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import AppSplash from "./AppSplash";
 import CopyrightModal from "./CopyrightModal";
 
 export default function ClientWrapper({ children }: { children: React.ReactNode }) {
   const [isReady, setIsReady] = useState(false);
+  const [showContent, setShowContent] = useState(false);
 
   useEffect(() => {
-    // Register Service Worker
+    // Register Service Worker for PWA
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker
         .register("/sw.js")
-        .then((reg) => console.log("SW registered", reg))
-        .catch((err) => console.log("SW failed", err));
+        .then((reg) => console.log("[PWA] Service Worker registered", reg.scope))
+        .catch((err) => console.log("[PWA] Service Worker failed", err));
     }
 
-    // Simulate app initialization
-    const timer = setTimeout(() => {
+    // Simulate app initialization (fonts, assets, etc.)
+    const initTimer = setTimeout(() => {
       setIsReady(true);
-    }, 1500);
+      // Stagger content fade-in
+      setTimeout(() => setShowContent(true), 100);
+    }, 1200);
 
-    return () => clearTimeout(timer);
+    return () => clearTimeout(initTimer);
+  }, []);
+
+  // Prevent context menu on long press (for native app feel)
+  const handleContextMenu = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
   }, []);
 
   return (
-    <div className="app-frame">
+    <div 
+      className="app-frame"
+      onContextMenu={handleContextMenu}
+    >
+      {/* Splash Screen */}
       {!isReady && <AppSplash />}
-      {children}
       
-      {/* Floating Copyright Button */}
-      <div className="fixed bottom-4 left-4 z-[60] pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)]">
+      {/* Main Content with Fade-in */}
+      <div 
+        className={`flex-1 flex flex-col transition-opacity duration-300 ${
+          showContent ? 'opacity-100' : 'opacity-0'
+        }`}
+      >
+        {children}
+      </div>
+      
+      {/* Floating Copyright Button - Bottom Left */}
+      <div className="fixed bottom-3 left-3 z-[60] pl-[env(safe-area-inset-left)] pb-[env(safe-area-inset-bottom)]">
         <CopyrightModal>
-          <button className="group relative cursor-pointer text-[10px] text-white/40 hover:text-white/80 transition-colors uppercase tracking-[0.1em] flex items-center gap-1.5 focus:outline-none">
-            <span className="w-1.5 h-1.5 bg-orange-500/50 rounded-full group-hover:bg-orange-500 animate-pulse" />
-            © FOE - 2026
+          <button 
+            className="group relative cursor-pointer text-[10px] text-white/30 hover:text-white/60 transition-all duration-200 uppercase tracking-[0.15em] flex items-center gap-1.5 focus:outline-none active:scale-95"
+            aria-label="Copyright information"
+          >
+            <span className="w-1.5 h-1.5 bg-orange-500/40 rounded-full group-hover:bg-orange-500 group-hover:animate-pulse transition-colors" />
+            <span className="font-medium">© FOE - 2026</span>
           </button>
         </CopyrightModal>
       </div>

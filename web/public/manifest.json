@@ -1,32 +1,93 @@
 {
-  "name": "Basarnas WA Report Generator",
+  "name": "Laporan WA Basarnas",
   "short_name": "WA Report",
-  "description": "Generate WhatsApp reports with collage export for Basarnas.",
+  "description": "Aplikasi pembuat laporan WhatsApp untuk Direktorat Kesiapsiagaan Basarnas. Buat laporan kegiatan dengan dokumentasi foto dan kirim langsung ke WhatsApp.",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#0b0f1a",
   "theme_color": "#b91c1c",
   "start_url": "/",
+  "scope": "/",
+  "id": "basarnas-wa-report",
+  "categories": ["productivity", "utilities", "business"],
+  "lang": "id",
+  "dir": "ltr",
   "icons": [
     {
-      "src": "/logo.svg",
+      "src": "/icons/icon-48.webp",
+      "sizes": "48x48",
+      "type": "image/webp",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-72.webp",
+      "sizes": "72x72",
+      "type": "image/webp",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-96.webp",
+      "sizes": "96x96",
+      "type": "image/webp",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-128.webp",
+      "sizes": "128x128",
+      "type": "image/webp",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-192.webp",
       "sizes": "192x192",
-      "type": "image/svg+xml",
+      "type": "image/webp",
       "purpose": "any maskable"
     },
     {
-      "src": "/logo.svg",
+      "src": "/icons/icon-256.webp",
+      "sizes": "256x256",
+      "type": "image/webp",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.webp",
       "sizes": "512x512",
-      "type": "image/svg+xml",
+      "type": "image/webp",
       "purpose": "any maskable"
     }
   ],
   "screenshots": [
     {
-      "src": "/logo.svg",
-      "type": "image/svg+xml",
-      "sizes": "512x512",
-      "form_factor": "narrow"
+      "src": "/generated/template-preview.png",
+      "type": "image/png",
+      "sizes": "420x747",
+      "form_factor": "narrow",
+      "label": "Tampilan Editor Laporan"
     }
-  ]
+  ],
+  "shortcuts": [
+    {
+      "name": "Buat Laporan Baru",
+      "short_name": "Baru",
+      "description": "Mulai membuat laporan baru",
+      "url": "/?action=new",
+      "icons": [
+        {
+          "src": "/icons/icon-96.webp",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false,
+  "display_override": ["window-controls-overlay", "standalone", "browser"],
+  "edge_side_panel": {
+    "preferred_width": 400
+  },
+  "launch_handler": {
+    "client_mode": "navigate-existing"
+  },
+  "handle_links": "preferred",
+  "capture_links": "existing-client-navigate"
 }
