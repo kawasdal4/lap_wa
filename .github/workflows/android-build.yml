@@ -72,15 +72,20 @@ jobs:
           chmod +x gradlew
           ./gradlew assembleRelease --stacktrace --info
 
-      - name: Rename APK
+      - name: Debug APK Output
         run: |
-          cp web/android/app/build/outputs/apk/release/app-release.apk lap-wa-release.apk
+          ls -R web/android/app/build/outputs
+
+      - name: Collect APK
+        run: |
+          mkdir -p build-output
+          cp web/android/app/build/outputs/apk/release/*.apk build-output/lap-wa-release.apk
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: lap-wa-android
-          path: lap-wa-release.apk
+          path: build-output/lap-wa-release.apk
 
       - name: Upload to R2
         env:
