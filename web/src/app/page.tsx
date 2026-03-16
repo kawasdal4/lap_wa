@@ -1657,8 +1657,10 @@ const CollageEditor = ({
               activeTool === "background" ? "text-blue-400" : "text-white/70 hover:text-white"
             }`}
           >
-            <ImageIcon className="w-5 h-5" />
-            <span className="text-[11px]">Background</span>
+            <div className={`p-2 rounded-xl transition-all ${activeTool === "background" ? "bg-blue-500/20 shadow-[0_0_15px_rgba(59,130,246,0.5)]" : "bg-white/5"}`}>
+              <ImageIcon className="w-5 h-5" />
+            </div>
+            <span className="text-[10px] font-medium tracking-wide">BG</span>
           </button>
           
           <button
@@ -1667,8 +1669,10 @@ const CollageEditor = ({
               activeTool === "photos" ? "text-purple-400" : "text-white/70 hover:text-white"
             }`}
           >
-            <ImagePlus className="w-5 h-5" />
-            <span className="text-[11px]">Photos</span>
+            <div className={`p-2 rounded-xl transition-all ${activeTool === "photos" ? "bg-purple-500/20 shadow-[0_0_15px_rgba(168,85,247,0.5)]" : "bg-white/5"}`}>
+              <ImagePlus className="w-5 h-5" />
+            </div>
+            <span className="text-[10px] font-medium tracking-wide">Foto</span>
           </button>
           
           <button
@@ -1677,8 +1681,10 @@ const CollageEditor = ({
               activeTool === "text" ? "text-orange-400" : "text-white/70 hover:text-white"
             }`}
           >
-            <Type className="w-5 h-5" />
-            <span className="text-[11px]">Text</span>
+            <div className={`p-2 rounded-xl transition-all ${activeTool === "text" ? "bg-orange-500/20 shadow-[0_0_15px_rgba(249,115,22,0.5)]" : "bg-white/5"}`}>
+              <Type className="w-5 h-5" />
+            </div>
+            <span className="text-[10px] font-medium tracking-wide">Teks</span>
           </button>
           
           <button
@@ -1687,27 +1693,26 @@ const CollageEditor = ({
               activeTool === "logo" ? "text-cyan-400" : "text-white/70 hover:text-white"
             }`}
           >
-            <Layers className="w-5 h-5" />
-            <span className="text-[11px]">Logo</span>
+            <div className={`p-2 rounded-xl transition-all ${activeTool === "logo" ? "bg-cyan-500/20 shadow-[0_0_15px_rgba(34,211,238,0.5)]" : "bg-white/5"}`}>
+              <Layers className="w-5 h-5" />
+            </div>
+            <span className="text-[10px] font-medium tracking-wide">Logo</span>
           </button>
           
-          <button
+          <div className="w-px h-8 bg-white/10 mx-1" />
+          
+          <button 
             onClick={exportImage}
             disabled={isMerging}
-            className="px-3.5 py-2 rounded-xl font-semibold text-black transition-all disabled:opacity-50"
+            className="flex flex-col items-center gap-1 text-emerald-400 hover:text-emerald-300 disabled:opacity-50 transition-all"
             style={{
-              background: "linear-gradient(45deg, #00ff8a, #00ffa2)",
               animation: isMerging ? "none" : "pulseGlow 2s infinite"
             }}
           >
-            {isMerging ? (
-              <span className="flex items-center gap-1.5 text-sm">
-                <RefreshCw className="w-4 h-4 animate-spin" />
-                Proses
-              </span>
-            ) : (
-              <span className="text-sm">Export</span>
-            )}
+            <div className="p-2 rounded-xl bg-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.3)]">
+              {isMerging ? <RefreshCw className="w-5 h-5 animate-spin" /> : <Download className="w-5 h-5" />}
+            </div>
+            <span className="text-[10px] font-medium tracking-wide">Export</span>
           </button>
         </div>
       </div>
@@ -1746,10 +1751,10 @@ const CollageEditor = ({
         }
       `}</style>
 
-      {/* Tool Panels - Slide up from bottom */}
+      {/* Tool Panels - Redesigned to be partial width/height to avoid full obstruction */}
       {/* Background Panel */}
       {activeTool === "background" && (
-        <div className="absolute bottom-[72px] left-0 right-0 bg-[#0a1525]/95 backdrop-blur-lg border-t border-white/10 rounded-t-2xl p-4 z-40 max-h-[50vh] overflow-y-auto">
+        <div className="absolute bottom-[80px] left-4 right-4 bg-[#0a1525]/95 backdrop-blur-lg border border-white/10 rounded-2xl p-4 z-40 shadow-2xl animate-in slide-in-from-bottom-4 duration-300">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-white font-semibold">Background</h3>
             <button onClick={() => setActiveTool(null)} className="text-white/70 hover:text-white">
@@ -1799,7 +1804,7 @@ const CollageEditor = ({
 
       {/* Photos Panel */}
       {activeTool === "photos" && (
-        <div className="absolute bottom-[72px] left-0 right-0 bg-[#0a1525]/95 backdrop-blur-lg border-t border-white/10 rounded-t-2xl p-4 z-40 max-h-[50vh] overflow-y-auto">
+        <div className="absolute bottom-[80px] left-4 right-4 bg-[#0a1525]/95 backdrop-blur-lg border border-white/10 rounded-2xl p-4 z-40 shadow-2xl max-h-[50vh] overflow-y-auto animate-in slide-in-from-bottom-4 duration-300">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-white font-semibold">Photos</h3>
             <button onClick={() => setActiveTool(null)} className="text-white/70 hover:text-white">
@@ -1867,7 +1872,7 @@ const CollageEditor = ({
 
       {/* Text Panel */}
       {activeTool === "text" && (
-        <div className="absolute bottom-[72px] left-0 right-0 bg-[#0a1525]/95 backdrop-blur-lg border-t border-white/10 rounded-t-2xl p-4 z-40 max-h-[60vh] overflow-y-auto">
+        <div className="absolute bottom-[80px] left-4 right-4 bg-[#0a1525]/95 backdrop-blur-lg border border-white/10 rounded-2xl p-4 z-40 shadow-2xl max-h-[60vh] overflow-y-auto animate-in slide-in-from-bottom-4 duration-300">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-white font-semibold">Text</h3>
             <button onClick={() => setActiveTool(null)} className="text-white/70 hover:text-white">
@@ -3486,31 +3491,33 @@ export default function WAHome() {
         </header>
 
         {/* Main Content - Scrollable area */}
-        <div className="flex-1 flex flex-col">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
-            <TabsList className="w-full bg-white/5 backdrop-blur-sm rounded-2xl p-1.5 mx-4 mt-2 mb-2 flex flex-shrink-0">
-              <TabsTrigger 
-                value="editor" 
-                className="flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-sm font-medium transition-all duration-300 data-[state=active]:bg-white/10 data-[state=active]:text-white data-[state=active]:shadow-lg text-white/50 hover:text-white/80"
-              >
-                <FileText className="w-4 h-4" />
-                <span>Editor</span>
-              </TabsTrigger>
-              <TabsTrigger 
-                value="preview" 
-                className="flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-sm font-medium transition-all duration-300 data-[state=active]:bg-white/10 data-[state=active]:text-white data-[state=active]:shadow-lg text-white/50 hover:text-white/80"
-              >
-                <Eye className="w-4 h-4" />
-                <span>Preview</span>
-              </TabsTrigger>
-              <TabsTrigger 
-                value="image" 
-                className="flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-sm font-medium transition-all duration-300 data-[state=active]:bg-white/10 data-[state=active]:text-white data-[state=active]:shadow-lg text-white/50 hover:text-white/80"
-              >
-                <Layers className="w-4 h-4" />
-                <span>Foto</span>
-              </TabsTrigger>
-            </TabsList>
+        <div className="flex-1 flex flex-col min-h-0">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
+            <div className="px-4 mt-2 mb-2 flex-shrink-0">
+              <TabsList className="w-full bg-white/5 backdrop-blur-sm rounded-2xl p-1.5 flex">
+                <TabsTrigger 
+                  value="editor" 
+                  className="flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-sm font-medium transition-all duration-300 data-[state=active]:bg-white/10 data-[state=active]:text-white data-[state=active]:shadow-lg text-white/50 hover:text-white/80"
+                >
+                  <FileText className="w-4 h-4" />
+                  <span>Editor</span>
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="preview" 
+                  className="flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-sm font-medium transition-all duration-300 data-[state=active]:bg-white/10 data-[state=active]:text-white data-[state=active]:shadow-lg text-white/50 hover:text-white/80"
+                >
+                  <Eye className="w-4 h-4" />
+                  <span>Preview</span>
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="image" 
+                  className="flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-sm font-medium transition-all duration-300 data-[state=active]:bg-white/10 data-[state=active]:text-white data-[state=active]:shadow-lg text-white/50 hover:text-white/80"
+                >
+                  <Layers className="w-4 h-4" />
+                  <span>Foto</span>
+                </TabsTrigger>
+              </TabsList>
+            </div>
 
             {/* Editor Tab */}
             <TabsContent value="editor" className="flex-1 overflow-y-auto mt-0 scroll-smooth">
@@ -4023,7 +4030,7 @@ export default function WAHome() {
           </TabsContent>
 
           {/* Image Merger Tab - Collage Editor */}
-          <TabsContent value="image" className="flex-1 flex flex-col mt-0">
+          <TabsContent value="image" className="flex-1 overflow-y-auto mt-0 min-h-0 bg-slate-900/50">
             <CollageEditor
               layers={collageLayers}
               setLayers={setCollageLayers}
