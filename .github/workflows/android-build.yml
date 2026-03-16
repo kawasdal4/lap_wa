@@ -38,34 +38,27 @@ jobs:
         run: |
           cd mobile
           npm install
-          npm install @capacitor/core @capacitor/cli @capacitor/android
+          npm install @capacitor/core @capacitor/cli @capacitor/android @capacitor/splash-screen @capacitor/status-bar
 
-      - name: Sync Capacitor
+      - name: Create www directory
+        run: |
+          mkdir -p mobile/www
+          echo '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Laporan WA</title></head><body><script>window.location.href="https://ap-wa.vercel.app"</script></body></html>' > mobile/www/index.html
+
+      - name: Initialize Capacitor Android
         run: |
           cd mobile
+          npx cap add android || true
           npx cap sync android
 
       - name: Build Debug APK
-        if: ${{ github.event.inputs.build_type != 'release' }}
         run: |
           cd mobile/android
           ./gradlew assembleDebug
 
-      - name: Build Release APK
-        if: ${{ github.event.inputs.build_type == 'release' }}
-        run: |
-          cd mobile/android
-          ./gradlew assembleRelease
-
-      - name: Rename Debug APK
-        if: ${{ github.event.inputs.build_type != 'release' }}
+      - name: Rename APK
         run: |
           mv mobile/android/app/build/outputs/apk/debug/app-debug.apk lap-wa.apk
-
-      - name: Rename Release APK
-        if: ${{ github.event.inputs.build_type == 'release' }}
-        run: |
-          mv mobile/android/app/build/outputs/apk/release/app-release.apk lap-wa.apk
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
