@@ -23,6 +23,13 @@ export default function DownloadAppButton() {
   const [isVisible, setIsVisible] = useState(true);
 
   useEffect(() => {
+    // Hide inside Native App
+    import('@capacitor/core').then(({ Capacitor }) => {
+      if (Capacitor.isNativePlatform()) {
+        setIsVisible(false);
+      }
+    }).catch(() => {});
+
     // Detect device type
     const userAgent = navigator.userAgent.toLowerCase();
     const isIOS = /iphone|ipad|ipod/.test(userAgent);

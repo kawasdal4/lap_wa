@@ -194,9 +194,9 @@
   padding-bottom: env(safe-area-inset-bottom);
 }
 
-/* Desktop: Show as centered phone frame */
+/* Desktop: Show as centered phone frame (Only for web) */
 @media (min-width: 480px) {
-  body {
+  html:not(.is-native) body {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -204,7 +204,7 @@
     background: linear-gradient(135deg, #05070a 0%, #0a0f1a 50%, #050810 100%);
   }
   
-  .app-frame {
+  html:not(.is-native) .app-frame {
     width: 100%;
     max-width: 430px;
     height: 95vh;

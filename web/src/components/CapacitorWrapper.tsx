@@ -30,6 +30,8 @@ export default function CapacitorWrapper() {
       const { Capacitor } = await import('@capacitor/core');
       if (!Capacitor.isNativePlatform()) return;
 
+      document.documentElement.classList.add('is-native');
+
       const platform = Capacitor.getPlatform();
 
       // --- Splash Screen ---

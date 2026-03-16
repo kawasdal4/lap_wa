@@ -49,17 +49,19 @@ export default function ClientWrapper({ children }: { children: React.ReactNode 
         {children}
       </div>
       
-      {/* Floating Copyright Button - Bottom Left */}
-      <div className="fixed bottom-3 left-3 z-[60] pl-[env(safe-area-inset-left)] pb-[env(safe-area-inset-bottom)]">
-        <CopyrightModal>
-          <button 
-            className="group relative cursor-pointer text-[10px] text-white/30 hover:text-white/60 transition-all duration-200 uppercase tracking-[0.15em] flex items-center gap-1.5 focus:outline-none active:scale-95"
-            aria-label="Copyright information"
-          >
-            <span className="w-1.5 h-1.5 bg-orange-500/40 rounded-full group-hover:bg-orange-500 group-hover:animate-pulse transition-colors" />
-            <span className="font-medium">© FOE - 2026</span>
-          </button>
-        </CopyrightModal>
+      {/* Floating Copyright Button - Bottom Center */}
+      <div className="fixed bottom-[calc(env(safe-area-inset-bottom)+12px)] left-0 right-0 z-[60] flex items-center justify-center pointer-events-none">
+        <div className="pointer-events-auto bg-black/40 backdrop-blur-sm rounded-full px-3 py-1.5 border border-white/10 shadow-lg">
+          <CopyrightModal>
+            <button 
+              className="group relative cursor-pointer text-[10px] text-white/70 hover:text-white transition-all duration-200 uppercase tracking-[0.15em] flex items-center gap-1.5 focus:outline-none active:scale-95"
+              aria-label="Copyright information"
+            >
+              <span className="w-1.5 h-1.5 bg-orange-500/60 rounded-full group-hover:bg-orange-500 group-hover:animate-pulse transition-colors" />
+              <span className="font-medium">© FOE - 2026</span>
+            </button>
+          </CopyrightModal>
+        </div>
       </div>
     </div>
   );
