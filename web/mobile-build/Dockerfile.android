@@ -1,0 +1,98 @@
+# Dockerfile for building Android APK
+# Usage: docker build -t lap-wa-android -f Dockerfile.android ..
+
+# Stage 1: Build Next.js app
+FROM node:20-alpine AS web-builder
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm ci
+
+# Copy source code
+COPY . .
+
+# Install Capacitor
+RUN npm install @capacitor/core @capacitor/cli
+
+# Update next.config for static export
+RUN cat > next.config.js << 'EOF'
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  output: "export",
+  trailingSlash: true,
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+  reactStrictMode: false,
+  images: {
+    unoptimized: true,
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "**"
+      }
+    ]
+  }
+};
+module.exports = nextConfig;
+EOF
+
+# Build static export
+RUN npm run build
+
+# Initialize Capacitor and add Android
+RUN npx cap init "Laporan WA" "id.go.basarnas.lapwa" --web-dir out || true
+RUN npm install @capacitor/android
+RUN npx cap add android || true
+RUN npx cap sync android
+
+# Stage 2: Build APK
+FROM ubuntu:22.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install dependencies
+RUN apt-get update && apt-get install -y \
+    openjdk-17-jdk \
+    wget \
+    unzip \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Setup Android SDK
+ENV ANDROID_HOME=/opt/android-sdk
+ENV ANDROID_SDK_ROOT=/opt/android-sdk
+
+RUN mkdir -p ${ANDROID_HOME}/cmdline-tools && \
+    wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O /tmp/cmdline-tools.zip && \
+    unzip -q /tmp/cmdline-tools.zip -d ${ANDROID_HOME}/cmdline-tools && \
+    mv ${ANDROID_HOME}/cmdline-tools/cmdline-tools ${ANDROID_HOME}/cmdline-tools/latest && \
+    rm /tmp/cmdline-tools.zip
+
+ENV PATH=${PATH}:${ANDROID_HOME}/cmdline-tools/latest/bin:${ANDROID_HOME}/platform-tools:${ANDROID_HOME}/build-tools/34.0.0
+
+# Accept licenses and install SDK
+RUN yes | sdkmanager --licenses 2>/dev/null | tail -1
+RUN sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
+
+WORKDIR /app
+
+# Copy built files from previous stage
+COPY --from=web-builder /app/android ./android
+COPY --from=web-builder /app/out ./out
+
+# Build APK
+WORKDIR /app/android
+RUN chmod +x gradlew
+RUN ./gradlew assembleDebug --no-daemon
+
+# Create output
+RUN mkdir -p /output && \
+    cp app/build/outputs/apk/debug/app-debug.apk /output/lap-wa.apk
+
+# Default command
+CMD ["sh", "-c", "cp /output/lap-wa.apk /output/ 2>/dev/null || ls -la /output"]
