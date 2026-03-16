@@ -46,24 +46,27 @@ jobs:
           rm -rf node_modules
           npm install
 
-      - name: Capacitor Sync & Build
+      - name: Capacitor Sync
         run: |
           cd web
           mkdir -p out
           echo "<html><body>Loading Laporan WA...</body></html>" > out/index.html
           npx cap sync android
-          cd android
+
+      - name: Build Android App
+        run: |
+          cd web/android
           chmod +x gradlew
           ./gradlew assembleRelease
 
-      - name: Debug APK Output
+      - name: Debug Output
         run: |
           ls -R web/android/app/build/outputs
 
-      - name: Collect APK
+      - name: Prepare App Binary
         run: |
           mkdir -p build-output
-          cp web/android/app/build/outputs/apk/release/app-release.apk build-output/lap-wa-release.apk
+          find web/android/app/build/outputs -type f \( -name "*.apk" -o -name "*.aab" \) -exec cp {} build-output/lap-wa-release.apk \;
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
