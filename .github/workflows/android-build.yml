@@ -44,10 +44,16 @@ jobs:
           mkdir -p web/out
           echo '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Laporan WA</title><style>body{background:#0b0f1a;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;color:white;font-family:sans-serif;}</style></head><body><div style="text-align:center"><h2>Loading...</h2></div><script>window.location.href="https://lap-wa.vercel.app"</script></body></html>' > web/out/index.html
  
+      - name: Debug - List Files
+        run: |
+          ls -la web/
+          ls -la web/android/ || echo "Android folder missing"
+          cat web/capacitor.config.ts
+ 
       - name: Sync Capacitor
         run: |
           cd web
-          npx cap sync android
+          npx cap sync android --verbose
  
       - name: Build Release APK
         run: |
