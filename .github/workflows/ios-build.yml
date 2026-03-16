@@ -19,7 +19,7 @@ jobs:
       - name: Install Dependencies
         run: |
           cd web
-          npm install
+          npm install --ignore-scripts
  
       - name: Create Web Assets (Bootstrap)
         run: |
