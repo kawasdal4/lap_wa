@@ -1,6 +1,6 @@
 {
-  "name": "Laporan WA Basarnas",
-  "short_name": "WA Report",
+  "name": "Laporan WA Generator",
+  "short_name": "WA Generator",
   "description": "Aplikasi pembuat laporan WhatsApp untuk Direktorat Kesiapsiagaan Basarnas. Buat laporan kegiatan dengan dokumentasi foto dan kirim langsung ke WhatsApp.",
   "display": "standalone",
   "orientation": "portrait",
@@ -14,45 +14,45 @@
   "dir": "ltr",
   "icons": [
     {
-      "src": "/icons/icon-48.webp",
+      "src": "https://pub-03210bb1ce9c4a419bd417ee47bd4e6d.r2.dev/logo-lap-wa.png",
       "sizes": "48x48",
-      "type": "image/webp",
+      "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/icons/icon-72.webp",
+      "src": "https://pub-03210bb1ce9c4a419bd417ee47bd4e6d.r2.dev/logo-lap-wa.png",
       "sizes": "72x72",
-      "type": "image/webp",
+      "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/icons/icon-96.webp",
+      "src": "https://pub-03210bb1ce9c4a419bd417ee47bd4e6d.r2.dev/logo-lap-wa.png",
       "sizes": "96x96",
-      "type": "image/webp",
+      "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/icons/icon-128.webp",
+      "src": "https://pub-03210bb1ce9c4a419bd417ee47bd4e6d.r2.dev/logo-lap-wa.png",
       "sizes": "128x128",
-      "type": "image/webp",
+      "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/icons/icon-192.webp",
+      "src": "https://pub-03210bb1ce9c4a419bd417ee47bd4e6d.r2.dev/logo-lap-wa.png",
       "sizes": "192x192",
-      "type": "image/webp",
+      "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/icons/icon-256.webp",
+      "src": "https://pub-03210bb1ce9c4a419bd417ee47bd4e6d.r2.dev/logo-lap-wa.png",
       "sizes": "256x256",
-      "type": "image/webp",
+      "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/icons/icon-512.webp",
+      "src": "https://pub-03210bb1ce9c4a419bd417ee47bd4e6d.r2.dev/logo-lap-wa.png",
       "sizes": "512x512",
-      "type": "image/webp",
+      "type": "image/png",
       "purpose": "any maskable"
     }
   ],
@@ -73,7 +73,7 @@
       "url": "/?action=new",
       "icons": [
         {
-          "src": "/icons/icon-96.webp",
+          "src": "https://pub-03210bb1ce9c4a419bd417ee47bd4e6d.r2.dev/logo-lap-wa.png",
           "sizes": "96x96"
         }
       ]
