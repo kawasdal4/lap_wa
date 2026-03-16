@@ -1,8 +1,11 @@
 "use client"
 
 import React, { useEffect, useState, useCallback } from "react";
+import dynamic from 'next/dynamic';
 import AppSplash from "./AppSplash";
 import CopyrightModal from "./CopyrightModal";
+
+const CapacitorWrapper = dynamic(() => import('./CapacitorWrapper'), { ssr: false });
 
 export default function ClientWrapper({ children }: { children: React.ReactNode }) {
   const [isReady, setIsReady] = useState(false);
@@ -37,6 +40,7 @@ export default function ClientWrapper({ children }: { children: React.ReactNode 
       className="app-frame"
       onContextMenu={handleContextMenu}
     >
+      <CapacitorWrapper />
       {/* Splash Screen */}
       {!isReady && <AppSplash />}
       
