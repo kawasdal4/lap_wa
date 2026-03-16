@@ -1,27 +1,56 @@
 name: Build iOS
-
+ 
 on:
   push:
     branches: [ main ]
-
+  workflow_dispatch:
+ 
 jobs:
   build:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v3
-
-      - name: Install Node
-        uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+ 
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
           node-version: 20
-
-      - name: Install Mobile Dependencies
+ 
+      - name: Install Dependencies
         run: |
-          cd mobile
+          cd web
           npm install
-          npm install @capacitor/core @capacitor/cli @capacitor/ios
-
+ 
+      - name: Create Web Assets (Bootstrap)
+        run: |
+          mkdir -p web/out
+          echo '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Laporan WA</title><style>body{background:#0b0f1a;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;color:white;font-family:sans-serif;}</style></head><body><div style="text-align:center"><h2>Loading...</h2></div><script>window.location.href="https://lap-wa.vercel.app"</script></body></html>' > web/out/index.html
+ 
       - name: Sync Capacitor
         run: |
-          cd mobile
+          cd web
           npx cap sync ios
+ 
+      - name: Build iOS App
+        run: |
+          cd web/ios/App
+          xcodebuild -workspace App.xcworkspace -scheme App -sdk iphoneos -configuration Release CODE_SIGNING_ALLOWED=NO
+ 
+      - name: Prepare for R2
+        run: |
+          # Create a dummy or zipped app if ipa is not available without signing
+          mkdir -p output
+          cd web/ios/App
+          zip -r ../../../output/app-release.ipa .
+ 
+      - name: Upload to R2
+        env:
+          R2_ACCESS_KEY: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          R2_BUCKET: ${{ secrets.R2_BUCKET_NAME }}
+          R2_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
+        if: ${{ env.R2_ACCESS_KEY != '' }}
+        run: |
+          pip install awscli
+          aws s3 cp output/app-release.ipa s3://${R2_BUCKET}/mobile-builds/ios/app-release.ipa \
+            --endpoint-url ${R2_ENDPOINT}
