@@ -1613,7 +1613,7 @@ const CollageEditor = ({
               fontWeight: "bold",
               touchAction: "none",
               width: "90%",
-              ...getTextStyleCSS(layers.title.textStyle, layers.background.url ? layers.title.color : "#FFFFFF"),
+              ...getTextStyleCSS(layers.title.textStyle, layers.title.color),
               lineHeight: 1.2,
               display: "-webkit-box",
               WebkitLineClamp: 2,
@@ -1635,7 +1635,7 @@ const CollageEditor = ({
               transform: "translate(-50%, -50%)",
               fontSize: layers.subtitle.fontSize,
               touchAction: "none",
-              ...getTextStyleCSS(layers.subtitle.textStyle, layers.background.url ? layers.subtitle.color : "#CBD5E1"),
+              ...getTextStyleCSS(layers.subtitle.textStyle, layers.subtitle.color),
               width: "90%",
               whiteSpace: "nowrap",
               overflow: "hidden",
@@ -1656,12 +1656,17 @@ const CollageEditor = ({
               transform: "translate(-50%, -50%)",
               fontSize: layers.footer.fontSize,
               touchAction: "none",
-              ...getTextStyleCSS(layers.footer.textStyle, layers.background.url ? layers.footer.color : "#FFFFFF")
+              ...getTextStyleCSS(layers.footer.textStyle, layers.footer.color)
             }}
           >
             {layers.footer.text || "Footer text"}
           </div>
         </div>
+
+        {/* Bottom spacer to allow scrolling up when tools are active and obscuring parts of the canvas */}
+        {activeTool && (
+          <div className="h-[40vh] pointer-events-none" />
+        )}
 
         {/* Action buttons above toolbar */}
         {mergedImage && (
@@ -2262,7 +2267,7 @@ export default function WAHome() {
       color: "#CBD5E1"
     },
     footer: {
-      text: "┬⌐ Direktorat Kesiapsiagaan",
+      text: "© Direktorat Kesiapsiagaan",
       x: 50,
       y: 95,
       fontSize: 14,
@@ -3178,10 +3183,11 @@ export default function WAHome() {
       
       // Footer content
       const footerContent = footerConfig.content;
+      const finalFooterText = collageLayers.footer.text || footerContent.organization.text;
       ctx.fillStyle = footerContent.organization.color;
       ctx.font = `${footerContent.organization.fontWeight} ${footerContent.organization.fontSize}px Arial`;
       ctx.textAlign = "center";
-      ctx.fillText(footerContent.organization.text, canvasWidth / 2, canvasHeight - footerConfig.height + 35);
+      ctx.fillText(finalFooterText, canvasWidth / 2, canvasHeight - footerConfig.height + 35);
       
       // Contact info
       ctx.fillStyle = footerContent.contactInfo.color;
@@ -3442,7 +3448,7 @@ export default function WAHome() {
     try {
       setIsSendingWA(true);
 
-      // 1∩╕ÅΓâú Export gambar
+      // 1️⃣ Export gambar
       if (!mergedImage) {
         toast.error("Silakan klik Export terlebih dahulu!");
         return;
@@ -3451,13 +3457,13 @@ export default function WAHome() {
       toast.info("Menyiapkan foto...");
       await exportPhotoFile();
 
-      // 2∩╕ÅΓâú Kirim text
+      // 2️⃣ Kirim text
       toast.info("Membuka WhatsApp...");
       kirimTextWA(phoneNumber, laporanText);
       
       toast.success("Laporan teks terkirim!");
 
-      // 3∩╕ÅΓâú Munculkan tombol kirim foto setelah 1.5 detik
+      // 3️⃣ Munculkan tombol kirim foto setelah 1.5 detik
       setTimeout(() => {
         setShowSendPhotoButton(true);
         setIsSendingWA(false);
