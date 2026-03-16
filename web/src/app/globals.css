@@ -147,7 +147,6 @@
     min-height: 100dvh;
     overflow-x: hidden;
     overflow-y: auto;
-    overscroll-behavior: none;
     -webkit-overflow-scrolling: touch;
     
     /* Safe area support for notch devices */
@@ -158,12 +157,6 @@
     
     /* Native app feel */
     position: relative;
-    touch-action: manipulation;
-  }
-  
-  /* Prevent pull-to-refresh on mobile */
-  body {
-    overscroll-behavior-y: contain;
   }
 }
 

@@ -1369,6 +1369,7 @@ const CollageEditor = ({
               initialPosition={{ x: layers.background.x, y: layers.background.y }}
               onScaleChange={(newScale) => updateLayer("background", { scale: newScale })}
               onPositionChange={(newPos) => updateLayer("background", { x: newPos.x, y: newPos.y })}
+              active={activeTool === "background"}
             />
           ) : (
             <div 
