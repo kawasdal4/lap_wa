@@ -4,6 +4,16 @@ import path from "path";
 import { execSync } from "child_process";
 import dotenv from "dotenv";
 
+// Check Node.js version
+const nodeVersion = process.versions.node;
+const majorVersion = parseInt(nodeVersion.split('.')[0]);
+
+if (majorVersion < 22) {
+  console.error('\x1b[31m%s\x1b[0m', 'Error: Node.js 22 or higher is required for Capacitor builds.');
+  console.error(`Current version: ${nodeVersion}`);
+  process.exit(1);
+}
+
 // Load environment variables from .env.local
 const envPath = path.join(process.cwd(), ".env.local");
 console.log(`Loading environment from: ${envPath}`);
