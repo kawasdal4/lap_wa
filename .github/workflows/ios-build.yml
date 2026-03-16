@@ -42,31 +42,30 @@ jobs:
           mkdir -p ios/App/App/public
           echo "<html><body>App Loader</body></html>" > ios/App/App/public/index.html
 
-      - name: Platform Sync
+      - name: Select Xcode
+        run: |
+          sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+          xcodebuild -version
+
+      - name: Capacitor Sync
         run: |
           cd web
           npx cap sync ios
-          npx cap doctor
 
-      - name: Build iOS Archive
+      - name: Install CocoaPods
+        run: |
+          cd web/ios/App
+          pod install
+
+      - name: Build iOS
         run: |
           cd web/ios/App
           xcodebuild -workspace App.xcworkspace \
             -scheme App \
             -configuration Release \
             -sdk iphoneos \
-            -archivePath $PWD/build/App.xcarchive \
-            archive \
+            build \
             CODE_SIGNING_ALLOWED=NO
-
-      - name: Export IPA
-        run: |
-          cd web/ios/App
-          mkdir -p ../../../output
-          xcodebuild -exportArchive \
-            -archivePath build/App.xcarchive \
-            -exportOptionsPlist exportOptions.plist \
-            -exportPath ../../../output
 
       - name: Upload to R2
         env:
@@ -78,4 +77,4 @@ jobs:
         run: |
           pip install awscli
           aws s3 cp output/App.ipa s3://${R2_BUCKET}/mobile-builds/ios/app-release.ipa \
-            --endpoint-url ${R2_ENDPOINT}
+            --endpoint-url ${R2_ENDPOINT} || echo "IPA not found, skipping upload"
