@@ -20,6 +20,7 @@ import {
   Strikethrough, Code, MapPin, Map as MapIcon, Loader2, Move, ZoomIn, ZoomOut
 } from "lucide-react";
 import { toast } from "sonner";
+import CopyrightModal from "@/components/CopyrightModal";
 // Build Stability: layoutConfig will be loaded dynamically in the WAHome component
 const DEFAULT_LAYOUT = {
   canvas: { width: 420, height: 747 },
@@ -1052,6 +1053,33 @@ const CollageEditor = ({
   const photoInputRef = useRef<HTMLInputElement>(null);
   const [activeTool, setActiveTool] = useState<string | null>(null);
   const [selectedPhoto, setSelectedPhoto] = useState<number | null>(null);
+  const [showToolbar, setShowToolbar] = useState(true);
+  const toolbarTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Auto-hide toolbar logic
+  const resetToolbarTimer = useCallback(() => {
+    setShowToolbar(true);
+    if (toolbarTimerRef.current) clearTimeout(toolbarTimerRef.current);
+    
+    // Only auto-hide if no tool is active
+    if (!activeTool) {
+      toolbarTimerRef.current = setTimeout(() => {
+        setShowToolbar(false);
+      }, 5000); // 5 seconds inactivity
+    }
+  }, [activeTool]);
+
+  useEffect(() => {
+    resetToolbarTimer();
+    return () => {
+      if (toolbarTimerRef.current) clearTimeout(toolbarTimerRef.current);
+    };
+  }, [resetToolbarTimer, activeTool]);
+
+  // Handle interaction to reset timer
+  const handleInteraction = () => {
+    resetToolbarTimer();
+  };
 
   // =============================
   // GRID SNAP SYSTEM
@@ -1650,8 +1678,21 @@ const CollageEditor = ({
       </div>
 
       {/* Bottom Toolbar */}
-      <div className="absolute bottom-0 left-0 right-0 bg-[rgba(10,20,35,0.95)] border-t border-white/10 z-50 px-safe" style={{ height: "72px" }}>
-        <div className="flex justify-around items-center h-full px-2">
+      <div 
+        className={`absolute bottom-0 left-0 right-0 bg-[rgba(10,20,35,0.95)] border-t border-white/10 z-50 px-safe transition-transform duration-500 ease-in-out ${
+          showToolbar ? "translate-y-0" : "translate-y-full"
+        }`} 
+        style={{ height: "72px" }}
+      >
+        {/* Manual Hide Tablet/Handle */}
+        <button 
+          onClick={() => setShowToolbar(false)}
+          className="absolute -top-6 left-1/2 -translate-x-1/2 px-4 py-1.5 bg-[rgba(10,20,35,0.95)] border-t border-x border-white/10 rounded-t-xl text-white/30 hover:text-white/60 transition-colors flex flex-col items-center"
+        >
+          <ChevronDown className="w-4 h-4" />
+        </button>
+
+        <div className="flex justify-around items-center h-full px-2" onClick={handleInteraction}>
           <button
             onClick={() => setActiveTool(activeTool === "background" ? null : "background")}
             className={`flex flex-col items-center gap-1 transition-all ${
@@ -1718,40 +1759,17 @@ const CollageEditor = ({
         </div>
       </div>
 
-      {/* Add pulseGlow animation style */}
-      <style jsx global>{`
-        @keyframes pulseGlow {
-          0%, 100% { filter: drop-shadow(0 0 2px rgba(16, 185, 129, 0.4)); }
-          50% { filter: drop-shadow(0 0 12px rgba(16, 185, 129, 0.8)); }
-        }
-        @keyframes logoGlow {
-          0%, 100% { 
-            filter: drop-shadow(0 0 5px currentColor);
-            opacity: 0.7; 
-            transform: scale(1);
-          }
-          50% { 
-            filter: drop-shadow(0 0 15px currentColor);
-            opacity: 1; 
-            transform: scale(1.05);
-          }
-        }
-        @keyframes gradientX {
-          0%, 100% { 
-            background-position: 0% 50%;
-          }
-          50% { 
-            background-position: 100% 50%;
-          }
-        }
-        .animate-pulse-glow {
-          animation: logoGlow 2s ease-in-out infinite;
-        }
-        .animate-gradient-x {
-          background-size: 200% 200%;
-          animation: gradientX 3s ease infinite;
-        }
-      `}</style>
+      {/* Show Toggle Arrow (only when hidden) */}
+      <button
+        onClick={() => setShowToolbar(true)}
+        className={`absolute bottom-4 left-1/2 -translate-x-1/2 w-10 h-10 bg-blue-600/90 backdrop-blur-md rounded-full border border-blue-400/30 flex items-center justify-center text-white shadow-lg transition-all duration-500 z-[60] ${
+          showToolbar ? "opacity-0 translate-y-20 pointer-events-none" : "opacity-100 translate-y-0 animate-bounce"
+        }`}
+      >
+        <ChevronUp className="w-6 h-6" />
+      </button>
+
+      {/* Action buttons or other overlays can stay here */}
 
       {/* Tool Panels - Redesigned to be partial width/height to avoid full obstruction */}
       {/* Background Panel */}
@@ -2135,6 +2153,22 @@ const CollageEditor = ({
 
 export default function WAHome() {
   const [layoutConfig, setLayoutConfig] = useState<any>(DEFAULT_LAYOUT);
+  const [isMobileWeb, setIsMobileWeb] = useState(false);
+
+  useEffect(() => {
+    const checkPlatform = async () => {
+      try {
+        const { Capacitor } = await import('@capacitor/core');
+        const isNative = Capacitor.isNativePlatform();
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        setIsMobileWeb(!isNative && isMobile);
+      } catch (e) {
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        setIsMobileWeb(isMobile);
+      }
+    };
+    checkPlatform();
+  }, []);
 
   useEffect(() => {
     console.log("[WAHome] Fetching layout config...");
@@ -3480,7 +3514,37 @@ export default function WAHome() {
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
+              {isMobileWeb && (
+                <>
+                  <CopyrightModal>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="w-8 h-8 text-white/40 hover:text-white/80 hover:bg-white/5 rounded-full"
+                    >
+                      <span className="text-[10px] font-bold">©</span>
+                    </Button>
+                  </CopyrightModal>
+                  
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => {
+                      const userAgent = navigator.userAgent.toLowerCase();
+                      if (/android/.test(userAgent)) {
+                        window.location.href = "https://pub-03210bb1ce9c4a419bd417ee47bd4e6d.r2.dev/mobile-builds/android/app-release.apk";
+                      } else {
+                        toast.info("Gunakan tombol Download di bawah untuk instruksi iOS/Desktop");
+                      }
+                    }}
+                    className="w-8 h-8 text-blue-400/60 hover:text-blue-400 hover:bg-white/5 rounded-full"
+                  >
+                    <Download className="w-4 h-4" />
+                  </Button>
+                </>
+              )}
+
               <Button
                 variant="ghost"
                 size="icon"

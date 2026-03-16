@@ -40,6 +40,15 @@ export default function DownloadAppButton() {
       if (typeof window !== 'undefined' && (window as any).Capacitor?.isNativePlatform()) {
         setIsVisible(false);
       }
+
+      // Hide on Mobile Web (moved to header)
+      const userAgent = navigator.userAgent.toLowerCase();
+      const isMobile = /iphone|ipad|ipod|android/.test(userAgent);
+      const isNative = typeof window !== 'undefined' && (window as any).Capacitor?.isNativePlatform();
+      
+      if (!isNative && isMobile) {
+        setIsVisible(false);
+      }
     };
 
     checkNative();
