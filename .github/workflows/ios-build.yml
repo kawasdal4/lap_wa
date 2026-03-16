@@ -1,54 +1,62 @@
 name: Build iOS
- 
+
 on:
   push:
     branches: [ main ]
   workflow_dispatch:
- 
+
 jobs:
   build:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
- 
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 22
- 
-      - name: Install Dependencies
+          cache: 'npm'
+
+      - name: Environment Debug
+        run: |
+          node -v
+          npm -v
+
+      - name: Dependency Cleanup & Install
         run: |
           cd web
-          npm install --ignore-scripts
- 
-      - name: Create Web Assets (Bootstrap)
-        run: |
-          mkdir -p web/out
-          echo '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Laporan WA</title><style>body{background:#0b0f1a;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;color:white;font-family:sans-serif;}</style></head><body><div style="text-align:center"><h2>Loading...</h2></div><script>window.location.href="https://lap-wa.vercel.app"</script></body></html>' > web/out/index.html
- 
-      - name: Debug - List Files
-        run: |
-          ls -la web/
-          ls -la web/ios/ || echo "iOS folder missing"
-          cat web/capacitor.config.ts
- 
-      - name: Sync Capacitor
+          rm -rf node_modules
+          rm -f package-lock.json
+          npm install
+          npm install @capacitor/core @capacitor/cli @capacitor/ios
+          npx cap --version
+
+      - name: Build Web App
+        env:
+          DATABASE_URL: "file:./dummy.db"
+          NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: "AIzaSy..."
         run: |
           cd web
-          npx cap sync ios --verbose
- 
+          npm run build
+
+      - name: Platform Verification & Sync
+        run: |
+          cd web
+          npx cap add ios || echo "iOS platform already exists"
+          npx cap sync ios
+          npx cap doctor
+
       - name: Build iOS App
         run: |
           cd web/ios/App
           xcodebuild -workspace App.xcworkspace -scheme App -sdk iphoneos -configuration Release CODE_SIGNING_ALLOWED=NO
- 
+
       - name: Prepare for R2
         run: |
-          # Create a dummy or zipped app if ipa is not available without signing
           mkdir -p output
           cd web/ios/App
           zip -r ../../../output/app-release.ipa .
- 
+
       - name: Upload to R2
         env:
           R2_ACCESS_KEY: ${{ secrets.R2_ACCESS_KEY_ID }}
