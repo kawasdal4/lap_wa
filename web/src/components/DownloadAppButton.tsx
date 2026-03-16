@@ -1,14 +1,15 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Download, Smartphone, Apple, Android } from "lucide-react";
+import { Download, Apple, Android, Smartphone, X } from "lucide-react";
 
 type DeviceType = "android" | "ios" | "other";
 
 export default function DownloadAppButton() {
   const [deviceType, setDeviceType] = useState<DeviceType>("other");
   const [isHovered, setIsHovered] = useState(false);
-  const [showTooltip, setShowTooltip] = useState(false);
+  const [showMobilePopup, setShowMobilePopup] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
 
   useEffect(() => {
     // Detect device type
@@ -25,21 +26,19 @@ export default function DownloadAppButton() {
   const handleDownload = () => {
     // In a real app, these would be actual download URLs
     if (deviceType === "android") {
-      // APK download URL
       window.open("https://github.com/kawasdal4/lap_wa/releases", "_blank");
     } else if (deviceType === "ios") {
-      // App Store URL
       window.open("https://github.com/kawasdal4/lap_wa/releases", "_blank");
     } else {
-      // Desktop - show options
       window.open("https://github.com/kawasdal4/lap_wa/releases", "_blank");
     }
+    setShowMobilePopup(false);
   };
 
   const getDeviceIcon = () => {
-    if (deviceType === "ios") return <Apple className="w-5 h-5" />;
-    if (deviceType === "android") return <Android className="w-5 h-5" />;
-    return <Smartphone className="w-5 h-5" />;
+    if (deviceType === "ios") return <Apple className="w-5 h-5 xl:w-4 xl:h-4" />;
+    if (deviceType === "android") return <Android className="w-5 h-5 xl:w-4 xl:h-4" />;
+    return <Smartphone className="w-5 h-5 xl:w-4 xl:h-4" />;
   };
 
   const getDownloadText = () => {
@@ -48,9 +47,149 @@ export default function DownloadAppButton() {
     return "Get App";
   };
 
+  if (!isVisible) return null;
+
   return (
     <>
-      {/* Main Download Button - Outside app frame (desktop only) */}
+      {/* Mobile FAB Button - Visible on all screens < xl */}
+      <div className="fixed bottom-20 right-3 z-[100] xl:hidden">
+        {/* Glow Effect */}
+        <div className="absolute inset-0 scale-125">
+          <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 via-cyan-400 to-blue-500 animate-glow-pulse-mobile blur-lg" />
+        </div>
+
+        {/* Floating Particles - Mobile */}
+        <div className="absolute -inset-4 overflow-visible pointer-events-none">
+          <div className="absolute top-0 left-1/2 w-1.5 h-1.5 bg-cyan-400 rounded-full animate-float-particle-1 opacity-60" />
+          <div className="absolute bottom-0 right-0 w-1 h-1 bg-blue-400 rounded-full animate-float-particle-2 opacity-50" />
+        </div>
+
+        {/* FAB Button */}
+        <button
+          onClick={() => setShowMobilePopup(true)}
+          className="relative w-14 h-14 rounded-full flex items-center justify-center text-white transition-all duration-300 active:scale-90"
+          style={{
+            background: "linear-gradient(135deg, #1e40af 0%, #0891b2 50%, #1e40af 100%)",
+            backgroundSize: "200% 200%",
+            animation: "gradientShift 3s ease infinite",
+            boxShadow: `
+              0 0 20px rgba(59, 130, 246, 0.6),
+              0 0 40px rgba(59, 130, 246, 0.4),
+              0 0 60px rgba(59, 130, 246, 0.2),
+              inset 0 1px 0 rgba(255, 255, 255, 0.3)
+            `,
+          }}
+        >
+          {/* Shimmer */}
+          <div className="absolute inset-0 rounded-full overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-transparent -translate-x-full animate-shimmer" />
+          </div>
+
+          {/* Icon */}
+          <Download className="w-6 h-6 relative z-10" />
+
+          {/* Pulse Ring */}
+          <div className="absolute inset-0 rounded-full border-2 border-cyan-400/50 animate-ping-slow" />
+        </button>
+      </div>
+
+      {/* Mobile Popup Modal */}
+      {showMobilePopup && (
+        <div className="fixed inset-0 z-[200] flex items-end justify-center xl:hidden">
+          {/* Backdrop */}
+          <div 
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in"
+            onClick={() => setShowMobilePopup(false)}
+          />
+
+          {/* Modal Content */}
+          <div className="relative w-full max-w-sm mx-3 mb-6 animate-slide-up-mobile">
+            {/* Glow Background */}
+            <div className="absolute inset-0 rounded-3xl bg-gradient-to-r from-blue-500/20 via-cyan-400/20 to-blue-500/20 blur-xl" />
+
+            <div className="relative bg-slate-900/95 border border-cyan-500/30 rounded-3xl p-5 backdrop-blur-xl shadow-2xl">
+              {/* Close Button */}
+              <button
+                onClick={() => setShowMobilePopup(false)}
+                className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/20 transition-all"
+              >
+                <X className="w-4 h-4" />
+              </button>
+
+              {/* Header */}
+              <div className="text-center mb-4">
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-400 mb-3 shadow-lg">
+                  {deviceType === "ios" ? (
+                    <Apple className="w-8 h-8 text-white" />
+                  ) : deviceType === "android" ? (
+                    <Android className="w-8 h-8 text-white" />
+                  ) : (
+                    <Smartphone className="w-8 h-8 text-white" />
+                  )}
+                </div>
+                <h3 className="text-xl font-bold text-white">
+                  Install Aplikasi
+                </h3>
+                <p className="text-sm text-cyan-200/70 mt-1">
+                  Nikmati pengalaman lebih baik dengan aplikasi native
+                </p>
+              </div>
+
+              {/* Features */}
+              <div className="space-y-2 mb-5">
+                {[
+                  "Akses offline tanpa internet",
+                  "Notifikasi real-time",
+                  "Performa lebih cepat",
+                  "Integrasi native device"
+                ].map((feature, i) => (
+                  <div key={i} className="flex items-center gap-2 text-sm text-gray-300">
+                    <div className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
+                    {feature}
+                  </div>
+                ))}
+              </div>
+
+              {/* Download Button */}
+              <button
+                onClick={handleDownload}
+                className="w-full py-4 rounded-2xl font-bold text-white transition-all duration-300 active:scale-95 relative overflow-hidden"
+                style={{
+                  background: "linear-gradient(135deg, #1e40af 0%, #0891b2 50%, #1e40af 100%)",
+                  backgroundSize: "200% 200%",
+                  animation: "gradientShift 3s ease infinite",
+                  boxShadow: `
+                    0 0 25px rgba(59, 130, 246, 0.5),
+                    0 4px 15px rgba(0, 0, 0, 0.3)
+                  `,
+                }}
+              >
+                {/* Shimmer */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full animate-shimmer-slow" />
+                <div className="relative flex items-center justify-center gap-2">
+                  <Download className="w-5 h-5" />
+                  <span className="text-sm uppercase tracking-wider">
+                    {getDownloadText()}
+                  </span>
+                </div>
+              </button>
+
+              {/* Dismiss Link */}
+              <button
+                onClick={() => {
+                  setIsVisible(false);
+                  setShowMobilePopup(false);
+                }}
+                className="w-full mt-3 py-2 text-xs text-gray-400 hover:text-gray-300 transition-colors"
+              >
+                Jangan tampilkan lagi
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Desktop Download Button - xl screens only */}
       <div 
         className="fixed bottom-6 right-6 z-[100] hidden xl:flex"
         onMouseEnter={() => setIsHovered(true)}
@@ -60,11 +199,8 @@ export default function DownloadAppButton() {
         <div className="relative">
           {/* Animated Glow Rings */}
           <div className="absolute inset-0 scale-150">
-            {/* Outer pulse ring */}
             <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 via-cyan-400 to-blue-500 opacity-0 animate-glow-pulse-1 blur-xl" />
-            {/* Middle pulse ring */}
             <div className="absolute inset-0 rounded-full bg-gradient-to-r from-cyan-400 via-blue-500 to-cyan-400 opacity-0 animate-glow-pulse-2 blur-lg" />
-            {/* Inner pulse ring */}
             <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-400 via-cyan-300 to-blue-400 opacity-0 animate-glow-pulse-3 blur-md" />
           </div>
 
@@ -131,7 +267,6 @@ export default function DownloadAppButton() {
             }`}
           >
             <div className="relative px-4 py-2 rounded-xl bg-slate-900/95 border border-cyan-500/30 backdrop-blur-sm shadow-2xl">
-              {/* Arrow */}
               <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-px">
                 <div className="w-3 h-3 rotate-45 bg-slate-900 border-r border-b border-cyan-500/30" />
               </div>
@@ -146,7 +281,7 @@ export default function DownloadAppButton() {
         </div>
       </div>
 
-      {/* Styles */}
+      {/* Global Styles */}
       <style jsx global>{`
         @keyframes glow-pulse-1 {
           0%, 100% { opacity: 0.3; transform: scale(1); }
@@ -160,15 +295,14 @@ export default function DownloadAppButton() {
           0%, 100% { opacity: 0.4; transform: scale(0.9); }
           50% { opacity: 0.7; transform: scale(1.1); }
         }
-        .animate-glow-pulse-1 {
-          animation: glow-pulse-1 2s ease-in-out infinite;
+        @keyframes glow-pulse-mobile {
+          0%, 100% { opacity: 0.4; transform: scale(1); }
+          50% { opacity: 0.7; transform: scale(1.15); }
         }
-        .animate-glow-pulse-2 {
-          animation: glow-pulse-2 2s ease-in-out infinite 0.3s;
-        }
-        .animate-glow-pulse-3 {
-          animation: glow-pulse-3 2s ease-in-out infinite 0.6s;
-        }
+        .animate-glow-pulse-1 { animation: glow-pulse-1 2s ease-in-out infinite; }
+        .animate-glow-pulse-2 { animation: glow-pulse-2 2s ease-in-out infinite 0.3s; }
+        .animate-glow-pulse-3 { animation: glow-pulse-3 2s ease-in-out infinite 0.6s; }
+        .animate-glow-pulse-mobile { animation: glow-pulse-mobile 1.5s ease-in-out infinite; }
 
         @keyframes float-particle-1 {
           0%, 100% { transform: translateY(0) translateX(0); opacity: 0.6; }
@@ -196,6 +330,35 @@ export default function DownloadAppButton() {
           50% { background-position: 100% 50%; }
           100% { background-position: 0% 50%; }
         }
+
+        @keyframes shimmer {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(100%); }
+        }
+        @keyframes shimmer-slow {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(100%); }
+        }
+        .animate-shimmer { animation: shimmer 2s ease-in-out infinite; }
+        .animate-shimmer-slow { animation: shimmer 3s ease-in-out infinite; }
+
+        @keyframes ping-slow {
+          0% { transform: scale(1); opacity: 0.5; }
+          100% { transform: scale(1.5); opacity: 0; }
+        }
+        .animate-ping-slow { animation: ping-slow 1.5s ease-out infinite; }
+
+        @keyframes fade-in {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        .animate-fade-in { animation: fade-in 0.2s ease-out; }
+
+        @keyframes slide-up-mobile {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-slide-up-mobile { animation: slide-up-mobile 0.3s ease-out; }
       `}</style>
     </>
   );
