@@ -34,21 +34,28 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
+      - name: Debug - List mobile folder
+        run: |
+          ls -la mobile/
+          cat mobile/package.json
+          cat mobile/capacitor.config.ts || echo "No capacitor.config.ts"
+
       - name: Install Mobile Dependencies
         run: |
           cd mobile
           npm install
-          npm install @capacitor/core @capacitor/cli @capacitor/android @capacitor/splash-screen @capacitor/status-bar
+          npm list --depth=0
 
       - name: Create www directory
         run: |
           mkdir -p mobile/www
           echo '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Laporan WA</title></head><body><script>window.location.href="https://ap-wa.vercel.app"</script></body></html>' > mobile/www/index.html
+          ls -la mobile/www/
 
       - name: Initialize Capacitor
         run: |
           cd mobile
-          npx cap init "Laporan WA" "id.go.basarnas.lapwa" --web-dir www || true
+          npx cap init "Laporan WA" "id.go.basarnas.lapwa" --web-dir www || echo "Capacitor already initialized"
 
       - name: Add Android Platform
         run: |
