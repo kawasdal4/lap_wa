@@ -4,6 +4,9 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import ClientWrapper from "@/components/ClientWrapper";
 import DownloadAppButton from "@/components/DownloadAppButton";
+import dynamic from 'next/dynamic';
+
+const CapacitorWrapper = dynamic(() => import('@/components/CapacitorWrapper'), { ssr: false });
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -128,6 +131,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#0b0f1a] text-foreground`}
       >
+        <CapacitorWrapper />
         <ClientWrapper>
           {children}
         </ClientWrapper>
