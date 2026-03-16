@@ -54,11 +54,15 @@ jobs:
           cd web
           npm run build
 
+      - name: Prepare Capacitor Web Assets
+        run: |
+          cd web
+          mkdir -p android/app/src/main/assets/public
+          echo "<html><body>App Loader</body></html>" > android/app/src/main/assets/public/index.html
+ 
       - name: Platform Verification & Sync
         run: |
           cd web
-          mkdir -p android/app/src/main/assets
-          mkdir -p android/app/src/main/assets/public
           npx cap sync android
           npx cap doctor
 
