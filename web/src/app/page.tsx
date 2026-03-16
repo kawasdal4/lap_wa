@@ -889,6 +889,67 @@ interface PhotoLayer {
   scale: number;   // zoom scale
 }
 
+const TEXT_STYLES = [
+  { id: "none", label: "Normal" },
+  { id: "outer_glow", label: "Outer Glow" },
+  { id: "inner_glow", label: "Inner Glow" },
+  { id: "neon_glow", label: "Neon Glow" },
+  { id: "soft_glow", label: "Soft Glow" },
+  { id: "gradient", label: "Gradient Text" },
+  { id: "gradient_glow", label: "Gradient + Glow" },
+  { id: "drop_shadow", label: "Drop Shadow" },
+  { id: "soft_shadow", label: "Soft Drop Shadow" },
+  { id: "long_shadow", label: "Long Shadow" },
+  { id: "3d_extrude", label: "3D Extrude" },
+  { id: "outline", label: "Outline Stroke" },
+  { id: "outline_glow", label: "Outline + Glow" },
+  { id: "glass", label: "Glass / Frosted Text" },
+  { id: "metallic", label: "Metallic / Chrome Text" },
+  { id: "gold", label: "Gold Gradient Text" },
+  { id: "silver", label: "Silver Metallic Text" },
+  { id: "emboss", label: "Emboss Text" },
+  { id: "deboss", label: "Deboss Text" },
+  { id: "blur_glow", label: "Blur Glow Text" },
+  { id: "cyberpunk", label: "Cyberpunk Neon Text" },
+  { id: "holographic", label: "Holographic Text" },
+  { id: "liquid", label: "Liquid Gradient Text" },
+  { id: "glassmorphism", label: "Glassmorphism Text" },
+  { id: "floating", label: "Floating Shadow Text" },
+  { id: "layered", label: "Layered Shadow Text" },
+];
+
+const getTextStyleCSS = (styleId: string | undefined, color: string): React.CSSProperties => {
+  if (!styleId || styleId === "none") return { color, textShadow: "0 2px 4px rgba(0,0,0,0.5)" };
+  switch (styleId) {
+    case "outer_glow": return { color, textShadow: `0 0 5px ${color}, 0 0 10px ${color}` };
+    case "inner_glow": return { color, textShadow: `inset 0 0 10px #fff, 0 0 5px ${color}` };
+    case "neon_glow": return { color: "#fff", textShadow: `0 0 5px #fff, 0 0 10px #fff, 0 0 20px ${color}, 0 0 40px ${color}` };
+    case "soft_glow": return { color, textShadow: `0 0 15px ${color}` };
+    case "gradient": return { background: `linear-gradient(to right, ${color}, #ffffff)`, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", color: "transparent" };
+    case "gradient_glow": return { background: `linear-gradient(to right, ${color}, #ffffff)`, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", color: "transparent", filter: `drop-shadow(0 0 10px ${color})` };
+    case "drop_shadow": return { color, textShadow: `5px 5px 5px rgba(0,0,0,0.8)` };
+    case "soft_shadow": return { color, textShadow: `2px 2px 10px rgba(0,0,0,0.5)` };
+    case "long_shadow": return { color, textShadow: `1px 1px ${color}, 2px 2px ${color}, 3px 3px ${color}, 4px 4px ${color}, 5px 5px ${color}` };
+    case "3d_extrude": return { color, textShadow: `0 1px 0 #ccc, 0 2px 0 #c9c9c9, 0 3px 0 #bbb, 0 4px 0 #b9b9b9, 0 5px 0 #aaa, 0 6px 1px rgba(0,0,0,.1), 0 0 5px rgba(0,0,0,.1), 0 1px 3px rgba(0,0,0,.3), 0 3px 5px rgba(0,0,0,.2), 0 5px 10px rgba(0,0,0,.25), 0 10px 10px rgba(0,0,0,.2), 0 20px 20px rgba(0,0,0,.15)` };
+    case "outline": return { color: "transparent", WebkitTextStroke: `1px ${color}` };
+    case "outline_glow": return { color: "transparent", WebkitTextStroke: `1px ${color}`, filter: `drop-shadow(0 0 5px ${color})` };
+    case "glass": return { color: "rgba(255,255,255,0.3)", backgroundImage: "linear-gradient(to bottom, rgba(255,255,255,0.8), rgba(255,255,255,0.2))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backdropFilter: "blur(4px)" };
+    case "metallic": return { background: "linear-gradient(to bottom, #dbe6f6, #c5d9ed, #90afcd, #c5d9ed, #dbe6f6)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", color: "transparent", textShadow: "1px 1px 2px rgba(0,0,0,0.5)" };
+    case "gold": return { background: "linear-gradient(to bottom, #bf953f, #fcf6ba, #b38728, #fbf5b7, #aa771c)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", color: "transparent", textShadow: "1px 1px 2px rgba(0,0,0,0.5)" };
+    case "silver": return { background: "linear-gradient(to bottom, #e6e9f0, #eef1f5, #8e9eab, #eef1f5, #e6e9f0)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", color: "transparent", textShadow: "1px 1px 2px rgba(0,0,0,0.5)" };
+    case "emboss": return { color, textShadow: `1px 1px 0px rgba(255,255,255,0.7), -1px -1px 0px rgba(0,0,0,0.7)` };
+    case "deboss": return { color, textShadow: `-1px -1px 0px rgba(255,255,255,0.7), 1px 1px 0px rgba(0,0,0,0.7)` };
+    case "blur_glow": return { color: "transparent", textShadow: `0 0 10px ${color}, 0 0 20px ${color}` };
+    case "cyberpunk": return { color: "#0ff", textShadow: `2px 2px 0px #f0f, -2px -2px 0px #ff0` };
+    case "holographic": return { background: `linear-gradient(45deg, #ff00ff, #00ffff, #ff00ff, #00ffff)`, backgroundSize: "200% auto", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", color: "transparent", filter: `drop-shadow(0 0 5px rgba(255,255,255,0.5))` };
+    case "liquid": return { background: `linear-gradient(to right, ${color}, #000)`, backgroundSize: "200% auto", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", color: "transparent" };
+    case "glassmorphism": return { color: "rgba(255,255,255,0.8)", textShadow: "0 4px 10px rgba(0,0,0,0.2)", backdropFilter: "blur(10px)", border: "1px solid rgba(255,255,255,0.3)", borderRadius: "8px", padding: "4px 8px" };
+    case "floating": return { color, textShadow: `0px 10px 10px rgba(0,0,0,0.4)` };
+    case "layered": return { color, textShadow: `2px 2px 0px #aaa, 4px 4px 0px #888, 6px 6px 0px #555` };
+    default: return { color, textShadow: "0 2px 4px rgba(0,0,0,0.5)" };
+  }
+};
+
 interface CollageLayers {
   background: {
     url: string | null;
@@ -902,6 +963,7 @@ interface CollageLayers {
     y: number;
     fontSize: number;
     color: string;
+    textStyle?: string;
   };
   subtitle: {
     text: string;
@@ -909,6 +971,7 @@ interface CollageLayers {
     y: number;
     fontSize: number;
     color: string;
+    textStyle?: string;
   };
   footer: {
     text: string;
@@ -916,6 +979,7 @@ interface CollageLayers {
     y: number;
     fontSize: number;
     color: string;
+    textStyle?: string;
   };
   logo: {
     leftX: number;   // percentage position
@@ -1134,13 +1198,13 @@ const CollageEditor = ({
       const deltaX = clientX - startPos.x;
       const deltaY = clientY - startPos.y;
       
-      // Convert pixel delta to percentage and snap to grid
-      const percentX = Math.round((deltaX / rect.width) * 100);
-      const percentY = Math.round((deltaY / rect.height) * 100);
+      // Convert pixel delta to percentage (NO GRID SNAP)
+      const percentX = (deltaX / rect.width) * 100;
+      const percentY = (deltaY / rect.height) * 100;
       
-      // Snap to grid and clamp values
-      const newX = Math.max(0, Math.min(100, snapToGrid(startLayer.x + percentX)));
-      const newY = Math.max(0, Math.min(100, snapToGrid(startLayer.y + percentY)));
+      // Clamp values (free drag)
+      const newX = Math.max(0, Math.min(100, startLayer.x + percentX));
+      const newY = Math.max(0, Math.min(100, startLayer.y + percentY));
       
       updateLayer(type, { x: newX, y: newY });
     };
@@ -1518,10 +1582,9 @@ const CollageEditor = ({
               transform: "translate(-50%, -50%)",
               fontSize: layers.title.fontSize,
               fontWeight: "bold",
-              color: layers.background.url ? layers.title.color : "#FFFFFF",
-              textShadow: "0 2px 4px rgba(0,0,0,0.5)",
               touchAction: "none",
               width: "90%",
+              ...getTextStyleCSS(layers.title.textStyle, layers.background.url ? layers.title.color : "#FFFFFF"),
               lineHeight: 1.2,
               display: "-webkit-box",
               WebkitLineClamp: 2,
@@ -1542,9 +1605,8 @@ const CollageEditor = ({
               left: `${layers.subtitle.x}%`,
               transform: "translate(-50%, -50%)",
               fontSize: layers.subtitle.fontSize,
-              color: layers.background.url ? layers.subtitle.color : "#CBD5E1",
-              textShadow: "0 2px 4px rgba(0,0,0,0.5)",
               touchAction: "none",
+              ...getTextStyleCSS(layers.subtitle.textStyle, layers.background.url ? layers.subtitle.color : "#CBD5E1"),
               width: "90%",
               whiteSpace: "nowrap",
               overflow: "hidden",
@@ -1564,9 +1626,8 @@ const CollageEditor = ({
               left: `${layers.footer.x}%`,
               transform: "translate(-50%, -50%)",
               fontSize: layers.footer.fontSize,
-              color: layers.background.url ? layers.footer.color : "#FFFFFF",
-              textShadow: "0 2px 4px rgba(0,0,0,0.5)",
-              touchAction: "none"
+              touchAction: "none",
+              ...getTextStyleCSS(layers.footer.textStyle, layers.background.url ? layers.footer.color : "#FFFFFF")
             }}
           >
             {layers.footer.text || "Footer text"}
@@ -1843,6 +1904,18 @@ const CollageEditor = ({
                 className="w-10 h-8 p-1"
               />
             </div>
+            <div className="space-y-2 mt-3">
+              <Label className="text-white/50 text-xs">Style Text</Label>
+              <select
+                value={layers.title.textStyle || "none"}
+                onChange={(e) => updateLayer("title", { textStyle: e.target.value })}
+                className="w-full bg-[#0b0f1a] text-white border border-white/20 rounded-lg p-2 text-sm focus:outline-none focus:border-blue-500"
+              >
+                {TEXT_STYLES.map(s => (
+                  <option key={s.id} value={s.id}>{s.label}</option>
+                ))}
+              </select>
+            </div>
           </div>
           
           {/* Subtitle Section */}
@@ -1874,6 +1947,18 @@ const CollageEditor = ({
                 className="w-10 h-8 p-1"
               />
             </div>
+            <div className="space-y-2 mt-3">
+              <Label className="text-white/50 text-xs">Style Text</Label>
+              <select
+                value={layers.subtitle.textStyle || "none"}
+                onChange={(e) => updateLayer("subtitle", { textStyle: e.target.value })}
+                className="w-full bg-[#0b0f1a] text-white border border-white/20 rounded-lg p-2 text-sm focus:outline-none focus:border-cyan-500"
+              >
+                {TEXT_STYLES.map(s => (
+                  <option key={s.id} value={s.id}>{s.label}</option>
+                ))}
+              </select>
+            </div>
           </div>
           
           {/* Footer Section */}
@@ -1903,6 +1988,18 @@ const CollageEditor = ({
                 onChange={(e) => updateLayer("footer", { color: e.target.value })}
                 className="w-10 h-8 p-1"
               />
+            </div>
+            <div className="space-y-2 mt-3">
+              <Label className="text-white/50 text-xs">Style Text</Label>
+              <select
+                value={layers.footer.textStyle || "none"}
+                onChange={(e) => updateLayer("footer", { textStyle: e.target.value })}
+                className="w-full bg-[#0b0f1a] text-white border border-white/20 rounded-lg p-2 text-sm focus:outline-none focus:border-green-500"
+              >
+                {TEXT_STYLES.map(s => (
+                  <option key={s.id} value={s.id}>{s.label}</option>
+                ))}
+              </select>
             </div>
           </div>
           
@@ -3389,8 +3486,8 @@ export default function WAHome() {
         </header>
 
         {/* Main Content - Scrollable area */}
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden h-full">
+        <div className="flex-1 flex flex-col">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
             <TabsList className="w-full bg-white/5 backdrop-blur-sm rounded-2xl p-1.5 mx-4 mt-2 mb-2 flex flex-shrink-0">
               <TabsTrigger 
                 value="editor" 
@@ -3416,9 +3513,8 @@ export default function WAHome() {
             </TabsList>
 
             {/* Editor Tab */}
-            <TabsContent value="editor" className="flex-1 flex flex-col mt-0 overflow-hidden">
-              <ScrollArea className="flex-1 h-full">
-                <div className="space-y-6 p-4 pb-32">
+            <TabsContent value="editor" className="flex-1 flex flex-col mt-0">
+              <div className="space-y-6 p-4 pb-32">
             {/* Template Section */}
             <Card className="bg-slate-800/50 backdrop-blur-sm border-white/10 shadow-xl">
               <CardHeader className="pb-3">
@@ -3779,7 +3875,6 @@ export default function WAHome() {
               </CardContent>
             </Card>
 
-            {/* Action Buttons */}
             <div className="flex flex-wrap gap-3">
               <Button onClick={saveDraft} variant="outline" className="flex-1 sm:flex-none border-white/20 bg-white/5 hover:bg-white/10 text-white backdrop-blur-sm transition-all duration-300 hover:scale-105">
                 <Save className="w-4 h-4 mr-2" />
@@ -3791,13 +3886,11 @@ export default function WAHome() {
               </Button>
             </div>
           </div>
-        </ScrollArea>
       </TabsContent>
 
           {/* Preview Tab */}
-          <TabsContent value="preview" className="flex-1 flex flex-col mt-0 overflow-hidden">
-            <ScrollArea className="flex-1 h-full">
-              <div className="space-y-6 p-4 pb-32">
+          <TabsContent value="preview" className="flex-1 flex flex-col mt-0">
+            <div className="space-y-6 p-4 pb-32">
             <Card className="bg-slate-800/50 backdrop-blur-sm border-white/10 shadow-xl overflow-hidden">
               <CardHeader className="bg-gradient-to-r from-green-600/20 to-green-500/10 border-b border-white/10">
                 <div className="flex items-center justify-between">
@@ -3927,7 +4020,6 @@ export default function WAHome() {
               </CardContent>
                 </Card>
               </div>
-            </ScrollArea>
           </TabsContent>
 
           {/* Image Merger Tab - Collage Editor */}
