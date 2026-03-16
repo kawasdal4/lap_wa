@@ -45,10 +45,16 @@ jobs:
           mkdir -p mobile/www
           echo '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Laporan WA</title></head><body><script>window.location.href="https://ap-wa.vercel.app"</script></body></html>' > mobile/www/index.html
 
-      - name: Initialize Capacitor Android
+      - name: Initialize Capacitor
         run: |
           cd mobile
-          npx cap add android || true
+          npx cap init "Laporan WA" "id.go.basarnas.lapwa" --web-dir www || true
+
+      - name: Add Android Platform
+        run: |
+          cd mobile
+          rm -rf android
+          npx cap add android
           npx cap sync android
 
       - name: Build Debug APK
