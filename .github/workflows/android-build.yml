@@ -66,11 +66,11 @@ jobs:
           npx cap sync android
           npx cap doctor
 
-      - name: Build Release APK
+      - name: Build Signed APK
         run: |
           cd web/android
           chmod +x gradlew
-          ./gradlew assembleRelease --stacktrace --info
+          ./gradlew assembleRelease
 
       - name: Debug APK Output
         run: |
@@ -79,8 +79,7 @@ jobs:
       - name: Collect APK
         run: |
           mkdir -p build-output
-          cp web/android/app/build/outputs/apk/release/*.apk build-output/lap-wa-release.apk || \
-          cp web/android/app/build/outputs/apk/debug/*.apk build-output/lap-wa-release.apk
+          cp web/android/app/build/outputs/apk/release/app-release.apk build-output/lap-wa-release.apk
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
