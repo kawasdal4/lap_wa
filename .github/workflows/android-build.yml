@@ -3,17 +3,36 @@ name: Build Android APK
 on:
   push:
     branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      build_type:
+        description: 'Build type'
+        required: false
+        default: 'debug'
+        type: choice
+        options:
+          - debug
+          - release
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Install Node
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 20
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
 
       - name: Install Mobile Dependencies
         run: |
@@ -26,13 +45,50 @@ jobs:
           cd mobile
           npx cap sync android
 
-      - name: Build APK
+      - name: Build Debug APK
+        if: ${{ github.event.inputs.build_type != 'release' }}
+        run: |
+          cd mobile/android
+          ./gradlew assembleDebug
+
+      - name: Build Release APK
+        if: ${{ github.event.inputs.build_type == 'release' }}
         run: |
           cd mobile/android
           ./gradlew assembleRelease
 
-      - name: Upload APK
-        uses: actions/upload-artifact@v3
+      - name: Rename Debug APK
+        if: ${{ github.event.inputs.build_type != 'release' }}
+        run: |
+          mv mobile/android/app/build/outputs/apk/debug/app-debug.apk lap-wa.apk
+
+      - name: Rename Release APK
+        if: ${{ github.event.inputs.build_type == 'release' }}
+        run: |
+          mv mobile/android/app/build/outputs/apk/release/app-release.apk lap-wa.apk
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
         with:
-          name: app-release
-          path: mobile/android/app/build/outputs/apk/release/app-release.apk
+          name: lap-wa-android
+          path: lap-wa.apk
+
+      - name: Upload to R2
+        env:
+          R2_ACCESS_KEY: ${{ secrets.R2_ACCESS_KEY }}
+          R2_SECRET_KEY: ${{ secrets.R2_SECRET_KEY }}
+          R2_BUCKET: ${{ secrets.R2_BUCKET }}
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+        if: ${{ env.R2_ACCESS_KEY != '' }}
+        run: |
+          pip install awscli
+          aws s3 cp lap-wa.apk s3://${R2_BUCKET}/lap-wa.apk \
+            --endpoint-url https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com \
+            --acl public-read
+
+      - name: Create Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v1
+        with:
+          files: lap-wa.apk
+          generate_release_notes: true
