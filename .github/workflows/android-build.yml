@@ -59,7 +59,7 @@ jobs:
         run: |
           cd web/android
           chmod +x gradlew
-          ./gradlew assembleRelease
+          ./gradlew clean assembleDebug
 
       - name: Debug Output
         run: |
@@ -68,13 +68,13 @@ jobs:
       - name: Prepare App Binary
         run: |
           mkdir -p build-output
-          find web/android/app/build/outputs -type f \( -name "*.apk" -o -name "*.aab" \) -exec cp {} build-output/lap-wa-release.apk \;
+          find web/android/app/build/outputs/apk/debug -type f -name "*.apk" -exec cp {} build-output/lap-wa-debug.apk \;
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: lap-wa-android
-          path: build-output/lap-wa-release.apk
+          path: build-output/lap-wa-debug.apk
 
       - name: Upload to R2
         env:
@@ -85,12 +85,12 @@ jobs:
         if: ${{ env.AWS_ACCESS_KEY_ID != '' }}
         run: |
           pip install awscli
-          aws s3 cp build-output/lap-wa-release.apk s3://${R2_BUCKET}/mobile-builds/android/app-release.apk \
+          aws s3 cp build-output/lap-wa-debug.apk s3://${R2_BUCKET}/mobile-builds/android/app-debug.apk \
             --endpoint-url ${R2_ENDPOINT}
 
       - name: Create Release
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v1
         with:
-          files: build-output/lap-wa-release.apk
+          files: build-output/lap-wa-debug.apk
           generate_release_notes: true
