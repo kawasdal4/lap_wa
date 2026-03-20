@@ -79,5 +79,8 @@ jobs:
         if: ${{ env.AWS_ACCESS_KEY_ID != '' }}
         run: |
           pip install awscli
-          aws s3 cp output/App.ipa s3://${R2_BUCKET}/mobile-builds/ios/app-release.ipa \
-            --endpoint-url ${R2_ENDPOINT} || echo "IPA not found, skipping upload"
+          if [ -f "output/App.ipa" ]; then
+            aws s3 cp output/App.ipa s3://${R2_BUCKET}/mobile-builds/ios/app-release.ipa --endpoint-url ${R2_ENDPOINT}
+          else
+            echo "IPA not found at output/App.ipa. Skipping upload. (Note: Distributable IPAs require Archiving and Code Signing)."
+          fi
