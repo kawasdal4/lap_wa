@@ -1927,11 +1927,11 @@ const CollageEditor = ({
                   className="w-full"
                 />
               </div>
-              <Input
+              <input
                 type="color"
                 value={layers.title.color}
                 onChange={(e) => updateLayer("title", { color: e.target.value })}
-                className="w-10 h-8 p-1"
+                className="w-10 h-8 p-0 border-none bg-transparent cursor-pointer"
               />
             </div>
             <div className="space-y-2 mt-3">
@@ -1960,21 +1960,21 @@ const CollageEditor = ({
             />
             <div className="flex gap-2">
               <div className="flex-1">
-                <Label className="text-white/50 text-xs">Ukuran: {layers.subtitle.fontSize}px</Label>
+                <Label className="text-white/50 text-xs text-left block">Ukuran Subtitle: {layers.subtitle.fontSize}px</Label>
                 <input
                   type="range"
-                  min="8"
-                  max="32"
+                  min="10"
+                  max="40"
                   value={layers.subtitle.fontSize}
                   onChange={(e) => updateLayer("subtitle", { fontSize: parseInt(e.target.value) })}
                   className="w-full"
                 />
               </div>
-              <Input
+              <input
                 type="color"
                 value={layers.subtitle.color}
                 onChange={(e) => updateLayer("subtitle", { color: e.target.value })}
-                className="w-10 h-8 p-1"
+                className="w-10 h-8 p-0 border-none bg-transparent cursor-pointer"
               />
             </div>
             <div className="space-y-2 mt-3">
@@ -2002,21 +2002,21 @@ const CollageEditor = ({
             />
             <div className="flex gap-2">
               <div className="flex-1">
-                <Label className="text-white/50 text-xs">Ukuran: {layers.footer.fontSize}px</Label>
+                <Label className="text-white/50 text-xs text-left block">Ukuran Footer: {layers.footer.fontSize}px</Label>
                 <input
                   type="range"
-                  min="10"
-                  max="20"
+                  min="8"
+                  max="30"
                   value={layers.footer.fontSize}
                   onChange={(e) => updateLayer("footer", { fontSize: parseInt(e.target.value) })}
                   className="w-full"
                 />
               </div>
-              <Input
+              <input
                 type="color"
                 value={layers.footer.color}
                 onChange={(e) => updateLayer("footer", { color: e.target.value })}
-                className="w-10 h-8 p-1"
+                className="w-10 h-8 p-0 border-none bg-transparent cursor-pointer"
               />
             </div>
             <div className="space-y-2 mt-3">
