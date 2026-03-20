@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useRef, useCallback, useEffect, forwardRef } from "react";
 import { toJpeg } from "html-to-image";
@@ -1679,19 +1679,9 @@ const CollageEditor = ({
 
       {/* Bottom Toolbar */}
       <div 
-        className={`absolute bottom-0 left-0 right-0 bg-[rgba(10,20,35,0.95)] border-t border-white/10 z-50 px-safe transition-transform duration-500 ease-in-out ${
-          showToolbar ? "translate-y-0" : "translate-y-full"
-        }`} 
+        className="absolute bottom-0 left-0 right-0 bg-[rgba(10,20,35,0.95)] border-t border-white/10 z-[60] px-safe transition-transform duration-500 ease-in-out translate-y-0" 
         style={{ height: "72px" }}
       >
-        {/* Manual Hide Tablet/Handle */}
-        <button 
-          onClick={() => setShowToolbar(false)}
-          className="absolute -top-6 left-1/2 -translate-x-1/2 px-4 py-1.5 bg-[rgba(10,20,35,0.95)] border-t border-x border-white/10 rounded-t-xl text-white/30 hover:text-white/60 transition-colors flex flex-col items-center"
-        >
-          <ChevronDown className="w-4 h-4" />
-        </button>
-
         <div className="flex justify-around items-center h-full px-2" onClick={handleInteraction}>
           <button
             onClick={() => setActiveTool(activeTool === "background" ? null : "background")}
@@ -1758,16 +1748,6 @@ const CollageEditor = ({
           </button>
         </div>
       </div>
-
-      {/* Show Toggle Arrow (only when hidden) */}
-      <button
-        onClick={() => setShowToolbar(true)}
-        className={`absolute bottom-4 left-1/2 -translate-x-1/2 w-10 h-10 bg-blue-600/90 backdrop-blur-md rounded-full border border-blue-400/30 flex items-center justify-center text-white shadow-lg transition-all duration-500 z-[60] ${
-          showToolbar ? "opacity-0 translate-y-20 pointer-events-none" : "opacity-100 translate-y-0 animate-bounce"
-        }`}
-      >
-        <ChevronUp className="w-6 h-6" />
-      </button>
 
       {/* Action buttons or other overlays can stay here */}
 
@@ -3235,7 +3215,7 @@ export default function WAHome() {
       // Contact info
       ctx.fillStyle = isDarkBg ? "#94A3B8" : "#64748B";
       ctx.font = `12px ${emojiFontStack}`;
-      const contactText = footerContent.contactInfo.items.map((item: { label: string }) => item.label).join("  â€¢  ");
+      const contactText = footerContent.contactInfo.items.map((item: { label: string }) => item.label).join("  |  ");
       ctx.fillText(contactText, canvasWidth / 2, canvasHeight - footerConfig.height + 65);
       ctx.restore();
 
