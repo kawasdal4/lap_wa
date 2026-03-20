@@ -1375,7 +1375,7 @@ const CollageEditor = ({
       />
 
       {/* Main Canvas Area */}
-      <div className="flex-1 flex flex-col items-center justify-center p-3.5 overflow-auto">
+      <div className={`flex-1 flex flex-col items-center ${activeTool ? 'justify-start pt-8' : 'justify-center'} p-3.5 overflow-auto`}>
         {/* Canvas - 9:16 aspect ratio with enhanced styling */}
         <div
           ref={canvasRef}
@@ -1665,7 +1665,7 @@ const CollageEditor = ({
 
         {/* Bottom spacer to allow scrolling up when tools are active and obscuring parts of the canvas */}
         {activeTool && (
-          <div className="h-[40vh] pointer-events-none" />
+          <div className="h-[60vh] pointer-events-none" />
         )}
 
         {/* Action buttons above toolbar */}
