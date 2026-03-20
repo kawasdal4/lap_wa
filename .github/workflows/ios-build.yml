@@ -55,7 +55,11 @@ jobs:
       - name: Install CocoaPods
         run: |
           cd web/ios/App
-          pod install
+          if [ -f "Podfile" ]; then
+            pod install
+          else
+            echo "No Podfile found, skipping CocoaPods installation (assuming Swift Package Manager)"
+          fi
 
       - name: Build iOS
         run: |
