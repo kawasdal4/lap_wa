@@ -46,7 +46,7 @@ jobs:
         run: |
           cd web
           rm -rf node_modules
-          npm ci
+          npm install
 
       - name: Capacitor Sync
         run: |
