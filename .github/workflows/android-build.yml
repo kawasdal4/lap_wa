@@ -25,7 +25,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 20
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -46,7 +46,7 @@ jobs:
         run: |
           cd web
           rm -rf node_modules
-          npm install
+          npm ci
 
       - name: Capacitor Sync
         run: |
@@ -54,6 +54,9 @@ jobs:
           mkdir -p out
           echo "<html><body>Loading Laporan WA...</body></html>" > out/index.html
           npx cap sync android
+          # Remove persistent flatDir warnings randomly re-generated
+          sed -i '/flatDir/,/}/d' android/app/build.gradle
+          sed -i '/flatDir/,/}/d' android/capacitor-cordova-android-plugins/build.gradle
 
       - name: Build Android App
         run: |

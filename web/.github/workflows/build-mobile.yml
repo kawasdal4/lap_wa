@@ -56,6 +56,9 @@ jobs:
           npx cap init "Laporan WA" "id.go.basarnas.lapwa" --web-dir out
           npx cap add android
           npx cap sync android
+          # Remove persistent flatDir warnings randomly re-generated
+          sed -i '/flatDir/,/}/d' android/app/build.gradle
+          sed -i '/flatDir/,/}/d' android/capacitor-cordova-android-plugins/build.gradle
 
       - name: Build APK
         working-directory: ./android
