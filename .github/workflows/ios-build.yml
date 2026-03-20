@@ -64,12 +64,11 @@ jobs:
       - name: Build iOS
         run: |
           cd web/ios/App
-          xcodebuild -workspace App.xcworkspace \
-            -scheme App \
-            -configuration Release \
-            -sdk iphoneos \
-            build \
-            CODE_SIGNING_ALLOWED=NO
+          if [ -d "App.xcworkspace" ]; then
+            xcodebuild -workspace App.xcworkspace -scheme App -configuration Release -sdk iphoneos build CODE_SIGNING_ALLOWED=NO
+          else
+            xcodebuild -project App.xcodeproj -scheme App -configuration Release -sdk iphoneos build CODE_SIGNING_ALLOWED=NO
+          fi
 
       - name: Upload to R2
         env:
