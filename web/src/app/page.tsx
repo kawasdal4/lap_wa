@@ -3013,6 +3013,11 @@ export default function WAHome() {
       const currentSubtitleFontSize = collageLayers.subtitle.fontSize;
       const currentTitleColor = collageLayers.title.color;
       const currentSubtitleColor = collageLayers.subtitle.color;
+      const currentTitleStyle = collageLayers.title.textStyle || "none";
+      const currentSubtitleStyle = collageLayers.subtitle.textStyle || "none";
+      
+      const emojiFontStack = 'system-ui, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji", sans-serif';
+      const fullTitleFont = `${titleFontFamily}, ${emojiFontStack}`;
       
       // Word wrap helper function
       const wrapText = (text: string, maxWidth: number, fontSize: number, fontFamily: string, isBold: boolean = false): string[] => {
@@ -3053,27 +3058,51 @@ export default function WAHome() {
       const titleLineHeight = currentTitleFontSize + 10;
       const subtitleLineHeight = currentSubtitleFontSize + 8;
       
-      const titleLines = wrapText(judulText, titleMaxWidth, currentTitleFontSize, titleFontFamily, true).slice(0, 2);
-      const subtitleLines = wrapText(tempatTanggalText, titleMaxWidth, currentSubtitleFontSize, titleFontFamily, false).slice(0, 1);
+      const titleLines = wrapText(judulText, titleMaxWidth, currentTitleFontSize, fullTitleFont, true).slice(0, 2);
+      const subtitleLines = wrapText(tempatTanggalText, titleMaxWidth, currentSubtitleFontSize, fullTitleFont, false).slice(0, 1);
       
       // Draw title with custom styling
       ctx.textAlign = titleTextAlign;
-      ctx.textBaseline = "middle"; // Match preview's translate(-50%, -50%)
+      ctx.textBaseline = "middle"; 
       ctx.font = `bold ${currentTitleFontSize}px ${titleFontFamily}`;
       ctx.fillStyle = bgUrl ? currentTitleColor : "#1E293B";
       
+      ctx.save();
+      if (currentTitleStyle === "glow") {
+        ctx.shadowColor = currentTitleColor;
+        ctx.shadowBlur = 10;
+      }
+      
       titleLines.forEach((line, idx) => {
+        if (currentTitleStyle === "outline") {
+          ctx.strokeStyle = currentTitleColor;
+          ctx.lineWidth = 1;
+          ctx.strokeText(line, titleActualX, titleActualY + idx * titleLineHeight);
+        }
         ctx.fillText(line, titleActualX, titleActualY + idx * titleLineHeight);
       });
+      ctx.restore();
       
       // Draw subtitle with its own styling
       ctx.textAlign = subtitleTextAlign;
       ctx.font = `${currentSubtitleFontSize}px ${titleFontFamily}`;
       ctx.fillStyle = bgUrl ? currentSubtitleColor : "#64748B";
       
+      ctx.save();
+      if (currentSubtitleStyle === "glow") {
+        ctx.shadowColor = currentSubtitleColor;
+        ctx.shadowBlur = 8;
+      }
+      
       subtitleLines.forEach((line, idx) => {
+        if (currentSubtitleStyle === "outline") {
+          ctx.strokeStyle = currentSubtitleColor;
+          ctx.lineWidth = 1;
+          ctx.strokeText(line, subtitleActualX, subtitleActualY + idx * subtitleLineHeight);
+        }
         ctx.fillText(line, subtitleActualX, subtitleActualY + idx * subtitleLineHeight);
       });
+      ctx.restore();
 
       // ========== PHOTOS ==========
       // Use collageLayers.photos for rendering
@@ -3184,16 +3213,36 @@ export default function WAHome() {
       // Footer content
       const footerContent = footerConfig.content;
       const finalFooterText = collageLayers.footer.text || footerContent.organization.text;
-      ctx.fillStyle = footerContent.organization.color;
-      ctx.font = `${footerContent.organization.fontWeight} ${footerContent.organization.fontSize}px Arial`;
+      const currentFooterColor = collageLayers.footer.color;
+      const currentFooterFontSize = collageLayers.footer.fontSize;
+      const currentFooterStyle = collageLayers.footer.textStyle || "none";
+      
+      ctx.save();
       ctx.textAlign = "center";
-      ctx.fillText(finalFooterText, canvasWidth / 2, canvasHeight - footerConfig.height + 35);
+      ctx.textBaseline = "middle";
+      ctx.fillStyle = currentFooterColor;
+      ctx.font = `bold ${currentFooterFontSize}px ${emojiFontStack}`;
+      
+      if (currentFooterStyle === "glow") {
+        ctx.shadowColor = currentFooterColor;
+        ctx.shadowBlur = 10;
+      }
+      
+      const footerY = canvasHeight - footerConfig.height + 35;
+      if (currentFooterStyle === "outline") {
+        ctx.strokeStyle = currentFooterColor;
+        ctx.lineWidth = 1;
+        ctx.strokeText(finalFooterText, canvasWidth / 2, footerY);
+      }
+      ctx.fillText(finalFooterText, canvasWidth / 2, footerY);
+      ctx.restore();
       
       // Contact info
-      ctx.fillStyle = footerContent.contactInfo.color;
-      ctx.font = `${footerContent.contactInfo.fontSize}px Arial`;
+      ctx.fillStyle = isDarkBg ? "#94A3B8" : "#64748B";
+      ctx.font = `12px ${emojiFontStack}`;
       const contactText = footerContent.contactInfo.items.map((item: { label: string }) => item.label).join("  •  ");
-      ctx.fillText(contactText, canvasWidth / 2, canvasHeight - footerConfig.height + 60);
+      ctx.fillText(contactText, canvasWidth / 2, canvasHeight - footerConfig.height + 65);
+      ctx.restore();
 
       // Convert to image
       const dataUrl = canvas.toDataURL("image/jpeg", 0.95);
