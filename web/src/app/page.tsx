@@ -353,7 +353,7 @@ const MapLocationPicker = ({ value, onChange, onLocationChange, placeholder }: M
       z-index: 100;
       filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
     `;
-    centerMarker.innerHTML = "ðŸ“";
+    centerMarker.innerHTML = "📍";
     mapRef.current.appendChild(centerMarker);
 
     // Drag start - show loading
@@ -595,9 +595,9 @@ const insertWAFormat = (
   const selectedText = text.substring(selectionStart, selectionEnd);
   // Use double markers for editor (will be converted for WhatsApp)
   const markers: Record<string, { start: string; end: string }> = {
-    bold: { start: '**', end: '**' },       // Editor: **text** Î“Ã¥Ã† WhatsApp: *text*
-    italic: { start: '__', end: '__' },     // Editor: __text__ Î“Ã¥Ã† WhatsApp: _text_
-    strike: { start: '~~', end: '~~' },     // Editor: ~~text~~ Î“Ã¥Ã† WhatsApp: ~text~
+    bold: { start: '**', end: '**' },       // Editor: **text** ΓåÆ WhatsApp: *text*
+    italic: { start: '__', end: '__' },     // Editor: __text__ ΓåÆ WhatsApp: _text_
+    strike: { start: '~~', end: '~~' },     // Editor: ~~text~~ ΓåÆ WhatsApp: ~text~
     mono: { start: '```', end: '```' }      // Editor & WhatsApp: ```text```
   };
   
@@ -1059,7 +1059,6 @@ const CollageEditor = ({
   // Auto-hide toolbar logic
   const resetToolbarTimer = useCallback(() => {
     setShowToolbar(true);
-    // Timer removed to prevent accidental toolbar disappearance
     if (toolbarTimerRef.current) clearTimeout(toolbarTimerRef.current);
   }, []);
 
@@ -1774,7 +1773,7 @@ const CollageEditor = ({
             {layers.background.url && (
               <>
                 <p className="text-white/50 text-xs text-center">
-                  ðŸ’¡ Drag untuk geser, pinch/scroll untuk zoom
+                  💡 Drag untuk geser, pinch/scroll untuk zoom
                 </p>
                 
                 <Button
@@ -2113,7 +2112,7 @@ const CollageEditor = ({
                 className="w-full mt-2 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white animate-pulse"
               >
                 <ImageIcon className="w-4 h-4 mr-2" />
-                ðŸ“¸ Kirim Foto ke WhatsApp
+                📸 Kirim Foto ke WhatsApp
               </Button>
             )}
             
@@ -2242,7 +2241,7 @@ export default function WAHome() {
       color: "#CBD5E1"
     },
     footer: {
-      text: "Â© Direktorat Kesiapsiagaan",
+      text: "© Direktorat Kesiapsiagaan",
       x: 50,
       y: 95,
       fontSize: 14,
@@ -2268,7 +2267,7 @@ export default function WAHome() {
   const [subtitleFontSize, setSubtitleFontSize] = useState(20);
   
   // State untuk kalimat penutup di teks utama
-  const [kalimatPenutup, setKalimatPenutup] = useState("Demikian disampaikan sebagai laporan. Terima kasih ðŸ™");
+  const [kalimatPenutup, setKalimatPenutup] = useState("Demikian disampaikan sebagai laporan. Terima kasih 🙏");
   
   // State untuk Layout & Style
   const [layoutStyle, setLayoutStyle] = useState<"grid" | "vertical" | "horizontal">("grid");
@@ -2328,14 +2327,14 @@ export default function WAHome() {
   // Format text for WhatsApp (convert editor markers to WhatsApp format)
   const formatForWhatsApp = useCallback((text: string): string => {
     let formatted = text;
-    // Bold: **text** Î“Ã¥Ã† *text*
+    // Bold: **text** ΓåÆ *text*
     formatted = formatted.replace(/\*\*([^*]+)\*\*/g, '*$1*');
-    // Italic: __text__ Î“Ã¥Ã† _text_
+    // Italic: __text__ ΓåÆ _text_
     formatted = formatted.replace(/__([^_]+)__/g, '_$1_');
-    // Strikethrough: ~~text~~ Î“Ã¥Ã† ~text~ (or keep as is if already ~)
+    // Strikethrough: ~~text~~ ΓåÆ ~text~ (or keep as is if already ~)
     formatted = formatted.replace(/~~([^~]+)~~/g, '~$1~');
     // Monospace: ```text``` stays the same for WhatsApp
-    // Bold+Italic: ***text*** Î“Ã¥Ã† *_text_*
+    // Bold+Italic: ***text*** ΓåÆ *_text_*
     formatted = formatted.replace(/\*\*\*([^*]+)\*\*\*/g, '*_$1_*');
     return formatted;
   }, []);
@@ -2415,35 +2414,35 @@ export default function WAHome() {
     text += `Selamat ${getWaktuSalam()}, Mohon izin melaporkan kegiatan ${formatForWhatsApp(judul.toLowerCase())}.\n\n`;
     
     // Location with map image, place name, and address OR Zoom link
-    text += `ðŸ“ *Tempat:*\n`;
+    text += `📍 *Tempat:*\n`;
     if (jenisTempat === "daring") {
       text += `${formatForWhatsApp(tempat)}\n`;
       if (zoomLink) {
-        text += `ðŸ”— Link Zoom: ${zoomLink}\n`;
+        text += `🔗 Link Zoom: ${zoomLink}\n`;
       }
     } else if (locationData && locationData.lat && locationData.lng) {
       // Show place name
-      text += `ðŸ“Œ *${formatForWhatsApp(locationData.placeName)}*\n`;
+      text += `📌 *${formatForWhatsApp(locationData.placeName)}*\n`;
       // Show full address
       text += `${formatForWhatsApp(locationData.address)}\n`;
       // Show map link
-      text += `ðŸ—ºï¸ Lihat di Maps: https://www.google.com/maps?q=${locationData.lat},${locationData.lng}\n`;
+      text += `🗺️ Lihat di Maps: https://www.google.com/maps?q=${locationData.lat},${locationData.lng}\n`;
     } else {
       text += `${formatForWhatsApp(tempat)}\n`;
     }
     text += "\n";
     
-    text += `ðŸ“… *Hari dan Tanggal:*\n${tanggal}\n\n`;
-    text += `â° *Waktu:*\n${waktu}\n\n`;
-    text += `ðŸ‘¤ *Pimpinan Rapat:*\n${formatForWhatsApp(pimpinan)}\n\n`;
+    text += `📅 *Hari dan Tanggal:*\n${tanggal}\n\n`;
+    text += `⏰ *Waktu:*\n${waktu}\n\n`;
+    text += `👤 *Pimpinan Rapat:*\n${formatForWhatsApp(pimpinan)}\n\n`;
     
-    text += `ðŸ‘¥ *Peserta Rapat:*\n`;
+    text += `👥 *Peserta Rapat:*\n`;
     peserta.forEach((p) => {
       text += `- ${formatForWhatsApp(p.text)};\n`;
     });
     text += "\n";
     
-    text += `ðŸ—’ï¸ *Pelaksanaan Rapat:*\n`;
+    text += `🗒️ *Pelaksanaan Rapat:*\n`;
     pelaksanaan.forEach((item, index) => {
       text += `${index + 1}. ${formatForWhatsApp(item.text)};\n`;
       if (item.subItems.length > 0) {
@@ -3278,7 +3277,7 @@ export default function WAHome() {
         toast.loading("Mengunggah peta lokasi...", { id: loadingToast });
         const mapUrl = await uploadImageToR2(locationData.mapImageUrl, "url", "maps");
         if (mapUrl) {
-          uploadedUrls.push(`ðŸ“ Peta Lokasi: ${mapUrl}`);
+          uploadedUrls.push(`📍 Peta Lokasi: ${mapUrl}`);
         }
       }
       
@@ -3287,7 +3286,7 @@ export default function WAHome() {
         toast.loading("Mengunggah dokumentasi foto...", { id: loadingToast });
         const photoUrl = await uploadImageToR2(mergedImage, "base64", "photos");
         if (photoUrl) {
-          uploadedUrls.push(`ðŸ“¸ Dokumentasi: ${photoUrl}`);
+          uploadedUrls.push(`📸 Dokumentasi: ${photoUrl}`);
         }
       }
       
@@ -3472,7 +3471,7 @@ export default function WAHome() {
     try {
       setIsSendingWA(true);
 
-      // 1ï¸âƒ£ Export gambar
+      // 1️⃣ Export gambar
       if (!mergedImage) {
         toast.error("Silakan klik Export terlebih dahulu!");
         return;
@@ -3481,13 +3480,13 @@ export default function WAHome() {
       toast.info("Menyiapkan foto...");
       await exportPhotoFile();
 
-      // 2ï¸âƒ£ Kirim text
+      // 2️⃣ Kirim text
       toast.info("Membuka WhatsApp...");
       kirimTextWA(phoneNumber, laporanText);
       
       toast.success("Laporan teks terkirim!");
 
-      // 3ï¸âƒ£ Munculkan tombol kirim foto setelah 1.5 detik
+      // 3️⃣ Munculkan tombol kirim foto setelah 1.5 detik
       setTimeout(() => {
         setShowSendPhotoButton(true);
         setIsSendingWA(false);
@@ -3553,7 +3552,7 @@ export default function WAHome() {
                       size="icon"
                       className="w-8 h-8 text-white/40 hover:text-white/80 hover:bg-white/5 rounded-full"
                     >
-                      <span className="text-[10px] font-bold">Â©</span>
+                      <span className="text-[10px] font-bold">©</span>
                     </Button>
                   </CopyrightModal>
                   
@@ -3699,7 +3698,7 @@ export default function WAHome() {
                 {/* Pimpinan - moved above Tempat */}
                 <div className="space-y-2">
                   <Label className="text-white flex items-center gap-2">
-                    <span className="text-lg">ðŸ‘¤</span> Pimpinan
+                    <span className="text-lg">👤</span> Pimpinan
                   </Label>
                   <WAInput
                     value={pimpinan}
@@ -3711,7 +3710,7 @@ export default function WAHome() {
                 {/* Tempat - full width */}
                 <div className="space-y-3">
                   <Label className="text-white flex items-center gap-2">
-                    <span className="text-lg">ðŸ“</span> Tempat
+                    <span className="text-lg">📍</span> Tempat
                   </Label>
                     
                   {/* Toggle Daring/Luring */}
@@ -3725,7 +3724,7 @@ export default function WAHome() {
                         ? "bg-blue-600 hover:bg-blue-500 text-white" 
                         : "border-white/30 bg-slate-700/50 text-white hover:bg-slate-700 hover:text-white"}`}
                     >
-                      ðŸ’» Daring
+                      💻 Daring
                     </Button>
                     <Button
                       type="button"
@@ -3736,7 +3735,7 @@ export default function WAHome() {
                         ? "bg-green-600 hover:bg-green-500 text-white" 
                         : "border-white/30 bg-slate-700/50 text-white hover:bg-slate-700 hover:text-white"}`}
                     >
-                      ðŸ¢ Luring
+                      🏢 Luring
                     </Button>
                   </div>
                     
@@ -3754,7 +3753,7 @@ export default function WAHome() {
                       </div>
                       <div className="space-y-2">
                         <Label className="text-gray-200 text-xs flex items-center gap-2">
-                          ðŸ”— Link Zoom Meeting
+                          🔗 Link Zoom Meeting
                           {isLoadingZoomTitle && <Loader2 className="w-3 h-3 animate-spin" />}
                         </Label>
                         <Input
@@ -3834,7 +3833,7 @@ export default function WAHome() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label className="text-white flex items-center gap-2">
-                      <span className="text-lg">ðŸ“…</span> Hari dan Tanggal
+                      <span className="text-lg">📅</span> Hari dan Tanggal
                     </Label>
                     <WAInput
                       value={tanggal}
@@ -3844,7 +3843,7 @@ export default function WAHome() {
                   </div>
                   <div className="space-y-2">
                     <Label className="text-white flex items-center gap-2">
-                      <span className="text-lg">â°</span> Waktu
+                      <span className="text-lg">⏰</span> Waktu
                     </Label>
                     <WAInput
                       value={waktu}
@@ -3861,7 +3860,7 @@ export default function WAHome() {
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-base text-white flex items-center gap-2">
-                    <span className="text-lg">ðŸ‘¥</span> Peserta Rapat
+                    <span className="text-lg">👥</span> Peserta Rapat
                   </CardTitle>
                   <Button variant="outline" size="sm" onClick={addPeserta} className="border-white/20 bg-white/5 hover:bg-white/10 text-white">
                     <Plus className="w-4 h-4 mr-2" />
@@ -3894,7 +3893,7 @@ export default function WAHome() {
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-base text-white flex items-center gap-2">
-                    <span className="text-lg">ðŸ—’ï¸</span> Pelaksanaan Rapat
+                    <span className="text-lg">🗒️</span> Pelaksanaan Rapat
                   </CardTitle>
                   <Button variant="outline" size="sm" onClick={addPelaksanaan} className="border-white/20 bg-white/5 hover:bg-white/10 text-white">
                     <Plus className="w-4 h-4 mr-2" />
@@ -3973,7 +3972,7 @@ export default function WAHome() {
                 <WATextarea
                   value={kalimatPenutup}
                   onChange={setKalimatPenutup}
-                  placeholder="Demikian disampaikan sebagai laporan. Terima kasih ðŸ™"
+                  placeholder="Demikian disampaikan sebagai laporan. Terima kasih 🙏"
                   rows={2}
                 />
               </CardContent>
@@ -4041,13 +4040,13 @@ export default function WAHome() {
                         <div className="whitespace-pre-wrap">Selamat {getWaktuSalam()}, Mohon izin melaporkan kegiatan {judul.toLowerCase()}.{"\n\n"}</div>
                         
                         {/* Tempat section */}
-                        <div className="whitespace-pre-wrap">ðŸ“ *Tempat:*{"\n"}</div>
+                        <div className="whitespace-pre-wrap">📍 *Tempat:*{"\n"}</div>
                         
                         {/* Location text or default */}
                         {locationData && locationData.lat && locationData.lng ? (
                           <div className="tempat-section">
                             {/* Place name and address */}
-                            <div className="whitespace-pre-wrap">ðŸ“Œ *{locationData.placeName}*{"\n"}{locationData.address}{"\n"}</div>
+                            <div className="whitespace-pre-wrap">📌 *{locationData.placeName}*{"\n"}{locationData.address}{"\n"}</div>
                             
                             {/* Map Image - visually grouped with Tempat */}
                             <div className="my-2 border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden">
@@ -4072,18 +4071,18 @@ export default function WAHome() {
                             </div>
                             
                             {/* Maps link */}
-                            <div className="whitespace-pre-wrap text-xs text-gray-300">ðŸ—ºï¸ Lihat di Maps: https://www.google.com/maps?q={locationData.lat},{locationData.lng}{"\n\n"}</div>
+                            <div className="whitespace-pre-wrap text-xs text-gray-300">🗺️ Lihat di Maps: https://www.google.com/maps?q={locationData.lat},{locationData.lng}{"\n\n"}</div>
                           </div>
                         ) : (
                           <div className="whitespace-pre-wrap">{tempat}{"\n\n"}</div>
                         )}
                         
                         {/* Rest of the message */}
-                        <div className="whitespace-pre-wrap">ðŸ“… *Hari dan Tanggal:*{"\n"}{tanggal}{"\n\n"}</div>
-                        <div className="whitespace-pre-wrap">â° *Waktu:*{"\n"}{waktu}{"\n\n"}</div>
-                        <div className="whitespace-pre-wrap">ðŸ‘¤ *Pimpinan Rapat:*{"\n"}{pimpinan}{"\n\n"}</div>
-                        <div className="whitespace-pre-wrap">ðŸ‘¥ *Peserta Rapat:*{"\n"}{peserta.map(p => `- ${p.text};`).join("\n")}{"\n\n"}</div>
-                        <div className="whitespace-pre-wrap">ðŸ—’ï¸ *Pelaksanaan Rapat:*{"\n"}{pelaksanaan.map((item, i) => {
+                        <div className="whitespace-pre-wrap">📅 *Hari dan Tanggal:*{"\n"}{tanggal}{"\n\n"}</div>
+                        <div className="whitespace-pre-wrap">⏰ *Waktu:*{"\n"}{waktu}{"\n\n"}</div>
+                        <div className="whitespace-pre-wrap">👤 *Pimpinan Rapat:*{"\n"}{pimpinan}{"\n\n"}</div>
+                        <div className="whitespace-pre-wrap">👥 *Peserta Rapat:*{"\n"}{peserta.map(p => `- ${p.text};`).join("\n")}{"\n\n"}</div>
+                        <div className="whitespace-pre-wrap">🗒️ *Pelaksanaan Rapat:*{"\n"}{pelaksanaan.map((item, i) => {
                           let text = `${i + 1}. ${item.text};`;
                           if (item.subItems.length > 0) {
                             text += "\n" + item.subItems.map(sub => `    - ${sub}`).join("\n");
@@ -4098,7 +4097,7 @@ export default function WAHome() {
                         <span className="text-xs text-gray-200">
                           {new Date().toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}
                         </span>
-                        <span className="text-blue-500">âœ“âœ“</span>
+                        <span className="text-blue-500">✓✓</span>
                       </div>
                     </div>
 
@@ -4118,7 +4117,7 @@ export default function WAHome() {
                           </Button>
                         )}
                         <p className="text-xs text-gray-200 mt-1 italic">
-                          ðŸ’¡ Download gambar peta, lalu lampirkan manual ke WhatsApp
+                          💡 Download gambar peta, lalu lampirkan manual ke WhatsApp
                         </p>
                       </div>
                     )}
@@ -4199,7 +4198,7 @@ export default function WAHome() {
                       <div className="flex-1 min-w-0 mb-2">
                         <p className="font-medium truncate text-white">{draft.judul}</p>
                         <p className="text-sm text-gray-200">
-                          {draft.tempat} â€¢ {draft.tanggal}
+                          {draft.tempat} • {draft.tanggal}
                         </p>
                         <p className="text-xs text-gray-300">
                           Disimpan: {new Date(draft.updatedAt).toLocaleString("id-ID")}
